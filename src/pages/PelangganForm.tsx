@@ -3,21 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import {
-  useTierHarga,
-  useWilayahProvinsi,
-  useWilayahKabupatenKota,
-  useWilayahKecamatan,
-  useWilayahKelurahan,
-} from '@/lib/queries'
+import { useWilayahProvinsi, useWilayahKabupatenKota, useWilayahKecamatan, useWilayahKelurahan } from '@/lib/queries'
 import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
-import type { Pelanggan, SumberPelanggan, TerminBayar, TipePelanggan } from '@/types/db'
+import type { Pelanggan, SumberPelanggan, TipePelanggan } from '@/types/db'
 
 interface FormState {
   kode: string
   nama: string
   tipe: TipePelanggan
-  tier_harga_id: string
   sales_id: string
   kontak_nama: string
   telepon: string
@@ -28,23 +21,16 @@ interface FormState {
   kecamatan_kode: string
   kelurahan_kode: string
   alamat: string
-  npwp: string
-  termin: TerminBayar
-  termin_hari: number
-  limit_kredit: number
   sosial_media: string
   tanggal_lahir: string
   sumber: SumberPelanggan | ''
   sumber_custom: string
-  tag: string
-  catatan: string
 }
 
 const KOSONG: FormState = {
   kode: '',
   nama: '',
   tipe: 'customer',
-  tier_harga_id: '',
   sales_id: '',
   kontak_nama: '',
   telepon: '',
@@ -55,16 +41,10 @@ const KOSONG: FormState = {
   kecamatan_kode: '',
   kelurahan_kode: '',
   alamat: '',
-  npwp: '',
-  termin: 'cod',
-  termin_hari: 0,
-  limit_kredit: 0,
   sosial_media: '',
   tanggal_lahir: '',
   sumber: '',
   sumber_custom: '',
-  tag: '',
-  catatan: '',
 }
 
 const LABEL_TIPE: Record<TipePelanggan, string> = {
@@ -100,7 +80,6 @@ export function PelangganForm() {
   const isBaru = !id || id === 'baru'
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { data: tierHarga } = useTierHarga()
   const { data: salesList } = useDaftarSales()
 
   const [form, setForm] = useState<FormState>(KOSONG)
@@ -128,7 +107,6 @@ export function PelangganForm() {
       kode: existing.kode,
       nama: existing.nama,
       tipe: existing.tipe,
-      tier_harga_id: existing.tier_harga_id ?? '',
       sales_id: existing.sales_id ?? '',
       kontak_nama: existing.kontak_nama ?? '',
       telepon: existing.telepon ?? '',
@@ -139,16 +117,10 @@ export function PelangganForm() {
       kecamatan_kode: existing.kecamatan_kode ?? '',
       kelurahan_kode: existing.kelurahan_kode ?? '',
       alamat: existing.alamat ?? '',
-      npwp: existing.npwp ?? '',
-      termin: existing.termin,
-      termin_hari: existing.termin_hari,
-      limit_kredit: existing.limit_kredit,
       sosial_media: existing.sosial_media ?? '',
       tanggal_lahir: existing.tanggal_lahir ?? '',
       sumber: existing.sumber ?? '',
       sumber_custom: existing.sumber_custom ?? '',
-      tag: (existing.tag ?? []).join(', '),
-      catatan: existing.catatan ?? '',
     })
     setAktif(existing.aktif)
   }, [existing])
@@ -175,11 +147,14 @@ export function PelangganForm() {
       return
     }
 
+    // Tier harga, termin, limit kredit, tag, catatan sengaja tidak di sini
+    // (form ini dipersingkat) -- kolomnya tetap ada di database dengan
+    // default aman (COD, limit 0), dan tidak disentuh sama sekali oleh
+    // update ini kalau pelanggan yang diedit sudah punya nilai sendiri.
     const payload = {
       kode: form.kode.trim(),
       nama: form.nama.trim(),
       tipe: form.tipe,
-      tier_harga_id: form.tier_harga_id || null,
       sales_id: form.sales_id || null,
       kontak_nama: form.kontak_nama || null,
       telepon: form.telepon || null,
@@ -190,19 +165,10 @@ export function PelangganForm() {
       kecamatan_kode: form.kecamatan_kode || null,
       kelurahan_kode: form.kelurahan_kode || null,
       alamat: form.alamat || null,
-      npwp: form.npwp || null,
-      termin: form.termin,
-      termin_hari: form.termin_hari,
-      limit_kredit: form.limit_kredit,
       sosial_media: form.sosial_media || null,
       tanggal_lahir: form.tanggal_lahir || null,
       sumber: form.sumber || null,
       sumber_custom: form.sumber === 'custom' ? form.sumber_custom || null : null,
-      tag: form.tag
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean),
-      catatan: form.catatan || null,
     }
 
     setMenyimpan(true)
@@ -387,115 +353,42 @@ export function PelangganForm() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Tier harga</Label>
-              <Select value={form.tier_harga_id} onChange={(e) => ubah('tier_harga_id', e.target.value)}>
-                <option value="">Pakai default sistem</option>
-                {(tierHarga ?? []).map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.nama}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>NPWP</Label>
-              <Input value={form.npwp} onChange={(e) => ubah('npwp', e.target.value)} />
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label>Termin</Label>
-              <Select value={form.termin} onChange={(e) => ubah('termin', e.target.value as TerminBayar)}>
-                <option value="cod">COD</option>
-                <option value="tempo">Tempo</option>
-              </Select>
-            </div>
-            {form.termin === 'tempo' ? (
+          <div className="space-y-3 border-t border-border pt-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label>Tempo (hari)</Label>
+                <Label>Sumber</Label>
+                <Select value={form.sumber} onChange={(e) => ubah('sumber', e.target.value as SumberPelanggan | '')}>
+                  <option value="">-</option>
+                  {Object.entries(LABEL_SUMBER).map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Tanggal lahir</Label>
+                <Input type="date" value={form.tanggal_lahir} onChange={(e) => ubah('tanggal_lahir', e.target.value)} />
+              </div>
+            </div>
+            {form.sumber === 'custom' ? (
+              <div className="space-y-1.5">
+                <Label>Sumber (custom)</Label>
                 <Input
-                  type="number"
-                  min={0}
-                  value={form.termin_hari}
-                  onChange={(e) => ubah('termin_hari', Number(e.target.value))}
+                  placeholder="mis. Tokopedia, WhatsApp, pameran, ..."
+                  value={form.sumber_custom}
+                  onChange={(e) => ubah('sumber_custom', e.target.value)}
                 />
               </div>
             ) : null}
             <div className="space-y-1.5">
-              <Label>Limit kredit</Label>
+              <Label>Media sosial</Label>
               <Input
-                type="number"
-                min={0}
-                value={form.limit_kredit}
-                onChange={(e) => ubah('limit_kredit', Number(e.target.value))}
+                placeholder="mis. IG: @nama, TikTok: @nama"
+                value={form.sosial_media}
+                onChange={(e) => ubah('sosial_media', e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="border-t border-border pt-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Untuk CRM (opsional)
-            </p>
-            <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label>Sumber</Label>
-                  <Select
-                    value={form.sumber}
-                    onChange={(e) => ubah('sumber', e.target.value as SumberPelanggan | '')}
-                  >
-                    <option value="">-</option>
-                    {Object.entries(LABEL_SUMBER).map(([v, l]) => (
-                      <option key={v} value={v}>
-                        {l}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Tanggal lahir</Label>
-                  <Input
-                    type="date"
-                    value={form.tanggal_lahir}
-                    onChange={(e) => ubah('tanggal_lahir', e.target.value)}
-                  />
-                </div>
-              </div>
-              {form.sumber === 'custom' ? (
-                <div className="space-y-1.5">
-                  <Label>Sumber (custom)</Label>
-                  <Input
-                    placeholder="mis. Tokopedia, WhatsApp, pameran, ..."
-                    value={form.sumber_custom}
-                    onChange={(e) => ubah('sumber_custom', e.target.value)}
-                  />
-                </div>
-              ) : null}
-              <div className="space-y-1.5">
-                <Label>Media sosial</Label>
-                <Input
-                  placeholder="mis. IG: @nama, TikTok: @nama"
-                  value={form.sosial_media}
-                  onChange={(e) => ubah('sosial_media', e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Tag</Label>
-                <Input
-                  placeholder="Pisahkan dengan koma, mis. VIP, reseller"
-                  value={form.tag}
-                  onChange={(e) => ubah('tag', e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Catatan</Label>
-            <Input value={form.catatan} onChange={(e) => ubah('catatan', e.target.value)} />
           </div>
 
           {!isBaru ? (

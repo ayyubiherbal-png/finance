@@ -370,6 +370,18 @@ WA-UMUM) ditata ulang: `tipe` jadi `customer`, `sumber` diisi sesuai
 platform (Tokopedia & WhatsApp lewat `sumber = 'custom'` karena tidak
 ada di daftar baku Sumber).
 
+**Form Pelanggan dipersingkat (setelah 0012, tanpa migrasi baru).**
+Field Tier harga, NPWP, Termin, Tempo (hari), Limit kredit, Tag, dan
+Catatan dihapus dari `PelangganForm.tsx` — dianggap terlalu panjang
+untuk input harian, sementara kolomnya di database **tidak disentuh
+sama sekali** (tidak ada migrasi baru untuk ini). Konsekuensinya:
+field-field itu memakai default kolom untuk pelanggan baru (Termin
+COD, Limit kredit 0, dst) dan tidak bisa lagi diisi/diubah lewat form
+— kalau nanti perlu diisi (mis. Mitra/Horeka/Perusahaan yang butuh
+termin tempo atau limit kredit), harus lewat SQL manual atau form ini
+dibuka kembali. Media sosial, Sumber, dan Tanggal lahir tetap ada
+karena masih relevan untuk CRM sehari-hari.
+
 ---
 
 ## 4. Cara menjalankan
