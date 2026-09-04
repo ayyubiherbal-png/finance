@@ -370,19 +370,15 @@ WA-UMUM) ditata ulang: `tipe` jadi `customer`, `sumber` diisi sesuai
 platform (Tokopedia & WhatsApp lewat `sumber = 'custom'` karena tidak
 ada di daftar baku Sumber).
 
-**ID dan nomor HP pelanggan tidak boleh kembar (0013).** `kode` (ID)
-sudah `unique` sejak skema awal (0002) -- tidak perlu perubahan.
-`telepon` belum punya penjagaan, jadi 0013 menambah
-`unique constraint uq_pelanggan_telepon`. NULL tetap boleh berapa pun
-(constraint unik Postgres tidak menganggap NULL sama dengan NULL lain),
-jadi pelanggan tanpa nomor HP tidak masalah. Kalau data yang sudah ada
-ternyata sudah punya nomor HP kembar, migrasi SENGAJA tidak memasang
-constraint-nya (cuma NOTICE, migrasi tetap sukses) supaya tidak
-menghentikan migrasi berikutnya -- perbaiki datanya dulu pakai query di
-komentar file migrasi, baru jalankan ulang. Di sisi form
-(`PelangganForm.tsx`), pelanggaran unik dari Postgres (kode error
-`23505`) diterjemahkan jadi pesan bahasa Indonesia yang jelas
-("ID ... sudah dipakai pelanggan lain" / "Nomor HP ini sudah dipakai
+**ID pelanggan dijaga unik (`kode`, sudah `unique` sejak skema awal
+0002) -- nomor HP SENGAJA tidak.** Sempat ditambah unique constraint
+di `telepon` juga, tapi dibatalkan atas permintaan user: karena ID
+sudah terstruktur & unik (prefix per Tipe + nomor urut, lihat bagian
+prefix ID di bawah), itu dianggap cukup sebagai pembeda pelanggan --
+nomor HP boleh sama (mis. satu keluarga/toko pakai nomor yang sama
+untuk beberapa pelanggan berbeda). Di sisi form (`PelangganForm.tsx`),
+pelanggaran unik ID dari Postgres (kode error `23505`) diterjemahkan
+jadi pesan bahasa Indonesia yang jelas ("ID ... sudah dipakai
 pelanggan lain") lewat `ramahkanErrorSimpan()`, bukan pesan teknis
 Postgres apa adanya.
 
