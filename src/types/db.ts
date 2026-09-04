@@ -143,6 +143,7 @@ export interface Pelanggan {
   kabupaten_kode: string | null
   kecamatan_kode: string | null
   kelurahan_kode: string | null
+  akun_agregat: boolean
 }
 
 export interface WilayahProvinsi {

@@ -22,6 +22,7 @@ ada **dua migrasi lagi**, kecil, tidak perlu import CSV apa pun:
 ```
 supabase/migrations/0012_pelanggan_tipe_sumber.sql
 supabase/migrations/0014_pelanggan_ringkas_view.sql
+supabase/migrations/0015_pelanggan_akun_agregat.sql
 ```
 
 0012 mengganti daftar Tipe Pelanggan (Customer/Mitra/Horeka/Perusahaan)
@@ -31,10 +32,13 @@ field yang ada di form Pelanggan (Tipe, Kontak, Sales, Telepon, WhatsApp,
 Email, Sumber, Tanggal lahir, Media sosial, Alamat gabungan), TANPA
 Piutang (itu data transaksi, sudah ada tempatnya sendiri di Laporan
 Piutang) dan tanpa Termin/Limit Kredit/Sisa Limit (sudah tidak
-informatif lagi sejak field itu dihapus dari form). Keduanya aman
-dijalankan berkali-kali kalau perlu diulang. (Nomor 0013 sempat dibuat
-lalu dibatalkan/dihapus lagi -- lompat dari 0012 ke 0014 memang
-disengaja, bukan ada yang hilang.)
+informatif lagi sejak field itu dihapus dari form). 0015 menandai 4
+akun agregat marketplace (SHOPEE/TIKTOK/TOKPED/WA-UMUM) lewat kolom baru
+`akun_agregat`, lalu menyembunyikannya dari daftar Pelanggan (datanya
+tetap ada, masih dipakai alur pesanan online). Semuanya aman dijalankan
+berkali-kali kalau perlu diulang. (Nomor 0013 sempat dibuat lalu
+dibatalkan/dihapus lagi -- lompat dari 0012 ke 0014 memang disengaja,
+bukan ada yang hilang.)
 
 > Percobaan pertama migrasi ini menulis ~91.000 baris data wilayah
 > sebagai SQL langsung dan **gagal ditempel** di SQL Editor ("Failed to
@@ -105,6 +109,7 @@ supabase/migrations/0010_kas_bank.sql
 supabase/migrations/0011_pelanggan_crm.sql
 supabase/migrations/0012_pelanggan_tipe_sumber.sql
 supabase/migrations/0014_pelanggan_ringkas_view.sql
+supabase/migrations/0015_pelanggan_akun_agregat.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

@@ -407,6 +407,21 @@ Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
 `overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
 dipotong/disembunyikan.
 
+**4 akun agregat marketplace disembunyikan dari daftar Pelanggan (0015).**
+User lihat SHOPEE/TIKTOK/TOKPED/WA-UMUM tercampur di daftar Pelanggan,
+minta dihapus -- setelah diklarifikasi (2x AskUserQuestion), maksudnya
+BUKAN hapus permanen (4 akun ini masih dipakai alur pesanan online
+sebagai pelanggan generik, lihat bagian "Kanal jualan dobel" di atas),
+tapi disembunyikan dari TAMPILAN saja. Ditambah kolom
+`pelanggan.akun_agregat boolean default false`, di-set `true` untuk
+ke-4 kode itu, lalu difilter di `v_pelanggan_ringkas`
+(`where pl.aktif and not pl.akun_agregat`). Kolom baru ini SENGAJA
+bukan hardcode daftar kode di query (supaya kalau nanti nambah kanal
+online baru, tinggal set flag-nya, tidak perlu ubah kode lagi). Pencarian
+pelanggan di form transaksi lain (`cariPelanggan` combobox di SO/Faktur/
+dst.) TIDAK disentuh -- itu query langsung ke tabel `pelanggan`, ke-4
+akun ini harus tetap bisa dipilih di sana untuk pesanan online.
+
 **Seluruh UI dikecilkan ke 80% (2026-09-04, `src/index.css`, murni
 CSS).** User minta "font dll dikecilin ke 80%". Karena hampir semua
 ukuran Tailwind (font, padding, gap, radius, ukuran ikon lucide via
