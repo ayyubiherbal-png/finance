@@ -652,7 +652,28 @@ $$;
 create trigger trg_terbayar_beli after insert or update or delete on pembayaran_supplier_alokasi
   for each row execute function fn_refresh_terbayar_beli();
 
--- Alokasi tidak boleh melebihi sisa tagihan.
+-- Padanan fn_refresh_terbayar_jual_header() di sisi beli: perubahan STATUS
+-- header pembayaran_supplier (mis. dibatalkan) tidak memicu trigger di atas
+-- karena itu hanya memantau tabel alokasi, bukan header pembayarannya.
+create or replace function fn_refresh_terbayar_beli_header()
+returns trigger language plpgsql as $$
+begin
+  update faktur_pembelian f
+  set terbayar = coalesce((
+        select sum(a.jumlah)
+        from pembayaran_supplier_alokasi a
+        join pembayaran_supplier b on b.id = a.pembayaran_id
+        where a.faktur_id = f.id and b.status not in ('dibatalkan','ditolak')
+      ), 0)
+  where f.id in (select faktur_id from pembayaran_supplier_alokasi where pembayaran_id = new.id);
+  return null;
+end;
+$$;
+
+create trigger trg_terbayar_beli_header after update of status on pembayaran_supplier
+  for each row execute function fn_refresh_terbayar_beli_header();
+
+-- Alokasi tidak boleh melebihi sisa tagihan (penjualan).
 create or replace function fn_cek_alokasi_jual()
 returns trigger language plpgsql as $$
 declare v_total numeric(18,2); v_alokasi numeric(18,2);
@@ -672,6 +693,27 @@ $$;
 
 create trigger trg_cek_alokasi_jual before insert or update on penerimaan_kas_alokasi
   for each row execute function fn_cek_alokasi_jual();
+
+-- Padanan di sisi beli.
+create or replace function fn_cek_alokasi_beli()
+returns trigger language plpgsql as $$
+declare v_total numeric(18,2); v_alokasi numeric(18,2);
+begin
+  select jumlah into v_total from pembayaran_supplier where id = new.pembayaran_id;
+  select coalesce(sum(jumlah), 0) into v_alokasi
+    from pembayaran_supplier_alokasi
+    where pembayaran_id = new.pembayaran_id and id <> new.id;
+
+  if v_alokasi + new.jumlah > v_total then
+    raise exception 'Alokasi (%) melebihi jumlah pembayaran (%)', v_alokasi + new.jumlah, v_total
+      using errcode = 'check_violation';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_cek_alokasi_beli before insert or update on pembayaran_supplier_alokasi
+  for each row execute function fn_cek_alokasi_beli();
 
 -- ---------------------------------------------------------------------
 -- H. Snapshot HPP pada item faktur penjualan (untuk laporan laba)

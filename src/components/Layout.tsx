@@ -49,6 +49,7 @@ const MENU: Grup[] = [
       { ke: '/purchase-order', label: 'Purchase Order', ikon: ShoppingCart },
       { ke: '/penerimaan-barang', label: 'Penerimaan Barang', ikon: Warehouse },
       { ke: '/faktur-pembelian', label: 'Faktur Pembelian', ikon: Receipt },
+      { ke: '/pembayaran-supplier', label: 'Pembayaran Supplier', ikon: Wallet },
     ],
   },
   {

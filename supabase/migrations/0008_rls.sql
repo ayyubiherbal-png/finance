@@ -74,6 +74,7 @@ alter function fn_sinkron_po_dari_pb()             security definer;
 alter function fn_refresh_terbayar_jual()          security definer;
 alter function fn_refresh_terbayar_jual_header()   security definer;
 alter function fn_refresh_terbayar_beli()          security definer;
+alter function fn_refresh_terbayar_beli_header()   security definer;
 alter function fn_cek_limit_kredit()               security definer;
 alter function fn_snapshot_hpp_faktur()            security definer;
 
@@ -90,6 +91,7 @@ begin
     'refresh_status_so(uuid)', 'refresh_status_po(uuid)',
     'fn_sinkron_so()', 'fn_sinkron_so_dari_sj()', 'fn_sinkron_po()', 'fn_sinkron_po_dari_pb()',
     'fn_refresh_terbayar_jual()', 'fn_refresh_terbayar_jual_header()', 'fn_refresh_terbayar_beli()',
+    'fn_refresh_terbayar_beli_header()',
     'fn_cek_limit_kredit()', 'fn_snapshot_hpp_faktur()'
   ] loop
     execute format('alter function %s set search_path = public', f);
