@@ -382,6 +382,20 @@ jadi pesan bahasa Indonesia yang jelas ("ID ... sudah dipakai
 pelanggan lain") lewat `ramahkanErrorSimpan()`, bukan pesan teknis
 Postgres apa adanya.
 
+**Kontak & Telepon disembunyikan kecuali Horeka/Perusahaan, dropdown
+Wilayah jadi combobox ketik-cari (2026-09-04, tanpa migrasi baru).**
+Field "Kontak" (nama PIC) dan "Telepon" cuma tampil kalau Tipe = Horeka
+atau Perusahaan -- Customer/Mitra (mayoritas B2C perorangan) dianggap
+cukup dengan WhatsApp saja, form jadi lebih pendek untuk kasus umum.
+Nilainya TIDAK dihapus kalau field disembunyikan (cuma disembunyikan
+dari tampilan) -- ganti Tipe bolak-balik tidak menghilangkan data yang
+sudah terisi. Dropdown Provinsi/Kabupaten-Kota/Kecamatan/Kelurahan
+diganti dari `<select>` polos jadi `Combobox` (komponen yang sama
+dipakai untuk cari produk/pelanggan/supplier) supaya bisa diketik,
+bukan scroll manual di antara puluhan/ratusan opsi -- pencariannya
+LOKAL (filter array yang sudah dimuat penuh lewat `staleTime: Infinity`
+di hook `useWilayah*`), bukan query baru ke Supabase tiap ketikan.
+
 **Form Pelanggan dipersingkat (setelah 0012, tanpa migrasi baru).**
 Field Tier harga, NPWP, Termin, Tempo (hari), Limit kredit, Tag, dan
 Catatan dihapus dari `PelangganForm.tsx` — dianggap terlalu panjang

@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useWilayahProvinsi, useWilayahKabupatenKota, useWilayahKecamatan, useWilayahKelurahan } from '@/lib/queries'
 import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
+import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import type { Pelanggan, SumberPelanggan, TipePelanggan } from '@/types/db'
 
 interface FormState {
@@ -70,6 +71,21 @@ const LABEL_SUMBER: Record<SumberPelanggan, string> = {
   custom: 'Custom...',
 }
 
+// Filter lokal atas daftar yang sudah dimuat penuh (staleTime: Infinity di
+// hook-nya) -- tidak perlu query baru tiap ketikan, tinggal saring array.
+function buatCariWilayah<T extends { kode: string; nama: string }>(
+  daftar: T[] | undefined,
+  sublabel?: (item: T) => string | undefined,
+) {
+  return async (kueri: string): Promise<OpsiCombobox[]> => {
+    const q = kueri.trim().toLowerCase()
+    const list = daftar ?? []
+    const hasil = q ? list.filter((w) => w.nama.toLowerCase().includes(q)) : list
+    const opsi = hasil.map((w) => ({ value: w.kode, label: w.nama, sublabel: sublabel?.(w) }))
+    return q ? opsi : [{ value: '', label: '- (kosongkan)' }, ...opsi]
+  }
+}
+
 // ID (kode) dijaga unik di database (constraint, lihat 0002). Kalau
 // kena, pesan Postgres-nya teknis -- ganti jadi bahasa yang jelas.
 function ramahkanErrorSimpan(e: unknown, kode: string): unknown {
@@ -107,6 +123,15 @@ export function PelangganForm() {
   const [aktif, setAktif] = useState(true)
   const [menyimpan, setMenyimpan] = useState(false)
   const [error, setError] = useState<unknown>(null)
+
+  // Kontak (nama PIC) & Telepon cuma relevan buat badan usaha -- Customer/Mitra
+  // (kebanyakan B2C perorangan) cukup WhatsApp.
+  const tampilkanKontakTelepon = form.tipe === 'horeka' || form.tipe === 'perusahaan'
+
+  const provinsiTerpilih = provinsiList?.find((p) => p.kode === form.provinsi_kode)
+  const kabupatenTerpilih = kabupatenList?.find((k) => k.kode === form.kabupaten_kode)
+  const kecamatanTerpilih = kecamatanList?.find((k) => k.kode === form.kecamatan_kode)
+  const kelurahanTerpilih = kelurahanList?.find((k) => k.kode === form.kelurahan_kode)
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ['pelanggan-detail', id],
@@ -274,10 +299,16 @@ export function PelangganForm() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Kontak</Label>
-              <Input value={form.kontak_nama} onChange={(e) => ubah('kontak_nama', e.target.value)} />
-            </div>
+            {tampilkanKontakTelepon ? (
+              <div className="space-y-1.5">
+                <Label>Kontak</Label>
+                <Input
+                  placeholder="Nama PIC/penanggung jawab"
+                  value={form.kontak_nama}
+                  onChange={(e) => ubah('kontak_nama', e.target.value)}
+                />
+              </div>
+            ) : null}
             <div className="space-y-1.5">
               <Label>Sales penanggung jawab</Label>
               <Select value={form.sales_id} onChange={(e) => ubah('sales_id', e.target.value)}>
@@ -292,14 +323,16 @@ export function PelangganForm() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Telepon</Label>
-              <Input value={form.telepon} onChange={(e) => ubah('telepon', e.target.value)} />
-            </div>
+            {tampilkanKontakTelepon ? (
+              <div className="space-y-1.5">
+                <Label>Telepon</Label>
+                <Input value={form.telepon} onChange={(e) => ubah('telepon', e.target.value)} />
+              </div>
+            ) : null}
             <div className="space-y-1.5">
               <Label>WhatsApp</Label>
               <Input
-                placeholder="Kosongkan kalau sama dengan telepon"
+                placeholder={tampilkanKontakTelepon ? 'Kosongkan kalau sama dengan telepon' : undefined}
                 value={form.whatsapp}
                 onChange={(e) => ubah('whatsapp', e.target.value)}
               />
@@ -316,62 +349,52 @@ export function PelangganForm() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Provinsi</Label>
-                <Select value={form.provinsi_kode} onChange={(e) => ubahProvinsi(e.target.value)}>
-                  <option value="">-</option>
-                  {(provinsiList ?? []).map((p) => (
-                    <option key={p.kode} value={p.kode}>
-                      {p.nama}
-                    </option>
-                  ))}
-                </Select>
+                <Combobox
+                  value={form.provinsi_kode || null}
+                  opsiTerpilih={provinsiTerpilih ? { value: provinsiTerpilih.kode, label: provinsiTerpilih.nama } : null}
+                  onChange={(kode) => ubahProvinsi(kode)}
+                  cariOpsi={buatCariWilayah(provinsiList)}
+                  placeholder="Ketik untuk cari provinsi..."
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Kabupaten/Kota</Label>
-                <Select
-                  value={form.kabupaten_kode}
-                  onChange={(e) => ubahKabupaten(e.target.value)}
+                <Combobox
+                  value={form.kabupaten_kode || null}
+                  opsiTerpilih={kabupatenTerpilih ? { value: kabupatenTerpilih.kode, label: kabupatenTerpilih.nama } : null}
+                  onChange={(kode) => ubahKabupaten(kode)}
+                  cariOpsi={buatCariWilayah(kabupatenList)}
+                  placeholder="Ketik untuk cari kabupaten/kota..."
                   disabled={!form.provinsi_kode}
-                >
-                  <option value="">-</option>
-                  {(kabupatenList ?? []).map((k) => (
-                    <option key={k.kode} value={k.kode}>
-                      {k.nama}
-                    </option>
-                  ))}
-                </Select>
+                />
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Kecamatan</Label>
-                <Select
-                  value={form.kecamatan_kode}
-                  onChange={(e) => ubahKecamatan(e.target.value)}
+                <Combobox
+                  value={form.kecamatan_kode || null}
+                  opsiTerpilih={kecamatanTerpilih ? { value: kecamatanTerpilih.kode, label: kecamatanTerpilih.nama } : null}
+                  onChange={(kode) => ubahKecamatan(kode)}
+                  cariOpsi={buatCariWilayah(kecamatanList)}
+                  placeholder="Ketik untuk cari kecamatan..."
                   disabled={!form.kabupaten_kode}
-                >
-                  <option value="">-</option>
-                  {(kecamatanList ?? []).map((k) => (
-                    <option key={k.kode} value={k.kode}>
-                      {k.nama}
-                    </option>
-                  ))}
-                </Select>
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Kelurahan/Desa</Label>
-                <Select
-                  value={form.kelurahan_kode}
-                  onChange={(e) => ubah('kelurahan_kode', e.target.value)}
+                <Combobox
+                  value={form.kelurahan_kode || null}
+                  opsiTerpilih={
+                    kelurahanTerpilih
+                      ? { value: kelurahanTerpilih.kode, label: kelurahanTerpilih.nama, sublabel: kelurahanTerpilih.kode_pos ?? undefined }
+                      : null
+                  }
+                  onChange={(kode) => ubah('kelurahan_kode', kode)}
+                  cariOpsi={buatCariWilayah(kelurahanList, (k) => k.kode_pos ?? undefined)}
+                  placeholder="Ketik untuk cari kelurahan/desa..."
                   disabled={!form.kecamatan_kode}
-                >
-                  <option value="">-</option>
-                  {(kelurahanList ?? []).map((k) => (
-                    <option key={k.kode} value={k.kode}>
-                      {k.nama}
-                      {k.kode_pos ? ` (${k.kode_pos})` : ''}
-                    </option>
-                  ))}
-                </Select>
+                />
               </div>
             </div>
             <div className="space-y-1.5">
