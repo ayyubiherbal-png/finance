@@ -27,8 +27,15 @@ interface FormState {
   sumber_custom: string
 }
 
+const PREFIX_TIPE: Record<TipePelanggan, string> = {
+  customer: 'CST-',
+  mitra: 'MTR-',
+  horeka: 'HRK-',
+  perusahaan: 'B2B-',
+}
+
 const KOSONG: FormState = {
-  kode: '',
+  kode: PREFIX_TIPE.customer,
   nama: '',
   tipe: 'customer',
   sales_id: '',
@@ -127,6 +134,16 @@ export function PelangganForm() {
 
   function ubah<K extends keyof FormState>(kunci: K, nilai: FormState[K]) {
     setForm((f) => ({ ...f, [kunci]: nilai }))
+  }
+
+  // Ganti Tipe -> ID diprefix otomatis (mis. CST-), kecuali pelanggan lama
+  // (isBaru false) atau user sudah mengetik sesuatu setelah prefix lama.
+  function ubahTipe(tipe: TipePelanggan) {
+    setForm((f) => {
+      const prefixLama = PREFIX_TIPE[f.tipe]
+      const bolehGantiKode = isBaru && (f.kode === '' || f.kode === prefixLama)
+      return { ...f, tipe, kode: bolehGantiKode ? PREFIX_TIPE[tipe] : f.kode }
+    })
   }
 
   // Ganti level yang lebih tinggi -> level di bawahnya jadi tidak valid lagi, kosongkan.
@@ -231,7 +248,7 @@ export function PelangganForm() {
             </div>
             <div className="space-y-1.5">
               <Label>Tipe</Label>
-              <Select value={form.tipe} onChange={(e) => ubah('tipe', e.target.value as TipePelanggan)}>
+              <Select value={form.tipe} onChange={(e) => ubahTipe(e.target.value as TipePelanggan)}>
                 {Object.entries(LABEL_TIPE).map(([v, l]) => (
                   <option key={v} value={v}>
                     {l}
