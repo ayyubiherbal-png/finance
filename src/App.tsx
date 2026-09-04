@@ -8,6 +8,7 @@ import { Dashboard } from '@/pages/Dashboard'
 import { Produk } from '@/pages/Produk'
 import { ProdukForm } from '@/pages/ProdukForm'
 import { Pelanggan } from '@/pages/Pelanggan'
+import { PelangganForm } from '@/pages/PelangganForm'
 import { Supplier } from '@/pages/Supplier'
 import { SupplierForm } from '@/pages/SupplierForm'
 import { Stok } from '@/pages/Stok'
@@ -70,6 +71,7 @@ function Rute() {
         <Route path="produk" element={<Produk />} />
         <Route path="produk/:id" element={<ProdukForm />} />
         <Route path="pelanggan" element={<Pelanggan />} />
+        <Route path="pelanggan/:id" element={<PelangganForm />} />
         <Route path="supplier" element={<Supplier />} />
         <Route path="supplier/:id" element={<SupplierForm />} />
         <Route path="stok" element={<Stok />} />

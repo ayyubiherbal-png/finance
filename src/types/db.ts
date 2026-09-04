@@ -130,6 +130,39 @@ export interface Pelanggan {
   limit_kredit: number
   aktif: boolean
   catatan: string | null
+  whatsapp: string | null
+  sosial_media: string | null
+  tanggal_lahir: string | null
+  kanal_akuisisi: KanalPenjualan | null
+  tag: string[]
+  provinsi_kode: string | null
+  kabupaten_kode: string | null
+  kecamatan_kode: string | null
+  kelurahan_kode: string | null
+}
+
+export interface WilayahProvinsi {
+  kode: string
+  nama: string
+}
+
+export interface WilayahKabupatenKota {
+  kode: string
+  provinsi_kode: string
+  nama: string
+}
+
+export interface WilayahKecamatan {
+  kode: string
+  kabupaten_kode: string
+  nama: string
+}
+
+export interface WilayahKelurahan {
+  kode: string
+  kecamatan_kode: string
+  nama: string
+  kode_pos: string | null
 }
 
 export interface Supplier {

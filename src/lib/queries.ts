@@ -1,7 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { OpsiCombobox } from '@/components/Combobox'
-import type { Gudang, TierHarga, ProdukSatuan, AkunKasBank } from '@/types/db'
+import type {
+  Gudang,
+  TierHarga,
+  ProdukSatuan,
+  AkunKasBank,
+  WilayahProvinsi,
+  WilayahKabupatenKota,
+  WilayahKecamatan,
+  WilayahKelurahan,
+} from '@/types/db'
 
 /**
  * Gudang aktif. Dipakai untuk selector "pintar": kalau cuma ada satu
@@ -121,4 +130,77 @@ export async function cariSupplier(kueri: string): Promise<OpsiCombobox[]> {
   if (kueri.trim()) q = q.or(`nama.ilike.%${kueri.trim()}%,kode.ilike.%${kueri.trim()}%`)
   const { data } = await q
   return (data ?? []).map((s) => ({ value: s.id, label: s.nama, sublabel: s.kode }))
+}
+
+/* ---------- Wilayah administratif (Provinsi -> Kab/Kota -> Kecamatan -> Kelurahan) ---------- */
+/** Dropdown berjenjang: tiap level baru aktif (`enabled`) setelah level di atasnya dipilih. */
+
+export function useWilayahProvinsi() {
+  return useQuery({
+    queryKey: ['wilayah-provinsi'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wilayah_provinsi')
+        .select('kode, nama')
+        .order('nama')
+        .returns<WilayahProvinsi[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: Infinity, // data referensi statis, tidak pernah berubah dari aplikasi
+  })
+}
+
+export function useWilayahKabupatenKota(provinsiKode: string | null) {
+  return useQuery({
+    queryKey: ['wilayah-kabkota', provinsiKode],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wilayah_kabupaten_kota')
+        .select('kode, provinsi_kode, nama')
+        .eq('provinsi_kode', provinsiKode as string)
+        .order('nama')
+        .returns<WilayahKabupatenKota[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!provinsiKode,
+    staleTime: Infinity,
+  })
+}
+
+export function useWilayahKecamatan(kabupatenKode: string | null) {
+  return useQuery({
+    queryKey: ['wilayah-kecamatan', kabupatenKode],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wilayah_kecamatan')
+        .select('kode, kabupaten_kode, nama')
+        .eq('kabupaten_kode', kabupatenKode as string)
+        .order('nama')
+        .returns<WilayahKecamatan[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!kabupatenKode,
+    staleTime: Infinity,
+  })
+}
+
+export function useWilayahKelurahan(kecamatanKode: string | null) {
+  return useQuery({
+    queryKey: ['wilayah-kelurahan', kecamatanKode],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wilayah_kelurahan')
+        .select('kode, kecamatan_kode, nama, kode_pos')
+        .eq('kecamatan_kode', kecamatanKode as string)
+        .order('nama')
+        .returns<WilayahKelurahan[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!kecamatanKode,
+    staleTime: Infinity,
+  })
 }

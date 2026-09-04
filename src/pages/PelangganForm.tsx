@@ -1,0 +1,510 @@
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import {
+  useTierHarga,
+  useWilayahProvinsi,
+  useWilayahKabupatenKota,
+  useWilayahKecamatan,
+  useWilayahKelurahan,
+} from '@/lib/queries'
+import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
+import type { KanalPenjualan, Pelanggan, TerminBayar, TipePelanggan } from '@/types/db'
+
+interface FormState {
+  kode: string
+  nama: string
+  tipe: TipePelanggan
+  tier_harga_id: string
+  sales_id: string
+  kontak_nama: string
+  telepon: string
+  whatsapp: string
+  email: string
+  provinsi_kode: string
+  kabupaten_kode: string
+  kecamatan_kode: string
+  kelurahan_kode: string
+  alamat: string
+  npwp: string
+  termin: TerminBayar
+  termin_hari: number
+  limit_kredit: number
+  sosial_media: string
+  tanggal_lahir: string
+  kanal_akuisisi: KanalPenjualan | ''
+  tag: string
+  catatan: string
+}
+
+const KOSONG: FormState = {
+  kode: '',
+  nama: '',
+  tipe: 'toko',
+  tier_harga_id: '',
+  sales_id: '',
+  kontak_nama: '',
+  telepon: '',
+  whatsapp: '',
+  email: '',
+  provinsi_kode: '',
+  kabupaten_kode: '',
+  kecamatan_kode: '',
+  kelurahan_kode: '',
+  alamat: '',
+  npwp: '',
+  termin: 'cod',
+  termin_hari: 0,
+  limit_kredit: 0,
+  sosial_media: '',
+  tanggal_lahir: '',
+  kanal_akuisisi: '',
+  tag: '',
+  catatan: '',
+}
+
+const LABEL_TIPE: Record<TipePelanggan, string> = {
+  perorangan: 'Perorangan',
+  toko: 'Toko',
+  grosir: 'Grosir',
+  instansi: 'Instansi',
+  marketplace: 'Marketplace (akun agregat)',
+}
+
+const LABEL_KANAL: Record<KanalPenjualan, string> = {
+  canvassing: 'Canvassing',
+  tokopedia: 'Tokopedia',
+  shopee: 'Shopee',
+  tiktok: 'TikTok',
+  whatsapp: 'WhatsApp',
+  lainnya: 'Lainnya',
+}
+
+function useDaftarSales() {
+  return useQuery({
+    queryKey: ['profil-sales'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('profil').select('id, nama').eq('aktif', true).order('nama')
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 5 * 60_000,
+  })
+}
+
+export function PelangganForm() {
+  const { id } = useParams<{ id: string }>()
+  const isBaru = !id || id === 'baru'
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { data: tierHarga } = useTierHarga()
+  const { data: salesList } = useDaftarSales()
+
+  const [form, setForm] = useState<FormState>(KOSONG)
+  const { data: provinsiList } = useWilayahProvinsi()
+  const { data: kabupatenList } = useWilayahKabupatenKota(form.provinsi_kode || null)
+  const { data: kecamatanList } = useWilayahKecamatan(form.kabupaten_kode || null)
+  const { data: kelurahanList } = useWilayahKelurahan(form.kecamatan_kode || null)
+  const [aktif, setAktif] = useState(true)
+  const [menyimpan, setMenyimpan] = useState(false)
+  const [error, setError] = useState<unknown>(null)
+
+  const { data: existing, isLoading } = useQuery({
+    queryKey: ['pelanggan-detail', id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('pelanggan').select('*').eq('id', id as string).single()
+      if (error) throw error
+      return data as Pelanggan
+    },
+    enabled: !isBaru,
+  })
+
+  useEffect(() => {
+    if (!existing) return
+    setForm({
+      kode: existing.kode,
+      nama: existing.nama,
+      tipe: existing.tipe,
+      tier_harga_id: existing.tier_harga_id ?? '',
+      sales_id: existing.sales_id ?? '',
+      kontak_nama: existing.kontak_nama ?? '',
+      telepon: existing.telepon ?? '',
+      whatsapp: existing.whatsapp ?? '',
+      email: existing.email ?? '',
+      provinsi_kode: existing.provinsi_kode ?? '',
+      kabupaten_kode: existing.kabupaten_kode ?? '',
+      kecamatan_kode: existing.kecamatan_kode ?? '',
+      kelurahan_kode: existing.kelurahan_kode ?? '',
+      alamat: existing.alamat ?? '',
+      npwp: existing.npwp ?? '',
+      termin: existing.termin,
+      termin_hari: existing.termin_hari,
+      limit_kredit: existing.limit_kredit,
+      sosial_media: existing.sosial_media ?? '',
+      tanggal_lahir: existing.tanggal_lahir ?? '',
+      kanal_akuisisi: existing.kanal_akuisisi ?? '',
+      tag: (existing.tag ?? []).join(', '),
+      catatan: existing.catatan ?? '',
+    })
+    setAktif(existing.aktif)
+  }, [existing])
+
+  function ubah<K extends keyof FormState>(kunci: K, nilai: FormState[K]) {
+    setForm((f) => ({ ...f, [kunci]: nilai }))
+  }
+
+  // Ganti level yang lebih tinggi -> level di bawahnya jadi tidak valid lagi, kosongkan.
+  function ubahProvinsi(kode: string) {
+    setForm((f) => ({ ...f, provinsi_kode: kode, kabupaten_kode: '', kecamatan_kode: '', kelurahan_kode: '' }))
+  }
+  function ubahKabupaten(kode: string) {
+    setForm((f) => ({ ...f, kabupaten_kode: kode, kecamatan_kode: '', kelurahan_kode: '' }))
+  }
+  function ubahKecamatan(kode: string) {
+    setForm((f) => ({ ...f, kecamatan_kode: kode, kelurahan_kode: '' }))
+  }
+
+  async function simpan() {
+    setError(null)
+    if (!form.kode.trim() || !form.nama.trim()) {
+      setError(new Error('Kode dan nama wajib diisi.'))
+      return
+    }
+
+    const payload = {
+      kode: form.kode.trim(),
+      nama: form.nama.trim(),
+      tipe: form.tipe,
+      tier_harga_id: form.tier_harga_id || null,
+      sales_id: form.sales_id || null,
+      kontak_nama: form.kontak_nama || null,
+      telepon: form.telepon || null,
+      whatsapp: form.whatsapp || null,
+      email: form.email || null,
+      provinsi_kode: form.provinsi_kode || null,
+      kabupaten_kode: form.kabupaten_kode || null,
+      kecamatan_kode: form.kecamatan_kode || null,
+      kelurahan_kode: form.kelurahan_kode || null,
+      alamat: form.alamat || null,
+      npwp: form.npwp || null,
+      termin: form.termin,
+      termin_hari: form.termin_hari,
+      limit_kredit: form.limit_kredit,
+      sosial_media: form.sosial_media || null,
+      tanggal_lahir: form.tanggal_lahir || null,
+      kanal_akuisisi: form.kanal_akuisisi || null,
+      tag: form.tag
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
+      catatan: form.catatan || null,
+    }
+
+    setMenyimpan(true)
+    try {
+      if (isBaru) {
+        const { data, error } = await supabase.from('pelanggan').insert(payload).select('id').single()
+        if (error) throw error
+        navigate(`/pelanggan/${data.id}`, { replace: true })
+      } else {
+        const { error } = await supabase.from('pelanggan').update(payload).eq('id', id)
+        if (error) throw error
+        queryClient.invalidateQueries({ queryKey: ['pelanggan-detail', id] })
+        queryClient.invalidateQueries({ queryKey: ['pelanggan'] })
+        navigate('/pelanggan')
+      }
+    } catch (e) {
+      setError(e)
+    } finally {
+      setMenyimpan(false)
+    }
+  }
+
+  async function ubahAktif(nilai: boolean) {
+    setAktif(nilai)
+    if (!isBaru) {
+      const { error } = await supabase.from('pelanggan').update({ aktif: nilai }).eq('id', id)
+      if (error) setError(error)
+      else {
+        queryClient.invalidateQueries({ queryKey: ['pelanggan-detail', id] })
+        queryClient.invalidateQueries({ queryKey: ['pelanggan'] })
+      }
+    }
+  }
+
+  if (!isBaru && isLoading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Spinner className="h-6 w-6" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-4">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" asChild>
+          <Link to="/pelanggan">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
+        <h1 className="text-xl font-semibold">{isBaru ? 'Pelanggan Baru' : form.nama || '...'}</h1>
+      </div>
+
+      <Card>
+        <CardContent className="space-y-4 p-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Kode</Label>
+              <Input value={form.kode} onChange={(e) => ubah('kode', e.target.value.toUpperCase())} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tipe</Label>
+              <Select value={form.tipe} onChange={(e) => ubah('tipe', e.target.value as TipePelanggan)}>
+                {Object.entries(LABEL_TIPE).map(([v, l]) => (
+                  <option key={v} value={v}>
+                    {l}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Nama</Label>
+            <Input value={form.nama} onChange={(e) => ubah('nama', e.target.value)} />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Kontak</Label>
+              <Input value={form.kontak_nama} onChange={(e) => ubah('kontak_nama', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Sales penanggung jawab</Label>
+              <Select value={form.sales_id} onChange={(e) => ubah('sales_id', e.target.value)}>
+                <option value="">-</option>
+                {(salesList ?? []).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nama}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Telepon</Label>
+              <Input value={form.telepon} onChange={(e) => ubah('telepon', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>WhatsApp</Label>
+              <Input
+                placeholder="Kosongkan kalau sama dengan telepon"
+                value={form.whatsapp}
+                onChange={(e) => ubah('whatsapp', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Email</Label>
+            <Input type="email" value={form.email} onChange={(e) => ubah('email', e.target.value)} />
+          </div>
+
+          <div className="space-y-3 border-t border-border pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Wilayah</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Provinsi</Label>
+                <Select value={form.provinsi_kode} onChange={(e) => ubahProvinsi(e.target.value)}>
+                  <option value="">-</option>
+                  {(provinsiList ?? []).map((p) => (
+                    <option key={p.kode} value={p.kode}>
+                      {p.nama}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Kabupaten/Kota</Label>
+                <Select
+                  value={form.kabupaten_kode}
+                  onChange={(e) => ubahKabupaten(e.target.value)}
+                  disabled={!form.provinsi_kode}
+                >
+                  <option value="">-</option>
+                  {(kabupatenList ?? []).map((k) => (
+                    <option key={k.kode} value={k.kode}>
+                      {k.nama}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Kecamatan</Label>
+                <Select
+                  value={form.kecamatan_kode}
+                  onChange={(e) => ubahKecamatan(e.target.value)}
+                  disabled={!form.kabupaten_kode}
+                >
+                  <option value="">-</option>
+                  {(kecamatanList ?? []).map((k) => (
+                    <option key={k.kode} value={k.kode}>
+                      {k.nama}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Kelurahan/Desa</Label>
+                <Select
+                  value={form.kelurahan_kode}
+                  onChange={(e) => ubah('kelurahan_kode', e.target.value)}
+                  disabled={!form.kecamatan_kode}
+                >
+                  <option value="">-</option>
+                  {(kelurahanList ?? []).map((k) => (
+                    <option key={k.kode} value={k.kode}>
+                      {k.nama}
+                      {k.kode_pos ? ` (${k.kode_pos})` : ''}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Alamat (nama jalan, nomor rumah, RT/RW)</Label>
+              <Input value={form.alamat} onChange={(e) => ubah('alamat', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Tier harga</Label>
+              <Select value={form.tier_harga_id} onChange={(e) => ubah('tier_harga_id', e.target.value)}>
+                <option value="">Pakai default sistem</option>
+                {(tierHarga ?? []).map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.nama}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>NPWP</Label>
+              <Input value={form.npwp} onChange={(e) => ubah('npwp', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label>Termin</Label>
+              <Select value={form.termin} onChange={(e) => ubah('termin', e.target.value as TerminBayar)}>
+                <option value="cod">COD</option>
+                <option value="tempo">Tempo</option>
+              </Select>
+            </div>
+            {form.termin === 'tempo' ? (
+              <div className="space-y-1.5">
+                <Label>Tempo (hari)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.termin_hari}
+                  onChange={(e) => ubah('termin_hari', Number(e.target.value))}
+                />
+              </div>
+            ) : null}
+            <div className="space-y-1.5">
+              <Label>Limit kredit</Label>
+              <Input
+                type="number"
+                min={0}
+                value={form.limit_kredit}
+                onChange={(e) => ubah('limit_kredit', Number(e.target.value))}
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-border pt-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Untuk CRM (opsional)
+            </p>
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Kanal akuisisi</Label>
+                  <Select
+                    value={form.kanal_akuisisi}
+                    onChange={(e) => ubah('kanal_akuisisi', e.target.value as KanalPenjualan | '')}
+                  >
+                    <option value="">-</option>
+                    {Object.entries(LABEL_KANAL).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Tanggal lahir</Label>
+                  <Input
+                    type="date"
+                    value={form.tanggal_lahir}
+                    onChange={(e) => ubah('tanggal_lahir', e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Media sosial</Label>
+                <Input
+                  placeholder="mis. IG: @nama, TikTok: @nama"
+                  value={form.sosial_media}
+                  onChange={(e) => ubah('sosial_media', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Tag</Label>
+                <Input
+                  placeholder="Pisahkan dengan koma, mis. VIP, reseller"
+                  value={form.tag}
+                  onChange={(e) => ubah('tag', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Catatan</Label>
+            <Input value={form.catatan} onChange={(e) => ubah('catatan', e.target.value)} />
+          </div>
+
+          {!isBaru ? (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={aktif} onChange={(e) => ubahAktif(e.target.checked)} className="h-4 w-4 rounded border-input" />
+              Aktif
+            </label>
+          ) : null}
+
+          {error ? <PesanError error={error} /> : null}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" asChild>
+              <Link to="/pelanggan">Batal</Link>
+            </Button>
+            <Button onClick={simpan} disabled={menyimpan}>
+              {menyimpan ? <Spinner /> : null}
+              Simpan
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

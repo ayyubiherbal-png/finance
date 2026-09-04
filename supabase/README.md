@@ -22,8 +22,10 @@ Cakupan file ini: **Fase 1** (jual sampai terima uang) dan **Fase 2**
 | `0008_rls.sql` | Row Level Security per peran |
 | `0009_seed_awal.sql` | Satuan, tier harga, gudang, kategori awal |
 | `0010_kas_bank.sql` | Akun kas/bank, saldo & kartu per akun -- **migrasi tambahan**, ditulis setelah 0001-0009 sudah dijalankan di database asli, jadi dirancang non-destruktif (backfill, bukan drop/replace) |
+| `0011_pelanggan_crm.sql` | Field persiapan CRM di `pelanggan` + 4 tabel wilayah administratif (Provinsi/Kab-Kota/Kecamatan/Kelurahan) berisi data resmi Kemendagri -- **butuh langkah tambahan**: import CSV kelurahan terpisah dari SQL, lihat README.md |
 
-Total 40 tabel + 14 view. Migrasi 0010 dan seterusnya adalah tambahan
+Total 44 tabel + 14 view (di luar ~91.600 baris data referensi wilayah).
+Migrasi 0010 dan seterusnya adalah tambahan
 inkremental di atas skema Fase 1 & 2 -- selalu jalankan berurutan sesuai
 nomor, jangan lompat.
 
@@ -300,6 +302,41 @@ window-function yang sama seperti `v_kartu_stok` untuk saldo berjalan.
 Kolom `bank_nama` lama di kedua tabel transaksi **dibiarkan** (bukan
 di-drop) karena 0010 ditulis setelah database sudah berisi data uji
 coba — lihat migrasi 0010 untuk detail backfill-nya.
+
+**Pelanggan: alamat berjenjang & field CRM (0011).** Dua kebutuhan
+digabung jadi satu migrasi karena diminta di sesi yang sama:
+
+1. *Field persiapan CRM* — `whatsapp`, `sosial_media`, `tanggal_lahir`,
+   `kanal_akuisisi` (reuse enum `kanal_penjualan` — dari mana pelanggan
+   ini pertama kali datang), `tag` (`text[]`, bebas: VIP/reseller/dst.).
+   Semua nullable/opsional, murni supaya Fase 3 (CRM sungguhan —
+   pipeline, follow-up, kampanye) tidak perlu migrasi "ubah struktur"
+   yang menyakitkan setelah data pelanggan menumpuk. Yang **sengaja
+   belum** ditambahkan karena butuh tabel/desain sendiri, bukan sekadar
+   kolom: poin loyalti (perlu ledger earn/redeem), referral (FK
+   self-referencing + UI pilih), tahap pipeline/status lead (itu
+   `leads`/`opportunities`, bukan atribut pelanggan) — ditunda sampai
+   Fase 3 benar-benar digarap.
+
+2. *Alamat berjenjang resmi* — 4 tabel referensi (`wilayah_provinsi` →
+   `wilayah_kabupaten_kota` → `wilayah_kecamatan` → `wilayah_kelurahan`),
+   data asli Kemendagri (38 / 514 / 7.285 / 83.762 baris, dari
+   `emsifa/api-wilayah-indonesia`), dropdown bertingkat di form
+   Pelanggan. Dipilih ketimbang 4 kolom teks bebas karena tujuannya
+   eksplisit: data untuk **analisis CRM & targeting iklan** ke depan —
+   teks bebas ("Bandung" vs "Kota Bandung" vs "kota bdg") akan merusak
+   agregasi itu. Kode wilayah dipakai apa adanya dari sumber (mis.
+   `"32.73.01.1001"`) supaya gampang disinkronkan ulang kalau sumbernya
+   update. Tabel `wilayah_*` murni referensi: RLS baca-saja untuk semua
+   pengguna, tidak ada policy tulis sama sekali (aplikasi tidak pernah
+   menulis ke situ). Data kelurahan (3,3 MB) sengaja **tidak** ikut
+   sebagai INSERT literal di migrasi — lihat `supabase/seed-data/` dan
+   README.md bagian atas untuk cara importnya (CSV via Table Editor,
+   bukan SQL Editor).
+
+Kolom `pelanggan.kota` (teks bebas, dari skema awal) **dibiarkan**
+tidak dipakai lagi oleh form — digantikan `kabupaten_kode` yang
+terstruktur — tapi tidak di-drop, pola yang sama dengan `bank_nama`.
 
 ---
 

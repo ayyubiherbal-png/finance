@@ -15,20 +15,39 @@ memengaruhi bentuk form.
 
 ## ⚠️ Migrasi baru yang perlu dijalankan sekarang
 
-Anda sudah setup Supabase dan menjalankan 0001-0009. Ada tambahan:
+Anda sudah menjalankan 0001-0010 (Kas & Bank sudah aktif). Ada tambahan
+**dua langkah** kali ini -- migrasi SQL seperti biasa, lalu satu import CSV:
+
+### Langkah A -- jalankan migrasi seperti biasa
 
 ```
-supabase/migrations/0010_kas_bank.sql
+supabase/migrations/0011_pelanggan_crm.sql
 ```
 
-Ini modul **Kas & Bank** (akun kas/rekening + saldo per akun) yang tadinya
-belum ada -- setiap Penerimaan Kas dan Pembayaran Supplier sekarang wajib
-tertaut ke akun kas/bank tertentu. Migrasi ini **aman dijalankan di
-database yang sudah ada datanya** -- data lama otomatis diarahkan ke akun
-"Kas Utama" yang dibuatkan migrasi ini, tidak ada yang hilang.
+File ini agak besar (~280 KB, berisi data resmi wilayah Indonesia dari
+Kemendagri: 38 provinsi + 514 kabupaten/kota + 7.285 kecamatan) --
+wajar, bukan berarti ada yang salah. Aman dijalankan di database yang
+sudah ada datanya: kolom baru di `pelanggan` semuanya opsional, tabel
+`wilayah_*` baru dan kosong sampai diisi.
 
-Jalankan filenya di SQL Editor seperti migrasi lain, satu kali saja.
-Migrasi selanjutnya (kalau ada) akan bernomor `0011`, dst. -- selalu jalankan
+### Langkah B -- import data Kelurahan/Desa (WAJIB, terpisah dari SQL)
+
+Data kelurahan (83.762 baris, ~3,3 MB) **tidak** ikut di file migrasi --
+kepanjangan buat ditempel di SQL Editor dengan andal. Setelah Langkah A
+sukses:
+
+1. Supabase Dashboard → **Table Editor** → pilih tabel `wilayah_kelurahan`
+2. Klik **Insert** → **Import data from CSV**
+3. Pilih file `supabase/seed-data/wilayah_kelurahan.csv` dari folder proyek
+4. Pastikan mapping kolom otomatis cocok (`kode`, `kecamatan_kode`, `nama`,
+   `kode_pos`) -- harusnya otomatis karena header CSV-nya sudah sama
+   persis dengan nama kolom tabel
+5. Import (mungkin makan waktu beberapa menit untuk 83 ribu baris)
+
+Tanpa langkah ini, dropdown "Kelurahan/Desa" di form Pelanggan akan
+selalu kosong -- Provinsi/Kabupaten/Kecamatan tetap berfungsi normal.
+
+Migrasi selanjutnya (kalau ada) akan bernomor `0012`, dst. -- selalu jalankan
 yang belum pernah Anda jalankan, urut sesuai nomor.
 
 ---
@@ -59,6 +78,7 @@ supabase/migrations/0007_view_laporan.sql
 supabase/migrations/0008_rls.sql
 supabase/migrations/0009_seed_awal.sql
 supabase/migrations/0010_kas_bank.sql
+supabase/migrations/0011_pelanggan_crm.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan
@@ -149,8 +169,9 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 
 | Area | Layar | Status |
 |---|---|---|
-| Master | Produk, Supplier, Pelanggan | Selesai (CRUD penuh untuk Produk & Supplier) |
+| Master | Produk, Supplier, Pelanggan | Selesai, CRUD penuh -- Pelanggan sekarang termasuk alamat berjenjang (Provinsi/Kab-Kota/Kecamatan/Kelurahan) dan field persiapan CRM |
 | Kas & Bank | Akun Kas & Bank (saldo live), Kartu Kas & Bank (mutasi) | Selesai -- **butuh migrasi 0010**, lihat peringatan di atas |
+| Wilayah | Data resmi Kemendagri (38 provinsi -> 83.762 kelurahan) untuk dropdown alamat Pelanggan | Selesai -- **butuh migrasi 0011 + import CSV**, lihat peringatan di atas |
 | Penjualan | Sales Order → Surat Jalan → Faktur → Penerimaan Kas → Retur | Selesai, ujung ke ujung |
 | Pembelian | Purchase Order → Penerimaan Barang → Faktur Pembelian → Pembayaran Supplier → Retur | Selesai, ujung ke ujung |
 | Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
