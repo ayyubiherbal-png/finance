@@ -206,13 +206,13 @@ export function AkunKasBankForm() {
             <Input
               type="number"
               min={0}
-              disabled={!isBaru}
               value={form.saldo_awal}
               onChange={(e) => ubah('saldo_awal', Number(e.target.value))}
             />
             {!isBaru ? (
               <p className="text-xs text-muted-foreground">
-                Tidak bisa diubah setelah dibuat -- transaksi berjalan sudah dihitung dari sini. Saldo saat ini ada di kanan atas.
+                Saldo dihitung ulang otomatis (saldo awal + semua transaksi), jadi mengubah ini langsung
+                mengubah saldo berjalan di kanan atas -- pakai kalau ada salah input di awal, bukan buat "menambah" saldo.
               </p>
             ) : null}
           </div>
