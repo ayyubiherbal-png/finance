@@ -288,6 +288,7 @@ interface FakturDetail {
   terbayar: number
   sisa: number
   catatan: string | null
+  pelanggan_id: string
   pelanggan: { nama: string } | null
 }
 
@@ -327,7 +328,7 @@ function FormDetail({ fakturId }: { fakturId: string }) {
       const { data, error } = await supabase
         .from('faktur_penjualan')
         .select(
-          'id, nomor, tanggal, jatuh_tempo, status, status_bayar, subtotal, total, terbayar, sisa, catatan, pelanggan:pelanggan_id(nama)',
+          'id, nomor, tanggal, jatuh_tempo, status, status_bayar, subtotal, total, terbayar, sisa, catatan, pelanggan_id, pelanggan:pelanggan_id(nama)',
         )
         .eq('id', fakturId)
         .single()
@@ -473,19 +474,22 @@ function FormDetail({ fakturId }: { fakturId: string }) {
 
       {error ? <PesanError error={error} /> : null}
 
-      {faktur.status !== 'dibatalkan' && faktur.terbayar === 0 ? (
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={batalkan} disabled={memproses}>
-            {memproses ? <Spinner /> : null}
-            Batalkan
-          </Button>
+      {faktur.status !== 'dibatalkan' ? (
+        <div className="flex justify-end gap-2">
+          {faktur.terbayar === 0 ? (
+            <Button variant="outline" onClick={batalkan} disabled={memproses}>
+              {memproses ? <Spinner /> : null}
+              Batalkan
+            </Button>
+          ) : null}
+          {faktur.sisa > 0 ? (
+            <Button asChild>
+              <Link to={`/penerimaan-kas/baru?pelanggan=${faktur.pelanggan_id}&faktur=${faktur.id}`}>
+                Catat Pembayaran
+              </Link>
+            </Button>
+          ) : null}
         </div>
-      ) : null}
-
-      {faktur.sisa > 0 && faktur.status !== 'dibatalkan' ? (
-        <p className="text-right text-xs text-muted-foreground">
-          Pencatatan pembayaran ada di Penerimaan Kas (belum dibangun).
-        </p>
       ) : null}
     </div>
   )

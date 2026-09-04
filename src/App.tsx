@@ -13,6 +13,8 @@ import { SuratJalan } from '@/pages/SuratJalan'
 import { SuratJalanForm } from '@/pages/SuratJalanForm'
 import { FakturPenjualan } from '@/pages/FakturPenjualan'
 import { FakturPenjualanForm } from '@/pages/FakturPenjualanForm'
+import { PenerimaanKas } from '@/pages/PenerimaanKas'
+import { PenerimaanKasForm } from '@/pages/PenerimaanKasForm'
 import { SegeraHadir } from '@/pages/SegeraHadir'
 
 const queryClient = new QueryClient({
@@ -51,9 +53,10 @@ function Rute() {
         <Route path="surat-jalan/:id" element={<SuratJalanForm />} />
         <Route path="faktur-penjualan" element={<FakturPenjualan />} />
         <Route path="faktur-penjualan/:id" element={<FakturPenjualanForm />} />
+        <Route path="penerimaan-kas" element={<PenerimaanKas />} />
+        <Route path="penerimaan-kas/:id" element={<PenerimaanKasForm />} />
 
         {/* Fase 1 & 2 — skema siap, layar menyusul */}
-        <Route path="penerimaan-kas" element={<SegeraHadir judul="Penerimaan Kas" />} />
         <Route path="purchase-order" element={<SegeraHadir judul="Purchase Order" />} />
         <Route path="penerimaan-barang" element={<SegeraHadir judul="Penerimaan Barang" />} />
         <Route path="faktur-pembelian" element={<SegeraHadir judul="Faktur Pembelian" />} />
