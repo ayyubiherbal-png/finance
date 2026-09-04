@@ -407,6 +407,16 @@ Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
 `overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
 dipotong/disembunyikan.
 
+**Seluruh UI dikecilkan ke 80% (2026-09-04, `src/index.css`, murni
+CSS).** User minta "font dll dikecilin ke 80%". Karena hampir semua
+ukuran Tailwind (font, padding, gap, radius, ukuran ikon lucide via
+`h-4 w-4` dst.) dalam satuan `rem`, cukup satu baris: `html { font-size:
+80%; }` di `@layer base` -- seluruh tampilan ikut mengecil proporsional
+tanpa perlu ganti className satu-satu di puluhan file. Border-width
+(1px) dan efek blur (`backdrop-filter: blur(20px)`) TIDAK ikut mengecil
+(itu bukan satuan rem) -- tapi itu memang tidak masalah, border 1px
+tetap tajam itu wajar meski teks mengecil.
+
 **Filter kolom (checklist) di daftar Pelanggan (2026-09-04, murni
 frontend).** User: banyak baris yang bakal kosong ("-") di kolom
 opsional, minta bisa milih sendiri kolom mana yang mau tampil. Dibuat

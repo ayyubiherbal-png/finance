@@ -61,6 +61,14 @@
     @apply border-border;
   }
 
+  /* UI dikecilkan ke ~80% (permintaan user) -- karena hampir semua ukuran
+     Tailwind (font, padding, gap, radius, ukuran ikon) dalam rem, cukup
+     ubah base font-size di sini, seluruh tampilan ikut mengecil proporsional
+     tanpa perlu ganti tiap className satu-satu. */
+  html {
+    font-size: 80%;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
   }
