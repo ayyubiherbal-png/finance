@@ -11,7 +11,7 @@ import {
   useWilayahKelurahan,
 } from '@/lib/queries'
 import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
-import type { KanalPenjualan, Pelanggan, TerminBayar, TipePelanggan } from '@/types/db'
+import type { Pelanggan, SumberPelanggan, TerminBayar, TipePelanggan } from '@/types/db'
 
 interface FormState {
   kode: string
@@ -34,7 +34,8 @@ interface FormState {
   limit_kredit: number
   sosial_media: string
   tanggal_lahir: string
-  kanal_akuisisi: KanalPenjualan | ''
+  sumber: SumberPelanggan | ''
+  sumber_custom: string
   tag: string
   catatan: string
 }
@@ -42,7 +43,7 @@ interface FormState {
 const KOSONG: FormState = {
   kode: '',
   nama: '',
-  tipe: 'toko',
+  tipe: 'customer',
   tier_harga_id: '',
   sales_id: '',
   kontak_nama: '',
@@ -60,26 +61,26 @@ const KOSONG: FormState = {
   limit_kredit: 0,
   sosial_media: '',
   tanggal_lahir: '',
-  kanal_akuisisi: '',
+  sumber: '',
+  sumber_custom: '',
   tag: '',
   catatan: '',
 }
 
 const LABEL_TIPE: Record<TipePelanggan, string> = {
-  perorangan: 'Perorangan',
-  toko: 'Toko',
-  grosir: 'Grosir',
-  instansi: 'Instansi',
-  marketplace: 'Marketplace (akun agregat)',
+  customer: 'Customer',
+  mitra: 'Mitra',
+  horeka: 'Horeka',
+  perusahaan: 'Perusahaan',
 }
 
-const LABEL_KANAL: Record<KanalPenjualan, string> = {
-  canvassing: 'Canvassing',
-  tokopedia: 'Tokopedia',
+const LABEL_SUMBER: Record<SumberPelanggan, string> = {
+  relasi: 'Relasi',
+  sosmed: 'Sosmed',
   shopee: 'Shopee',
   tiktok: 'TikTok',
-  whatsapp: 'WhatsApp',
-  lainnya: 'Lainnya',
+  website: 'Website',
+  custom: 'Custom...',
 }
 
 function useDaftarSales() {
@@ -144,7 +145,8 @@ export function PelangganForm() {
       limit_kredit: existing.limit_kredit,
       sosial_media: existing.sosial_media ?? '',
       tanggal_lahir: existing.tanggal_lahir ?? '',
-      kanal_akuisisi: existing.kanal_akuisisi ?? '',
+      sumber: existing.sumber ?? '',
+      sumber_custom: existing.sumber_custom ?? '',
       tag: (existing.tag ?? []).join(', '),
       catatan: existing.catatan ?? '',
     })
@@ -194,7 +196,8 @@ export function PelangganForm() {
       limit_kredit: form.limit_kredit,
       sosial_media: form.sosial_media || null,
       tanggal_lahir: form.tanggal_lahir || null,
-      kanal_akuisisi: form.kanal_akuisisi || null,
+      sumber: form.sumber || null,
+      sumber_custom: form.sumber === 'custom' ? form.sumber_custom || null : null,
       tag: form.tag
         .split(',')
         .map((t) => t.trim())
@@ -257,7 +260,7 @@ export function PelangganForm() {
         <CardContent className="space-y-4 p-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Kode</Label>
+              <Label>ID</Label>
               <Input value={form.kode} onChange={(e) => ubah('kode', e.target.value.toUpperCase())} />
             </div>
             <div className="space-y-1.5">
@@ -439,13 +442,13 @@ export function PelangganForm() {
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label>Kanal akuisisi</Label>
+                  <Label>Sumber</Label>
                   <Select
-                    value={form.kanal_akuisisi}
-                    onChange={(e) => ubah('kanal_akuisisi', e.target.value as KanalPenjualan | '')}
+                    value={form.sumber}
+                    onChange={(e) => ubah('sumber', e.target.value as SumberPelanggan | '')}
                   >
                     <option value="">-</option>
-                    {Object.entries(LABEL_KANAL).map(([v, l]) => (
+                    {Object.entries(LABEL_SUMBER).map(([v, l]) => (
                       <option key={v} value={v}>
                         {l}
                       </option>
@@ -461,6 +464,16 @@ export function PelangganForm() {
                   />
                 </div>
               </div>
+              {form.sumber === 'custom' ? (
+                <div className="space-y-1.5">
+                  <Label>Sumber (custom)</Label>
+                  <Input
+                    placeholder="mis. Tokopedia, WhatsApp, pameran, ..."
+                    value={form.sumber_custom}
+                    onChange={(e) => ubah('sumber_custom', e.target.value)}
+                  />
+                </div>
+              ) : null}
               <div className="space-y-1.5">
                 <Label>Media sosial</Label>
                 <Input

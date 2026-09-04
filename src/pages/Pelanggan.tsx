@@ -98,7 +98,7 @@ export function Pelanggan() {
             <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
               <Thead>
                 <Tr>
-                  <Th>Kode</Th>
+                  <Th>ID</Th>
                   <Th>Nama</Th>
                   <Th>Termin</Th>
                   <Th className="text-right">Limit kredit</Th>

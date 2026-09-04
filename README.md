@@ -15,8 +15,17 @@ memengaruhi bentuk form.
 
 ## ⚠️ Migrasi baru yang perlu dijalankan sekarang
 
-Anda sudah menjalankan 0001-0010 (Kas & Bank sudah aktif). Ada tambahan
-**empat langkah** kali ini -- migrasi SQL (kecil, aman), lalu tiga import CSV.
+Anda sudah menjalankan 0001-0010 (Kas & Bank sudah aktif) dan 0011
+(field CRM + tabel wilayah). Kalau Langkah B (3 import CSV) di bawah
+belum semua selesai, lanjutkan dulu itu. Setelah itu ada **satu migrasi
+lagi**, kecil, tidak perlu import CSV apa pun:
+
+```
+supabase/migrations/0012_pelanggan_tipe_sumber.sql
+```
+
+Mengganti daftar Tipe Pelanggan (Customer/Mitra/Horeka/Perusahaan) dan
+menambah field Sumber. Aman dijalankan berkali-kali kalau perlu diulang.
 
 > Percobaan pertama migrasi ini menulis ~91.000 baris data wilayah
 > sebagai SQL langsung dan **gagal ditempel** di SQL Editor ("Failed to
@@ -85,6 +94,7 @@ supabase/migrations/0008_rls.sql
 supabase/migrations/0009_seed_awal.sql
 supabase/migrations/0010_kas_bank.sql
 supabase/migrations/0011_pelanggan_crm.sql
+supabase/migrations/0012_pelanggan_tipe_sumber.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

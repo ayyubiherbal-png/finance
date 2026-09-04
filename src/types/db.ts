@@ -30,7 +30,10 @@ export type JenisMutasiStok =
 export type StatusBayar = 'belum' | 'sebagian' | 'lunas'
 export type MetodeBayar = 'tunai' | 'transfer' | 'qris' | 'giro' | 'kartu'
 export type TerminBayar = 'cod' | 'tempo'
-export type TipePelanggan = 'perorangan' | 'toko' | 'grosir' | 'instansi' | 'marketplace'
+export type TipePelanggan = 'customer' | 'mitra' | 'horeka' | 'perusahaan'
+
+/** Dari mana pelanggan ini didapat (beda dari kanal penjualan per-order). */
+export type SumberPelanggan = 'relasi' | 'sosmed' | 'shopee' | 'tiktok' | 'website' | 'custom'
 
 /** Dari mana order datang. 'canvassing' = sales bawa barang langsung. */
 export type KanalPenjualan = 'canvassing' | 'tokopedia' | 'shopee' | 'tiktok' | 'whatsapp' | 'lainnya'
@@ -133,7 +136,8 @@ export interface Pelanggan {
   whatsapp: string | null
   sosial_media: string | null
   tanggal_lahir: string | null
-  kanal_akuisisi: KanalPenjualan | null
+  sumber: SumberPelanggan | null
+  sumber_custom: string | null
   tag: string[]
   provinsi_kode: string | null
   kabupaten_kode: string | null

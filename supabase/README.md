@@ -23,6 +23,7 @@ Cakupan file ini: **Fase 1** (jual sampai terima uang) dan **Fase 2**
 | `0009_seed_awal.sql` | Satuan, tier harga, gudang, kategori awal |
 | `0010_kas_bank.sql` | Akun kas/bank, saldo & kartu per akun -- **migrasi tambahan**, ditulis setelah 0001-0009 sudah dijalankan di database asli, jadi dirancang non-destruktif (backfill, bukan drop/replace) |
 | `0011_pelanggan_crm.sql` | Field persiapan CRM di `pelanggan` + 4 tabel wilayah administratif (Provinsi/Kab-Kota/Kecamatan/Kelurahan), data resmi Kemendagri -- **butuh langkah tambahan**: 3 import CSV terpisah dari SQL (kab/kota, kecamatan, kelurahan), lihat README.md |
+| `0012_pelanggan_tipe_sumber.sql` | Ganti total daftar `tipe_pelanggan` (Customer/Mitra/Horeka/Perusahaan, dari 5 nilai lama) + kolom `sumber` (ganti `kanal_akuisisi`) |
 
 Total 44 tabel + 14 view (di luar ~91.600 baris data referensi wilayah).
 Migrasi 0010 dan seterusnya adalah tambahan
@@ -342,6 +343,32 @@ digabung jadi satu migrasi karena diminta di sesi yang sama:
 Kolom `pelanggan.kota` (teks bebas, dari skema awal) **dibiarkan**
 tidak dipakai lagi oleh form — digantikan `kabupaten_kode` yang
 terstruktur — tapi tidak di-drop, pola yang sama dengan `bank_nama`.
+
+**Tipe & Sumber pelanggan diganti total (0012).** `tipe_pelanggan`
+sebelumnya 5 nilai (perorangan/toko/grosir/instansi/marketplace),
+diganti jadi 4 (**Customer/Mitra/Horeka/Perusahaan**) — "Horeka"
+(Hotel/Restoran/Kafe) ditambahkan karena Ayyubi bisnis F&B, segmen
+B2B ini penting dan tidak tertangkap kategori lama. Postgres tidak
+bisa menghapus nilai enum yang sudah dipakai (cuma bisa nambah), jadi
+0012 bikin tipe enum baru lalu pindahkan data (peta nilai lama →
+baru: perorangan/marketplace→customer, toko/grosir→mitra,
+instansi→perusahaan), baru buang tipe lama — dibungkus DO block yang
+mengecek dulu apakah enum lama masih ada, supaya migrasi ini aman
+dijalankan berkali-kali tanpa salah petakan data yang sudah baru.
+
+Kolom `kanal_akuisisi` (baru ditambah di 0011) **langsung di-drop**
+(bukan dibiarkan) digantikan `sumber` (Relasi/Sosmed/Shopee/Tiktok/
+Website/**Custom** + `sumber_custom` teks bebas kalau pilih Custom) —
+konsepnya sama tapi daftar nilainya beda, dan kolom lama itu belum
+sempat terpakai data sungguhan sama sekali (fiturnya baru saja jadi),
+jadi drop langsung lebih bersih ketimbang menumpuk kolom mati. Ini
+beda dari pola "jangan pernah drop" di kolom lain (`bank_nama`,
+`kota`) yang sudah berpotensi ada datanya.
+
+4 akun agregat marketplace dari seed 0009 (SHOPEE/TOKPED/TIKTOK/
+WA-UMUM) ditata ulang: `tipe` jadi `customer`, `sumber` diisi sesuai
+platform (Tokopedia & WhatsApp lewat `sumber = 'custom'` karena tidak
+ada di daftar baku Sumber).
 
 ---
 
