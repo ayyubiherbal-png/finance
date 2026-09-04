@@ -30,7 +30,10 @@ export type JenisMutasiStok =
 export type StatusBayar = 'belum' | 'sebagian' | 'lunas'
 export type MetodeBayar = 'tunai' | 'transfer' | 'qris' | 'giro' | 'kartu'
 export type TerminBayar = 'cod' | 'tempo'
-export type TipePelanggan = 'perorangan' | 'toko' | 'grosir' | 'instansi'
+export type TipePelanggan = 'perorangan' | 'toko' | 'grosir' | 'instansi' | 'marketplace'
+
+/** Dari mana order datang. 'canvassing' = sales bawa barang langsung. */
+export type KanalPenjualan = 'canvassing' | 'tokopedia' | 'shopee' | 'tiktok' | 'whatsapp' | 'lainnya'
 
 export interface Profil {
   id: string
@@ -157,12 +160,14 @@ export interface SalesOrder extends TotalDokumen {
   nomor: string
   tanggal: string
   pelanggan_id: string
+  kanal: KanalPenjualan
   sales_id: string | null
   gudang_id: string
   tier_harga_id: string | null
   termin: TerminBayar
   termin_hari: number
   status: StatusDokumen
+  nama_penerima: string | null
   alamat_kirim: string | null
   catatan: string | null
 }
@@ -191,6 +196,7 @@ export interface FakturPenjualan extends TotalDokumen {
   tanggal: string
   jatuh_tempo: string
   pelanggan_id: string
+  kanal: KanalPenjualan
   so_id: string | null
   sales_id: string | null
   status: StatusDokumen

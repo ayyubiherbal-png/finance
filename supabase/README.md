@@ -250,6 +250,34 @@ Kalau bisnisnya memperbolehkan jual-dulu-kirim-belakangan, longgarkan di
 **Limit kredit.** Dicek saat Sales Order disetujui, hanya untuk pelanggan
 bertermin `tempo` dengan `limit_kredit > 0`.
 
+**Non-PKP, tidak ada PPN.** Ayyubi Finance belum PKP, jadi kolom
+`ppn_persen`/`ppn_nilai` tetap ada di skema (supaya tidak perlu migrasi
+ulang kalau suatu saat jadi PKP) tapi **selalu 0** dan **disembunyikan
+dari form**. `dpp` dan `total` di kode aplikasi jadi identik.
+
+**Kanal penjualan (`kanal_penjualan`).** Ayyubi jualan lewat dua pola
+sekaligus: canvassing (sales bawa barang, transaksi tuntas di tempat)
+dan online (Tokopedia/Shopee/TikTok/WhatsApp). Kolom `kanal` di
+`sales_order` dan `faktur_penjualan` menandai asal order, dipakai untuk
+laporan omzet per kanal.
+
+Pesanan online **tidak** membuat satu baris `pelanggan` per pembeli —
+platform sudah memegang data itu, dan volumenya bisa ratusan per bulan.
+Sebagai gantinya, seed (`0009`) menyediakan empat akun pelanggan
+agregat (`SHOPEE`, `TOKPED`, `TIKTOK`, `WA-UMUM`); order online
+menunjuk ke akun agregat kanalnya, dan nama penerima paket yang
+sesungguhnya disimpan di `sales_order.nama_penerima` (bukan relasi ke
+tabel `pelanggan`). Kalau ada pembeli WA yang jadi langganan tetap dan
+perlu dilacak/ditagih sendiri, buat baris `pelanggan` khusus untuknya —
+akun `WA-UMUM` hanya untuk transaksi lepas.
+
+Yang **tidak** termasuk di sini: sinkronisasi otomatis via API
+marketplace (ambil order langsung dari Shopee/Tokopedia/TikTok). Order
+online tetap diinput manual oleh staf ke Sales Order. Integrasi API
+per platform adalah pekerjaan terpisah yang jauh lebih besar (autentikasi
+per platform, webhook, pemetaan SKU, throttling) — taruh di backlog
+fase lanjut kalau volumenya sudah menjustifikasi.
+
 **Nomor dokumen.** Format `PREFIX/YYYY/MM/00001`, dihasilkan
 `generate_nomor()` dan direset tiap bulan. Kirim `nomor` sebagai `null`
 dari aplikasi — trigger yang mengisi.

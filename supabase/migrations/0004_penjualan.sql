@@ -10,6 +10,7 @@ create table sales_order (
   nomor          text not null unique,
   tanggal        date not null default current_date,
   pelanggan_id   uuid not null references pelanggan(id) on delete restrict,
+  kanal          kanal_penjualan not null default 'canvassing',
   sales_id       uuid references profil(id) on delete set null,
   gudang_id      uuid not null references gudang(id) on delete restrict,
   tier_harga_id  uuid references tier_harga(id),
@@ -23,6 +24,7 @@ create table sales_order (
   ppn_persen     numeric(5,2)  not null default 0 check (ppn_persen >= 0),
   ppn_nilai      numeric(18,2) not null default 0,
   total          numeric(18,2) not null default 0,
+  nama_penerima  text,     -- label penerima paket, dipakai kalau beda dari nama akun pelanggan (mis. pesanan marketplace)
   alamat_kirim   text,
   catatan        text,
   dibuat_oleh    uuid references profil(id) on delete set null,
@@ -104,6 +106,7 @@ create table faktur_penjualan (
   tanggal       date not null default current_date,
   jatuh_tempo   date not null default current_date,
   pelanggan_id  uuid not null references pelanggan(id) on delete restrict,
+  kanal         kanal_penjualan not null default 'canvassing',
   so_id         uuid references sales_order(id) on delete set null,
   sales_id      uuid references profil(id) on delete set null,
   status        status_dokumen not null default 'draf',

@@ -28,6 +28,26 @@ insert into kategori_produk (kode, nama) values
 on conflict (kode) do nothing;
 
 -- ---------------------------------------------------------------------
+-- Akun pelanggan agregat per kanal online.
+--
+-- Pesanan dari marketplace/WA umumnya pembeli satu kali beli (anonim,
+-- datanya sudah dipegang platform) -- tidak realistis membuatkan satu
+-- baris `pelanggan` per pembeli. Jadi satu order online dicatat dengan
+-- pelanggan_id menunjuk ke akun agregat channel-nya di bawah, dan nama
+-- penerima paket sesungguhnya disimpan di kolom sales_order.nama_penerima.
+--
+-- Kalau ada pembeli WA yang jadi langganan tetap dan perlu ditagih/
+-- dilacak sendiri, buat baris `pelanggan` khusus untuk dia -- akun
+-- agregat 'WA-UMUM' ini hanya untuk transaksi lepas/COD sekali beli.
+-- ---------------------------------------------------------------------
+insert into pelanggan (kode, nama, tipe, termin, termin_hari, limit_kredit) values
+  ('SHOPEE',  'Marketplace - Shopee',    'marketplace', 'cod', 0, 0),
+  ('TOKPED',  'Marketplace - Tokopedia', 'marketplace', 'cod', 0, 0),
+  ('TIKTOK',  'Marketplace - TikTok Shop','marketplace', 'cod', 0, 0),
+  ('WA-UMUM', 'WhatsApp - Pembeli Umum', 'marketplace', 'cod', 0, 0)
+on conflict (kode) do nothing;
+
+-- ---------------------------------------------------------------------
 -- Langkah manual setelah user pertama mendaftar lewat Supabase Auth:
 --
 --   update profil set peran = 'owner' where id = '<uuid-user-anda>';

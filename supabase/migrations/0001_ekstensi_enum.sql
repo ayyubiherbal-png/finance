@@ -35,7 +35,18 @@ create type metode_bayar as enum ('tunai','transfer','qris','giro','kartu');
 
 create type termin_bayar as enum ('cod','tempo');
 
-create type tipe_pelanggan as enum ('perorangan','toko','grosir','instansi');
+create type tipe_pelanggan as enum ('perorangan','toko','grosir','instansi','marketplace');
+
+-- Kanal penjualan: dari mana order ini datang. Dipakai untuk laporan
+-- "omzet per kanal" dan membedakan pola kerja canvassing vs online.
+create type kanal_penjualan as enum (
+  'canvassing',   -- sales bawa barang langsung, transaksi tuntas di tempat
+  'tokopedia',
+  'shopee',
+  'tiktok',
+  'whatsapp',
+  'lainnya'
+);
 
 -- ---------- updated_at otomatis ----------
 create or replace function set_updated_at()
