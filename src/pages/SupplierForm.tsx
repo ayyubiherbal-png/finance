@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { toast } from '@/components/Toast'
 import { Button, Card, CardContent, Input, Label, PesanError, Spinner } from '@/components/ui'
 import type { Supplier } from '@/types/db'
 
@@ -99,10 +100,12 @@ export function SupplierForm() {
       if (isBaru) {
         const { data, error } = await supabase.from('supplier').insert(payload).select('id').single()
         if (error) throw error
+        toast('Supplier tersimpan.')
         navigate(`/supplier/${data.id}`, { replace: true })
       } else {
         const { error } = await supabase.from('supplier').update(payload).eq('id', id)
         if (error) throw error
+        toast('Supplier tersimpan.')
         queryClient.invalidateQueries({ queryKey: ['supplier-detail', id] })
         queryClient.invalidateQueries({ queryKey: ['supplier'] })
         navigate('/supplier')

@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useGudangAktif, useProdukSatuan, cariProduk, cariSupplier } from '@/lib/queries'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
+import { toast } from '@/components/Toast'
 import {
   Badge,
   Button,
@@ -102,6 +103,7 @@ function FormBaru() {
         .select('id')
         .single()
       if (error) throw error
+      toast('Draf retur tersimpan.')
       navigate(`/retur-pembelian/${data.id}`, { replace: true })
     } catch (e) {
       setError(e)
@@ -301,6 +303,7 @@ function FormEdit({ returId }: { returId: string }) {
         harga_satuan: addRow.harga_satuan,
       })
       if (error) throw error
+      toast('Item ditambahkan.')
       setAddRow(BARIS_KOSONG)
       invalidateSemua()
     } catch (e) {
@@ -313,7 +316,10 @@ function FormEdit({ returId }: { returId: string }) {
   async function hapusItem(itemId: string) {
     if (!window.confirm('Hapus baris ini?')) return
     const { error } = await supabase.from('retur_pembelian_item').delete().eq('id', itemId)
-    if (!error) invalidateSemua()
+    if (!error) {
+      toast('Item dihapus.')
+      invalidateSemua()
+    }
   }
 
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
@@ -323,6 +329,7 @@ function FormEdit({ returId }: { returId: string }) {
     try {
       const { error } = await supabase.from('retur_pembelian').update({ status: statusBaru }).eq('id', returId)
       if (error) throw error
+      toast(statusBaru === 'selesai' ? 'Retur diposting.' : 'Retur dibatalkan.')
       invalidateSemua()
     } catch (e) {
       setError(e)

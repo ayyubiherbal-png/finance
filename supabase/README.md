@@ -382,6 +382,36 @@ jadi pesan bahasa Indonesia yang jelas ("ID ... sudah dipakai
 pelanggan lain") lewat `ramahkanErrorSimpan()`, bukan pesan teknis
 Postgres apa adanya.
 
+**Notifikasi "Tersimpan" (toast) ditambah di SEMUA form (2026-09-04,
+tanpa migrasi -- ini perubahan frontend murni).** User laporan harus
+klik "Simpan" 2x. Ternyata bukan bug klik -- klik pertama sudah
+berhasil, tapi aplikasi ini dari awal TIDAK PERNAH punya notifikasi
+sukses (tidak ada toast/library sejenis di `package.json`), jadi user
+tidak yakin sudah tersimpan dan klik lagi. Paling kentara di alur buat
+pelanggan/produk/dll baru: begitu sukses, halaman diam-diam pindah
+dari mode "buat baru" ke mode "edit" (URL & judul berganti halus,
+gampang tidak disadari) -- klik kedua sebenarnya cuma UPDATE ulang
+data yang sama.
+
+Dibuat `src/components/Toast.tsx` -- modul singleton kecil (bukan
+context/provider, supaya bisa dipanggil `toast('pesan')` dari mana
+saja tanpa hook) dengan array module-level + Set of subscriber,
+di-render sekali lewat `<Toaster />` yang dipasang di `App.tsx` (luar
+`<Rute />`, jadi tidak remount tiap ganti halaman). Toast otomatis
+hilang 3 detik, ada tombol tutup manual. TIDAK pakai library eksternal
+(tidak ada di `package.json` sebelumnya, dan tidak perlu -- kasusnya
+simpel: satu jenis notifikasi sukses/error, auto-dismiss).
+
+Dipasang di titik sukses SEMUA form transaksi & master data (Pelanggan,
+Produk -- termasuk tambah/hapus satuan & harga, Supplier, Akun Kas &
+Bank, Sales/Purchase Order -- termasuk tambah/hapus item & ubah status,
+Surat Jalan, Faktur Penjualan/Pembelian, Penerimaan Kas/Barang,
+Pembayaran Supplier, Retur Penjualan/Pembelian, Penyesuaian Stok) --
+setiap `insert`/`update` yang sebelumnya cuma diam-diam `navigate()`
+atau `invalidateQueries()` sekarang juga `toast('pesan sesuai aksi')`
+dulu. Toggle checkbox "Aktif" SENGAJA tidak diberi toast -- checkbox-nya
+sendiri sudah kelihatan berubah, tidak ambigu seperti tombol Simpan.
+
 **Kontak & Telepon disembunyikan kecuali Horeka/Perusahaan, dropdown
 Wilayah jadi combobox ketik-cari (2026-09-04, tanpa migrasi baru).**
 Field "Kontak" (nama PIC) dan "Telepon" cuma tampil kalau Tipe = Horeka

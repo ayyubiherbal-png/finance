@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { cariPelanggan, useAkunKasBankAktif } from '@/lib/queries'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
+import { toast } from '@/components/Toast'
 import {
   Badge,
   Button,
@@ -177,6 +178,7 @@ function FormBaru() {
       )
       if (errAlokasi) throw errAlokasi
 
+      toast('Penerimaan kas tersimpan.')
       navigate(`/penerimaan-kas/${kas.id}`, { replace: true })
     } catch (e) {
       setError(e)
@@ -397,6 +399,7 @@ function FormDetail({ kasId }: { kasId: string }) {
     try {
       const { error } = await supabase.from('penerimaan_kas').update({ status: 'dibatalkan' }).eq('id', kasId)
       if (error) throw error
+      toast('Penerimaan kas dibatalkan.')
       queryClient.invalidateQueries({ queryKey: ['penerimaan-kas-detail', kasId] })
       queryClient.invalidateQueries({ queryKey: ['penerimaan-kas'] })
       for (const a of alokasi ?? []) {

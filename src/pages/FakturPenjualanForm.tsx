@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { cariPelanggan } from '@/lib/queries'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
+import { toast } from '@/components/Toast'
 import {
   Badge,
   Button,
@@ -197,6 +198,7 @@ function FormBaru() {
         .eq('id', faktur.id)
       if (errStatus) throw errStatus
 
+      toast('Faktur tersimpan.')
       navigate(`/faktur-penjualan/${faktur.id}`, { replace: true })
     } catch (e) {
       setError(e)
@@ -371,6 +373,7 @@ function FormDetail({ fakturId }: { fakturId: string }) {
     try {
       const { error } = await supabase.from('faktur_penjualan').update({ status: 'dibatalkan' }).eq('id', fakturId)
       if (error) throw error
+      toast('Faktur dibatalkan.')
       queryClient.invalidateQueries({ queryKey: ['faktur-detail', fakturId] })
       queryClient.invalidateQueries({ queryKey: ['faktur-penjualan'] })
     } catch (e) {

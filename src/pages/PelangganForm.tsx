@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useWilayahProvinsi, useWilayahKabupatenKota, useWilayahKecamatan, useWilayahKelurahan } from '@/lib/queries'
 import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
+import { toast } from '@/components/Toast'
 import type { Pelanggan, SumberPelanggan, TipePelanggan } from '@/types/db'
 
 interface FormState {
@@ -228,10 +229,12 @@ export function PelangganForm() {
       if (isBaru) {
         const { data, error } = await supabase.from('pelanggan').insert(payload).select('id').single()
         if (error) throw error
+        toast('Pelanggan tersimpan.')
         navigate(`/pelanggan/${data.id}`, { replace: true })
       } else {
         const { error } = await supabase.from('pelanggan').update(payload).eq('id', id)
         if (error) throw error
+        toast('Pelanggan tersimpan.')
         queryClient.invalidateQueries({ queryKey: ['pelanggan-detail', id] })
         queryClient.invalidateQueries({ queryKey: ['pelanggan'] })
         navigate('/pelanggan')

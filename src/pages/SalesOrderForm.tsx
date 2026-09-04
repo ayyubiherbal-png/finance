@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useGudangAktif, useProdukSatuan, useTierHarga, ambilHargaJual, cariProduk, cariPelanggan } from '@/lib/queries'
 import { rupiah, tanggalISO, tanggal as fmtTanggal } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
+import { toast } from '@/components/Toast'
 import {
   Badge,
   Button,
@@ -217,6 +218,7 @@ export function SalesOrderForm() {
         .select('id')
         .single()
       if (error) throw error
+      toast('Draf Sales Order tersimpan.')
       navigate(`/sales-order/${data.id}`, { replace: true })
     } catch (e) {
       setErrorSimpan(e)
@@ -524,6 +526,7 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
         urutan: items?.length ?? 0,
       })
       if (error) throw error
+      toast('Item ditambahkan.')
       setAddRow(BARIS_KOSONG)
       invalidateSemua()
     } catch (e) {
@@ -536,7 +539,10 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
   async function hapusItem(itemId: string) {
     if (!window.confirm('Hapus baris ini dari Sales Order?')) return
     const { error } = await supabase.from('sales_order_item').delete().eq('id', itemId)
-    if (!error) invalidateSemua()
+    if (!error) {
+      toast('Item dihapus.')
+      invalidateSemua()
+    }
   }
 
   async function ubahStatus(statusBaru: 'disetujui' | 'dibatalkan') {
@@ -546,6 +552,7 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
     try {
       const { error } = await supabase.from('sales_order').update({ status: statusBaru }).eq('id', soId)
       if (error) throw error
+      toast(statusBaru === 'disetujui' ? 'Sales Order disetujui.' : 'Sales Order dibatalkan.')
       invalidateSemua()
     } catch (e) {
       setErrorStatus(e)

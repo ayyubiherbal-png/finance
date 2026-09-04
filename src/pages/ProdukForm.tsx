@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { toast } from '@/components/Toast'
 import { useTierHarga } from '@/lib/queries'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import {
@@ -159,6 +160,7 @@ function FormBaru() {
       })
       if (errSatuan) throw errSatuan
 
+      toast('Produk tersimpan.')
       navigate(`/produk/${produk.id}`, { replace: true })
     } catch (e) {
       setError(e)
@@ -397,6 +399,7 @@ function FormEdit({ produkId }: { produkId: string }) {
         })
         .eq('id', produkId)
       if (error) throw error
+      toast('Produk tersimpan.')
       invalidateSemua()
     } catch (e) {
       setError(e)
@@ -428,6 +431,7 @@ function FormEdit({ produkId }: { produkId: string }) {
     })
     if (error) setError(error)
     else {
+      toast('Satuan ditambahkan.')
       setSatuanBaru({ satuan_id: '', konversi: 1 })
       invalidateSemua()
     }
@@ -440,7 +444,10 @@ function FormEdit({ produkId }: { produkId: string }) {
     if (!window.confirm('Hapus satuan ini?')) return
     const { error } = await supabase.from('produk_satuan').delete().eq('id', baris.id)
     if (error) setError(error)
-    else invalidateSemua()
+    else {
+      toast('Satuan dihapus.')
+      invalidateSemua()
+    }
   }
 
   // ---------- Harga jual ----------
@@ -467,6 +474,7 @@ function FormEdit({ produkId }: { produkId: string }) {
     })
     if (error) setError(error)
     else {
+      toast('Harga ditambahkan.')
       setHargaBaru({ tier_harga_id: '', satuan_id: '', min_qty: 1, harga: 0, berlaku_mulai: tanggalISO() })
       invalidateSemua()
     }
@@ -475,7 +483,10 @@ function FormEdit({ produkId }: { produkId: string }) {
     if (!window.confirm('Hapus aturan harga ini?')) return
     const { error } = await supabase.from('produk_harga').delete().eq('id', id)
     if (error) setError(error)
-    else invalidateSemua()
+    else {
+      toast('Harga dihapus.')
+      invalidateSemua()
+    }
   }
 
   if (isLoading || !form || !produk) {

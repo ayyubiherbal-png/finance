@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { Layout } from '@/components/Layout'
 import { Spinner } from '@/components/ui'
+import { Toaster } from '@/components/Toast'
 import { Login } from '@/pages/Login'
 import { Dashboard } from '@/pages/Dashboard'
 import { Produk } from '@/pages/Produk'
@@ -118,6 +119,7 @@ export default function App() {
         <AuthProvider>
           <Rute />
         </AuthProvider>
+        <Toaster />
       </BrowserRouter>
     </QueryClientProvider>
   )

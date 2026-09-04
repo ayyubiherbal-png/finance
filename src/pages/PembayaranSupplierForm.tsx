@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { cariSupplier, useAkunKasBankAktif } from '@/lib/queries'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
+import { toast } from '@/components/Toast'
 import {
   Badge,
   Button,
@@ -176,6 +177,7 @@ function FormBaru() {
       )
       if (errAlokasi) throw errAlokasi
 
+      toast('Pembayaran tersimpan.')
       navigate(`/pembayaran-supplier/${bayar.id}`, { replace: true })
     } catch (e) {
       setError(e)
@@ -396,6 +398,7 @@ function FormDetail({ bayarId }: { bayarId: string }) {
     try {
       const { error } = await supabase.from('pembayaran_supplier').update({ status: 'dibatalkan' }).eq('id', bayarId)
       if (error) throw error
+      toast('Pembayaran dibatalkan.')
       queryClient.invalidateQueries({ queryKey: ['pembayaran-supplier-detail', bayarId] })
       queryClient.invalidateQueries({ queryKey: ['pembayaran-supplier'] })
       for (const a of alokasi ?? []) {

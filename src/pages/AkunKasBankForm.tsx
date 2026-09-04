@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { toast } from '@/components/Toast'
 import { rupiah } from '@/lib/format'
 import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
 import type { AkunKasBank, JenisAkunKas, VSaldoKasBank } from '@/types/db'
@@ -106,10 +107,12 @@ export function AkunKasBankForm() {
       if (isBaru) {
         const { data, error } = await supabase.from('akun_kas_bank').insert(payload).select('id').single()
         if (error) throw error
+        toast('Akun tersimpan.')
         navigate(`/kas-bank/${data.id}`, { replace: true })
       } else {
         const { error } = await supabase.from('akun_kas_bank').update(payload).eq('id', id)
         if (error) throw error
+        toast('Akun tersimpan.')
         queryClient.invalidateQueries({ queryKey: ['akun-kas-bank-detail', id] })
         queryClient.invalidateQueries({ queryKey: ['akun-kas-bank-saldo', id] })
         queryClient.invalidateQueries({ queryKey: ['akun-kas-bank'] })

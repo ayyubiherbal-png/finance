@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useGudangAktif, useProdukSatuan, cariProduk } from '@/lib/queries'
 import { angka, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
+import { toast } from '@/components/Toast'
 import {
   Badge,
   Button,
@@ -82,6 +83,7 @@ function FormBaru() {
         .select('id')
         .single()
       if (error) throw error
+      toast('Draf tersimpan.')
       navigate(`/penyesuaian-stok/${data.id}`, { replace: true })
     } catch (e) {
       setError(e)
@@ -282,6 +284,7 @@ function FormEdit({ adjId }: { adjId: string }) {
         hpp_satuan: addRow.qty > 0 ? addRow.hpp_satuan || null : null,
       })
       if (error) throw error
+      toast('Item ditambahkan.')
       setAddRow(BARIS_KOSONG)
       invalidateSemua()
     } catch (e) {
@@ -294,7 +297,10 @@ function FormEdit({ adjId }: { adjId: string }) {
   async function hapusItem(itemId: string) {
     if (!window.confirm('Hapus baris ini?')) return
     const { error } = await supabase.from('penyesuaian_stok_item').delete().eq('id', itemId)
-    if (!error) invalidateSemua()
+    if (!error) {
+      toast('Item dihapus.')
+      invalidateSemua()
+    }
   }
 
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
@@ -304,6 +310,7 @@ function FormEdit({ adjId }: { adjId: string }) {
     try {
       const { error } = await supabase.from('penyesuaian_stok').update({ status: statusBaru }).eq('id', adjId)
       if (error) throw error
+      toast(statusBaru === 'selesai' ? 'Penyesuaian diposting.' : 'Penyesuaian dibatalkan.')
       invalidateSemua()
     } catch (e) {
       setError(e)

@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
+import { toast } from '@/components/Toast'
 import {
   Badge,
   Button,
@@ -201,6 +202,7 @@ function FormBaru({ poId }: { poId: string | null }) {
         if (errStatus) throw errStatus
       }
 
+      toast(langsungTerima ? 'Barang diterima.' : 'Draf Penerimaan Barang tersimpan.')
       navigate(`/penerimaan-barang/${pb.id}`, { replace: true })
     } catch (e) {
       setError(e)
@@ -406,6 +408,7 @@ function FormDetail({ pbId }: { pbId: string }) {
     try {
       const { error } = await supabase.from('penerimaan_barang').update({ status: statusBaru }).eq('id', pbId)
       if (error) throw error
+      toast(statusBaru === 'selesai' ? 'Penerimaan Barang diselesaikan.' : 'Penerimaan Barang dibatalkan.')
       queryClient.invalidateQueries({ queryKey: ['penerimaan-barang-detail', pbId] })
       queryClient.invalidateQueries({ queryKey: ['penerimaan-barang-item', pbId] })
       queryClient.invalidateQueries({ queryKey: ['penerimaan-barang'] })

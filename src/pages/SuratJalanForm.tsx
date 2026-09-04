@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
+import { toast } from '@/components/Toast'
 import {
   Badge,
   Button,
@@ -199,6 +200,7 @@ function FormBaru({ soId }: { soId: string | null }) {
         if (errStatus) throw errStatus
       }
 
+      toast(langsungKirim ? 'Surat Jalan terkirim.' : 'Draf Surat Jalan tersimpan.')
       navigate(`/surat-jalan/${sj.id}`, { replace: true })
     } catch (e) {
       setError(e)
@@ -389,6 +391,7 @@ function FormDetail({ sjId }: { sjId: string }) {
     try {
       const { error } = await supabase.from('surat_jalan').update({ status: statusBaru }).eq('id', sjId)
       if (error) throw error
+      toast(statusBaru === 'selesai' ? 'Surat Jalan diselesaikan.' : 'Surat Jalan dibatalkan.')
       queryClient.invalidateQueries({ queryKey: ['surat-jalan-detail', sjId] })
       queryClient.invalidateQueries({ queryKey: ['surat-jalan'] })
       if (sj?.so_id) queryClient.invalidateQueries({ queryKey: ['sales-order-detail', sj.so_id] })
