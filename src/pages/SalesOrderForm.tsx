@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { useGudangAktif, useProdukSatuan, useTierHarga, ambilHargaJual } from '@/lib/queries'
+import { useGudangAktif, useProdukSatuan, useTierHarga, ambilHargaJual, cariProduk, cariPelanggan } from '@/lib/queries'
 import { rupiah, tanggalISO, tanggal as fmtTanggal } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import {
@@ -104,20 +104,6 @@ const BARIS_KOSONG: BarisTambah = {
   qty: 1,
   harga_satuan: 0,
   diskon_persen: 0,
-}
-
-async function cariProduk(kueri: string): Promise<OpsiCombobox[]> {
-  let q = supabase.from('produk').select('id, kode, nama').eq('aktif', true).order('nama').limit(20)
-  if (kueri.trim()) q = q.or(`nama.ilike.%${kueri.trim()}%,kode.ilike.%${kueri.trim()}%`)
-  const { data } = await q
-  return (data ?? []).map((p) => ({ value: p.id, label: p.nama, sublabel: p.kode }))
-}
-
-async function cariPelanggan(kueri: string): Promise<OpsiCombobox[]> {
-  let q = supabase.from('pelanggan').select('id, kode, nama, tipe').eq('aktif', true).order('nama').limit(20)
-  if (kueri.trim()) q = q.or(`nama.ilike.%${kueri.trim()}%,kode.ilike.%${kueri.trim()}%`)
-  const { data } = await q
-  return (data ?? []).map((p) => ({ value: p.id, label: p.nama, sublabel: p.kode }))
 }
 
 export function SalesOrderForm() {
@@ -755,11 +741,11 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
             Setujui
           </Button>
         </div>
-      ) : so.status === 'disetujui' ? (
+      ) : so.status === 'disetujui' || so.status === 'sebagian' ? (
         <div className="flex justify-end">
-          <p className="text-sm text-muted-foreground">
-            Disetujui -- lanjutkan dengan membuat Surat Jalan untuk mengirim barangnya.
-          </p>
+          <Button asChild>
+            <Link to={`/surat-jalan/baru?so=${so.id}`}>Buat Surat Jalan</Link>
+          </Button>
         </div>
       ) : null}
     </div>

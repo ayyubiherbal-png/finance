@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import type { OpsiCombobox } from '@/components/Combobox'
 import type { Gudang, TierHarga, ProdukSatuan } from '@/types/db'
 
 /**
@@ -78,4 +79,20 @@ export async function ambilHargaJual(params: {
   })
   if (error) throw error
   return (data as number | null) ?? null
+}
+
+/* ---------- Pencarian untuk Combobox (produk & pelanggan) ---------- */
+
+export async function cariProduk(kueri: string): Promise<OpsiCombobox[]> {
+  let q = supabase.from('produk').select('id, kode, nama').eq('aktif', true).order('nama').limit(20)
+  if (kueri.trim()) q = q.or(`nama.ilike.%${kueri.trim()}%,kode.ilike.%${kueri.trim()}%`)
+  const { data } = await q
+  return (data ?? []).map((p) => ({ value: p.id, label: p.nama, sublabel: p.kode }))
+}
+
+export async function cariPelanggan(kueri: string): Promise<OpsiCombobox[]> {
+  let q = supabase.from('pelanggan').select('id, kode, nama').eq('aktif', true).order('nama').limit(20)
+  if (kueri.trim()) q = q.or(`nama.ilike.%${kueri.trim()}%,kode.ilike.%${kueri.trim()}%`)
+  const { data } = await q
+  return (data ?? []).map((p) => ({ value: p.id, label: p.nama, sublabel: p.kode }))
 }
