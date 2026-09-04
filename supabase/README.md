@@ -388,13 +388,24 @@ tidak bisa diisi lagi lewat form (selalu default COD/0) -- kolom
 Termin/Limit Kredit/Sisa Limit di daftar Pelanggan jadi percuma,
 semua baris tampil "COD"/"-". `v_limit_kredit` cuma dipakai di SATU
 tempat (`Pelanggan.tsx`), jadi aman diganti total lewat migrasi baru:
-`drop view v_limit_kredit`, ganti `v_pelanggan_ringkas` dengan kolom
-yang sesuai bentuk form sekarang -- `tipe`, `telepon`, `whatsapp`,
-`sumber`/`sumber_custom` -- plus `piutang_berjalan` (TETAP
-dipertahankan, ini angka riil yang masih berguna terlepas dari ada/
-tidaknya limit kredit). Kolom tabel di UI berubah dari
-ID/Nama/Termin/Limit Kredit/Piutang/Sisa Limit jadi
-ID/Nama/Tipe/Kontak (WhatsApp atau Telepon)/Sumber/Piutang.
+`drop view v_limit_kredit`, ganti `v_pelanggan_ringkas`.
+
+Isi kolomnya sengaja dibuat mengikuti PERSIS field yang ada di form
+Pelanggan (user: "cukup tampilkan semua yang tadi di input saja") --
+`tipe`, `kontak_nama`, `sales_nama` (join ke `profil`), `telepon`,
+`whatsapp`, `email`, `sumber`/`sumber_custom`, `tanggal_lahir`,
+`sosial_media`. Dua pengecualian sengaja:
+- **Piutang DIBUANG** -- user: "Master data tidak perlu ada piutang,
+  piutang di munculkan di tempat lain" -- itu data transaksi, sudah
+  ada tempatnya sendiri di halaman **Laporan Piutang**
+  (`v_piutang_aging`), tidak perlu diulang di master data.
+- **Alamat berjenjang digabung jadi satu kolom teks** (`alamat_lengkap`,
+  lewat `concat_ws` + join ke 4 tabel `wilayah_*`) -- bukan 4 kolom
+  wilayah terpisah seperti field-nya di form.
+
+Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
+`overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
+dipotong/disembunyikan.
 
 **Notifikasi "Tersimpan" (toast) ditambah di SEMUA form (2026-09-04,
 tanpa migrasi -- ini perubahan frontend murni).** User laporan harus

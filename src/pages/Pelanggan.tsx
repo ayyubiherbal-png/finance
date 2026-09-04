@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah } from '@/lib/format'
+import { tanggal as fmtTanggal } from '@/lib/format'
 import {
   Badge,
   Button,
@@ -73,7 +73,7 @@ export function Pelanggan() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Pelanggan</h1>
-          <p className="text-sm text-muted-foreground">Tipe, kontak, dan piutang berjalan</p>
+          <p className="text-sm text-muted-foreground">Data master -- piutang berjalan ada di Laporan Piutang</p>
         </div>
 
         <div className="flex flex-1 justify-end gap-2 sm:flex-none">
@@ -115,8 +115,14 @@ export function Pelanggan() {
                   <Th>Nama</Th>
                   <Th>Tipe</Th>
                   <Th>Kontak</Th>
+                  <Th>Sales</Th>
+                  <Th>Telepon</Th>
+                  <Th>WhatsApp</Th>
+                  <Th>Email</Th>
                   <Th>Sumber</Th>
-                  <Th className="text-right">Piutang</Th>
+                  <Th>Tanggal lahir</Th>
+                  <Th>Media sosial</Th>
+                  <Th>Alamat</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -131,9 +137,15 @@ export function Pelanggan() {
                     <Td>
                       <Badge variant="netral">{LABEL_TIPE[p.tipe]}</Badge>
                     </Td>
-                    <Td className="text-muted-foreground">{p.whatsapp || p.telepon || '-'}</Td>
+                    <Td className="text-muted-foreground">{p.kontak_nama || '-'}</Td>
+                    <Td className="text-muted-foreground">{p.sales_nama || '-'}</Td>
+                    <Td className="text-muted-foreground">{p.telepon || '-'}</Td>
+                    <Td className="text-muted-foreground">{p.whatsapp || '-'}</Td>
+                    <Td className="text-muted-foreground">{p.email || '-'}</Td>
                     <Td className="text-muted-foreground">{labelSumber(p)}</Td>
-                    <Td className="tabular text-right">{p.piutang_berjalan > 0 ? rupiah(p.piutang_berjalan) : '-'}</Td>
+                    <Td className="text-muted-foreground">{p.tanggal_lahir ? fmtTanggal(p.tanggal_lahir) : '-'}</Td>
+                    <Td className="text-muted-foreground">{p.sosial_media || '-'}</Td>
+                    <Td className="max-w-xs text-muted-foreground">{p.alamat_lengkap || '-'}</Td>
                   </Tr>
                 ))}
               </Tbody>

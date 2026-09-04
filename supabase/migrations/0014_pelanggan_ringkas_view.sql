@@ -8,21 +8,34 @@
 --  Pelanggan yang menampilkan kolom Termin/Limit Kredit/Sisa Limit
 --  cuma menampilkan "COD"/"-" di semua baris, tidak informatif lagi.
 --  `v_limit_kredit` cuma dipakai satu tempat (daftar Pelanggan), jadi
---  aman diganti total: dibuang, diganti `v_pelanggan_ringkas` yang
---  kolomnya sesuai bentuk form sekarang (Tipe, kontak, Sumber) plus
---  Piutang berjalan (tetap dipertahankan -- ini data riil yang masih
---  berguna terlepas dari limit kredit).
+--  aman diganti total: dibuang, diganti `v_pelanggan_ringkas` berisi
+--  SEMUA field yang ada di form Pelanggan (kecuali piutang -- itu data
+--  transaksi, bukan master data, sudah ada tempatnya sendiri di
+--  Laporan Piutang / v_piutang_aging). Alamat berjenjang (Provinsi/
+--  Kab-Kota/Kecamatan/Kelurahan/Alamat) digabung jadi satu kolom teks
+--  supaya daftar tidak perlu 4 kolom wilayah terpisah.
 -- =====================================================================
 
 drop view if exists v_limit_kredit;
+drop view if exists v_pelanggan_ringkas;
 
-create or replace view v_pelanggan_ringkas with (security_invoker = true) as
+create view v_pelanggan_ringkas with (security_invoker = true) as
 select
   pl.id as pelanggan_id, pl.kode, pl.nama, pl.tipe,
-  pl.telepon, pl.whatsapp, pl.sumber, pl.sumber_custom,
-  coalesce(pi.total_piutang, 0) as piutang_berjalan
+  pl.kontak_nama, sp.nama as sales_nama,
+  pl.telepon, pl.whatsapp, pl.email,
+  pl.sumber, pl.sumber_custom,
+  pl.tanggal_lahir, pl.sosial_media,
+  nullif(
+    concat_ws(', ', nullif(pl.alamat, ''), kel.nama, kec.nama, kab.nama, prov.nama),
+    ''
+  ) as alamat_lengkap
 from pelanggan pl
-left join v_piutang_aging pi on pi.pelanggan_id = pl.id
+left join profil sp                        on sp.id = pl.sales_id
+left join wilayah_kelurahan kel             on kel.kode = pl.kelurahan_kode
+left join wilayah_kecamatan kec             on kec.kode = pl.kecamatan_kode
+left join wilayah_kabupaten_kota kab        on kab.kode = pl.kabupaten_kode
+left join wilayah_provinsi prov             on prov.kode = pl.provinsi_kode
 where pl.aktif;
 
 grant select on v_pelanggan_ringkas to authenticated;

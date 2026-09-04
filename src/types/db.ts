@@ -324,11 +324,16 @@ export interface VPelangganRingkas {
   kode: string
   nama: string
   tipe: TipePelanggan
+  kontak_nama: string | null
+  sales_nama: string | null
   telepon: string | null
   whatsapp: string | null
+  email: string | null
   sumber: SumberPelanggan | null
   sumber_custom: string | null
-  piutang_berjalan: number
+  tanggal_lahir: string | null
+  sosial_media: string | null
+  alamat_lengkap: string | null
 }
 
 export interface VLabaProduk {

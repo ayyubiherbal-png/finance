@@ -26,12 +26,15 @@ supabase/migrations/0014_pelanggan_ringkas_view.sql
 
 0012 mengganti daftar Tipe Pelanggan (Customer/Mitra/Horeka/Perusahaan)
 dan menambah field Sumber. 0014 mengganti view `v_limit_kredit` (dipakai
-daftar Pelanggan) jadi `v_pelanggan_ringkas` -- kolom Termin/Limit
-Kredit/Sisa Limit sudah tidak informatif lagi (selalu "COD"/"-" karena
-form Pelanggan sudah tidak punya field itu), diganti Tipe/Kontak/Sumber.
-Keduanya aman dijalankan berkali-kali kalau perlu diulang. (Nomor 0013
-sempat dibuat lalu dibatalkan/dihapus lagi -- lompat dari 0012 ke 0014
-memang disengaja, bukan ada yang hilang.)
+daftar Pelanggan) jadi `v_pelanggan_ringkas` -- isinya sekarang persis
+field yang ada di form Pelanggan (Tipe, Kontak, Sales, Telepon, WhatsApp,
+Email, Sumber, Tanggal lahir, Media sosial, Alamat gabungan), TANPA
+Piutang (itu data transaksi, sudah ada tempatnya sendiri di Laporan
+Piutang) dan tanpa Termin/Limit Kredit/Sisa Limit (sudah tidak
+informatif lagi sejak field itu dihapus dari form). Keduanya aman
+dijalankan berkali-kali kalau perlu diulang. (Nomor 0013 sempat dibuat
+lalu dibatalkan/dihapus lagi -- lompat dari 0012 ke 0014 memang
+disengaja, bukan ada yang hilang.)
 
 > Percobaan pertama migrasi ini menulis ~91.000 baris data wilayah
 > sebagai SQL langsung dan **gagal ditempel** di SQL Editor ("Failed to
