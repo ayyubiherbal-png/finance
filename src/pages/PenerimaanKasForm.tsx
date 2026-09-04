@@ -265,14 +265,15 @@ function FormBaru() {
           {header.metode !== 'tunai' ? (
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label>Bank</Label>
+                <Label>Bank (opsional)</Label>
                 <Input
+                  placeholder="mis. BCA a.n. Ayyubi -- kosongkan kalau tidak ada"
                   value={header.bank_nama}
                   onChange={(e) => setHeader((h) => ({ ...h, bank_nama: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>No. referensi</Label>
+                <Label>No. referensi (opsional)</Label>
                 <Input
                   placeholder="No. transaksi / no. giro"
                   value={header.nomor_referensi}
