@@ -70,6 +70,19 @@ const LABEL_SUMBER: Record<SumberPelanggan, string> = {
   custom: 'Custom...',
 }
 
+// ID (kode) dan telepon dijaga unik di database (constraint, lihat
+// 0002 & 0013). Kalau kena, pesan Postgres-nya teknis -- ganti jadi
+// bahasa yang jelas untuk user.
+function ramahkanErrorSimpan(e: unknown, kode: string): unknown {
+  const err = e as { code?: string; message?: string; details?: string } | null
+  if (err?.code === '23505') {
+    const teks = `${err.message ?? ''} ${err.details ?? ''}`.toLowerCase()
+    if (teks.includes('telepon')) return new Error('Nomor HP ini sudah dipakai pelanggan lain.')
+    if (teks.includes('kode')) return new Error(`ID "${kode}" sudah dipakai pelanggan lain. Pakai ID yang berbeda.`)
+  }
+  return e
+}
+
 function useDaftarSales() {
   return useQuery({
     queryKey: ['profil-sales'],
@@ -174,7 +187,7 @@ export function PelangganForm() {
       tipe: form.tipe,
       sales_id: form.sales_id || null,
       kontak_nama: form.kontak_nama || null,
-      telepon: form.telepon || null,
+      telepon: form.telepon.trim() || null,
       whatsapp: form.whatsapp || null,
       email: form.email || null,
       provinsi_kode: form.provinsi_kode || null,
@@ -202,7 +215,7 @@ export function PelangganForm() {
         navigate('/pelanggan')
       }
     } catch (e) {
-      setError(e)
+      setError(ramahkanErrorSimpan(e, payload.kode))
     } finally {
       setMenyimpan(false)
     }
