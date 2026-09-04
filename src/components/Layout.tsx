@@ -88,7 +88,7 @@ export function Layout() {
     !item.peran || (profil?.peran ? item.peran.includes(profil.peran) : false)
 
   return (
-    <div className="flex min-h-screen bg-muted/30">
+    <div className="flex h-screen overflow-hidden bg-muted/30">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-card md:flex">
         <div className="flex h-14 items-center gap-2 border-b border-border px-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
@@ -134,9 +134,14 @@ export function Layout() {
         </nav>
 
         <div className="border-t border-border p-3">
-          <div className="mb-2 px-2">
-            <p className="truncate text-sm font-medium">{profil?.nama ?? '...'}</p>
-            <p className="text-xs capitalize text-muted-foreground">{profil?.peran ?? ''}</p>
+          <div className="mb-2 flex items-center gap-2.5 px-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+              {(profil?.nama ?? '?').slice(0, 1).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{profil?.nama ?? '...'}</p>
+              <p className="text-xs capitalize text-muted-foreground">{profil?.peran ?? ''}</p>
+            </div>
           </div>
           <Button variant="ghost" size="sm" className="w-full justify-start" onClick={keluar}>
             <LogOut className="h-4 w-4" />
@@ -145,7 +150,7 @@ export function Layout() {
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1">
+      <main className="min-w-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl p-4 md:p-6">
           <Outlet />
         </div>
