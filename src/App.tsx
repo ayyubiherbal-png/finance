@@ -7,6 +7,8 @@ import { Login } from '@/pages/Login'
 import { Dashboard } from '@/pages/Dashboard'
 import { Produk } from '@/pages/Produk'
 import { Pelanggan } from '@/pages/Pelanggan'
+import { SalesOrder } from '@/pages/SalesOrder'
+import { SalesOrderForm } from '@/pages/SalesOrderForm'
 import { SegeraHadir } from '@/pages/SegeraHadir'
 
 const queryClient = new QueryClient({
@@ -39,8 +41,10 @@ function Rute() {
         <Route path="produk" element={<Produk />} />
         <Route path="pelanggan" element={<Pelanggan />} />
 
+        <Route path="sales-order" element={<SalesOrder />} />
+        <Route path="sales-order/:id" element={<SalesOrderForm />} />
+
         {/* Fase 1 & 2 — skema siap, layar menyusul */}
-        <Route path="sales-order" element={<SegeraHadir judul="Sales Order" />} />
         <Route path="surat-jalan" element={<SegeraHadir judul="Surat Jalan" />} />
         <Route path="faktur-penjualan" element={<SegeraHadir judul="Faktur Penjualan" />} />
         <Route path="penerimaan-kas" element={<SegeraHadir judul="Penerimaan Kas" />} />
