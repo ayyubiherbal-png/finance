@@ -35,6 +35,8 @@ export type TipePelanggan = 'perorangan' | 'toko' | 'grosir' | 'instansi' | 'mar
 /** Dari mana order datang. 'canvassing' = sales bawa barang langsung. */
 export type KanalPenjualan = 'canvassing' | 'tokopedia' | 'shopee' | 'tiktok' | 'whatsapp' | 'lainnya'
 
+export type JenisAkunKas = 'kas' | 'bank'
+
 export interface Profil {
   id: string
   nama: string
@@ -141,6 +143,19 @@ export interface Supplier {
   kota: string | null
   npwp: string | null
   termin_hari: number
+  aktif: boolean
+  catatan: string | null
+}
+
+export interface AkunKasBank {
+  id: string
+  kode: string
+  nama: string
+  jenis: JenisAkunKas
+  bank_nama: string | null
+  nomor_rekening: string | null
+  atas_nama: string | null
+  saldo_awal: number
   aktif: boolean
   catatan: string | null
 }
@@ -305,4 +320,31 @@ export interface VPenjualanHarian {
   jumlah_faktur: number
   omzet: number
   laba_kotor: number
+}
+
+export interface VSaldoKasBank {
+  akun_id: string
+  kode: string
+  nama: string
+  jenis: JenisAkunKas
+  bank_nama: string | null
+  nomor_rekening: string | null
+  atas_nama: string | null
+  aktif: boolean
+  saldo_awal: number
+  saldo: number
+}
+
+export interface VKartuKasBank {
+  ref_id: string
+  jenis: 'penerimaan_kas' | 'pembayaran_supplier'
+  tanggal: string
+  akun_id: string
+  kode_akun: string
+  nama_akun: string
+  ref_nomor: string
+  masuk: number
+  keluar: number
+  catatan: string | null
+  saldo: number
 }

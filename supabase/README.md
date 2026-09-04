@@ -21,8 +21,11 @@ Cakupan file ini: **Fase 1** (jual sampai terima uang) dan **Fase 2**
 | `0007_view_laporan.sql` | Stok, kartu stok, aging piutang/hutang, laba kotor |
 | `0008_rls.sql` | Row Level Security per peran |
 | `0009_seed_awal.sql` | Satuan, tier harga, gudang, kategori awal |
+| `0010_kas_bank.sql` | Akun kas/bank, saldo & kartu per akun -- **migrasi tambahan**, ditulis setelah 0001-0009 sudah dijalankan di database asli, jadi dirancang non-destruktif (backfill, bukan drop/replace) |
 
-Total 39 tabel + 12 view.
+Total 40 tabel + 14 view. Migrasi 0010 dan seterusnya adalah tambahan
+inkremental di atas skema Fase 1 & 2 -- selalu jalankan berurutan sesuai
+nomor, jangan lompat.
 
 ---
 
@@ -281,6 +284,22 @@ fase lanjut kalau volumenya sudah menjustifikasi.
 **Nomor dokumen.** Format `PREFIX/YYYY/MM/00001`, dihasilkan
 `generate_nomor()` dan direset tiap bulan. Kirim `nomor` sebagai `null`
 dari aplikasi — trigger yang mengisi.
+
+**Kas & Bank (`akun_kas_bank`, ditambah lewat 0010).** Sebelum ini,
+`penerimaan_kas`/`pembayaran_supplier` cuma punya kolom teks bebas
+`bank_nama` — uangnya tidak benar-benar tertaut ke rekening/kas manapun,
+tidak ada cara melihat saldo per akun. Sekarang setiap transaksi WAJIB
+menunjuk `akun_id`. Saldo per akun dihitung **live lewat view**
+(`v_saldo_kas_bank` = `saldo_awal` + semua penerimaan − semua
+pembayaran berstatus bukan `dibatalkan`/`ditolak`), bukan kolom saldo
+tersimpan yang perlu trigger — sengaja dihindari karena sesi ini sudah
+2 kali menemukan bug "lupa cabang pembalikan saat dibatalkan" pada
+trigger posting bergaya lama; view yang dihitung ulang tiap query tidak
+punya kelas bug itu sama sekali. `v_kartu_kas_bank` memakai pola
+window-function yang sama seperti `v_kartu_stok` untuk saldo berjalan.
+Kolom `bank_nama` lama di kedua tabel transaksi **dibiarkan** (bukan
+di-drop) karena 0010 ditulis setelah database sudah berisi data uji
+coba — lihat migrasi 0010 untuk detail backfill-nya.
 
 ---
 

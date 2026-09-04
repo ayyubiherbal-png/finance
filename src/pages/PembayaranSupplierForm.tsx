@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { cariSupplier } from '@/lib/queries'
+import { cariSupplier, useAkunKasBankAktif } from '@/lib/queries'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import {
@@ -71,14 +71,22 @@ function FormBaru() {
   const [baris, setBaris] = useState<BarisAlokasi[]>([])
   const [header, setHeader] = useState({
     tanggal: tanggalISO(),
+    akun_id: '',
     metode: 'transfer' as MetodeBayar,
-    bank_nama: '',
     nomor_referensi: '',
     tanggal_cair: '',
     catatan: '',
   })
   const [error, setError] = useState<unknown>(null)
   const [menyimpan, setMenyimpan] = useState(false)
+
+  const { data: akunAktif } = useAkunKasBankAktif()
+
+  useEffect(() => {
+    if (akunAktif && akunAktif.length === 1 && !header.akun_id) {
+      setHeader((h) => ({ ...h, akun_id: akunAktif[0]!.id }))
+    }
+  }, [akunAktif, header.akun_id])
 
   const { data: fakturOutstanding, isLoading } = useQuery({
     queryKey: ['faktur-pembelian-outstanding', supplierId],
@@ -139,6 +147,10 @@ function FormBaru() {
       setError(new Error('Pilih supplier dan minimal satu faktur dengan jumlah bayar lebih dari 0.'))
       return
     }
+    if (!header.akun_id) {
+      setError(new Error('Pilih akun kas/bank sumber pembayaran ini.'))
+      return
+    }
 
     setMenyimpan(true)
     try {
@@ -147,8 +159,8 @@ function FormBaru() {
         .insert({
           tanggal: header.tanggal,
           supplier_id: supplierId,
+          akun_id: header.akun_id,
           metode: header.metode,
-          bank_nama: header.metode === 'tunai' ? null : header.bank_nama || null,
           nomor_referensi: header.nomor_referensi || null,
           tanggal_cair: header.metode === 'giro' ? header.tanggal_cair || null : null,
           jumlah: totalJumlah,
@@ -261,24 +273,33 @@ function FormBaru() {
             </div>
           </div>
 
+          <div className="space-y-1.5">
+            <Label>Uang keluar dari akun</Label>
+            <Select value={header.akun_id} onChange={(e) => setHeader((h) => ({ ...h, akun_id: e.target.value }))}>
+              <option value="" disabled>
+                Pilih akun kas/bank...
+              </option>
+              {(akunAktif ?? []).map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nama}
+                </option>
+              ))}
+            </Select>
+            {akunAktif && akunAktif.length === 0 ? (
+              <p className="text-xs text-destructive">
+                Belum ada akun kas/bank. Tambahkan dulu di menu Kas & Bank.
+              </p>
+            ) : null}
+          </div>
+
           {header.metode !== 'tunai' ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Bank (opsional)</Label>
-                <Input
-                  placeholder="mis. BCA a.n. Supplier -- kosongkan kalau tidak ada"
-                  value={header.bank_nama}
-                  onChange={(e) => setHeader((h) => ({ ...h, bank_nama: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>No. referensi (opsional)</Label>
-                <Input
-                  placeholder="No. transaksi / no. giro"
-                  value={header.nomor_referensi}
-                  onChange={(e) => setHeader((h) => ({ ...h, nomor_referensi: e.target.value }))}
-                />
-              </div>
+            <div className="space-y-1.5">
+              <Label>No. referensi (opsional)</Label>
+              <Input
+                placeholder="No. transaksi / no. giro"
+                value={header.nomor_referensi}
+                onChange={(e) => setHeader((h) => ({ ...h, nomor_referensi: e.target.value }))}
+              />
             </div>
           ) : null}
 
@@ -304,7 +325,7 @@ function FormBaru() {
             <p className="text-sm">
               Total: <span className="tabular font-semibold">{rupiah(totalJumlah)}</span>
             </p>
-            <Button onClick={simpan} disabled={menyimpan || totalJumlah <= 0}>
+            <Button onClick={simpan} disabled={menyimpan || totalJumlah <= 0 || !header.akun_id}>
               {menyimpan ? <Spinner /> : null}
               Simpan
             </Button>
@@ -322,12 +343,12 @@ interface BayarDetail {
   nomor: string
   tanggal: string
   metode: MetodeBayar
-  bank_nama: string | null
   nomor_referensi: string | null
   jumlah: number
   status: StatusDokumen
   catatan: string | null
   supplier: { nama: string } | null
+  akun: { nama: string } | null
 }
 
 interface AlokasiBaris {
@@ -346,7 +367,7 @@ function FormDetail({ bayarId }: { bayarId: string }) {
       const { data, error } = await supabase
         .from('pembayaran_supplier')
         .select(
-          'id, nomor, tanggal, metode, bank_nama, nomor_referensi, jumlah, status, catatan, supplier:supplier_id(nama)',
+          'id, nomor, tanggal, metode, nomor_referensi, jumlah, status, catatan, supplier:supplier_id(nama), akun:akun_id(nama)',
         )
         .eq('id', bayarId)
         .single()
@@ -418,7 +439,7 @@ function FormDetail({ bayarId }: { bayarId: string }) {
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2">
           <InfoField label="Metode" value={LABEL_METODE[bayar.metode]} />
           <InfoField label="Jumlah" value={rupiah(bayar.jumlah)} />
-          {bayar.bank_nama ? <InfoField label="Bank" value={bayar.bank_nama} /> : null}
+          <InfoField label="Akun" value={bayar.akun?.nama ?? '-'} />
           {bayar.nomor_referensi ? <InfoField label="No. referensi" value={bayar.nomor_referensi} /> : null}
           {bayar.catatan ? <InfoField label="Catatan" value={bayar.catatan} /> : null}
         </CardContent>

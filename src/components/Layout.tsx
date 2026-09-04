@@ -12,6 +12,7 @@ import {
   Building2,
   Undo2,
   ClipboardEdit,
+  Landmark,
   LogOut,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -54,6 +55,13 @@ const MENU: Grup[] = [
       { ke: '/faktur-pembelian', label: 'Faktur Pembelian', ikon: Receipt },
       { ke: '/pembayaran-supplier', label: 'Pembayaran Supplier', ikon: Wallet },
       { ke: '/retur-pembelian', label: 'Retur Pembelian', ikon: Undo2 },
+    ],
+  },
+  {
+    judul: 'Kas & Bank',
+    item: [
+      { ke: '/kas-bank', label: 'Akun Kas & Bank', ikon: Landmark },
+      { ke: '/kartu-kas-bank', label: 'Kartu Kas & Bank', ikon: BarChart3 },
     ],
   },
   {

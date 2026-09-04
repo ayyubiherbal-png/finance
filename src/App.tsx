@@ -12,6 +12,9 @@ import { Supplier } from '@/pages/Supplier'
 import { SupplierForm } from '@/pages/SupplierForm'
 import { Stok } from '@/pages/Stok'
 import { KartuStok } from '@/pages/KartuStok'
+import { AkunKasBank } from '@/pages/AkunKasBank'
+import { AkunKasBankForm } from '@/pages/AkunKasBankForm'
+import { KartuKasBank } from '@/pages/KartuKasBank'
 import { LaporanPiutang } from '@/pages/LaporanPiutang'
 import { LaporanLaba } from '@/pages/LaporanLaba'
 import { SalesOrder } from '@/pages/SalesOrder'
@@ -71,6 +74,9 @@ function Rute() {
         <Route path="supplier/:id" element={<SupplierForm />} />
         <Route path="stok" element={<Stok />} />
         <Route path="kartu-stok" element={<KartuStok />} />
+        <Route path="kas-bank" element={<AkunKasBank />} />
+        <Route path="kas-bank/:id" element={<AkunKasBankForm />} />
+        <Route path="kartu-kas-bank" element={<KartuKasBank />} />
         <Route path="penyesuaian-stok" element={<PenyesuaianStok />} />
         <Route path="penyesuaian-stok/:id" element={<PenyesuaianStokForm />} />
         <Route path="laporan/piutang" element={<LaporanPiutang />} />

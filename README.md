@@ -13,7 +13,27 @@ memengaruhi bentuk form.
 
 ---
 
-## Yang harus Anda kerjakan
+## ⚠️ Migrasi baru yang perlu dijalankan sekarang
+
+Anda sudah setup Supabase dan menjalankan 0001-0009. Ada tambahan:
+
+```
+supabase/migrations/0010_kas_bank.sql
+```
+
+Ini modul **Kas & Bank** (akun kas/rekening + saldo per akun) yang tadinya
+belum ada -- setiap Penerimaan Kas dan Pembayaran Supplier sekarang wajib
+tertaut ke akun kas/bank tertentu. Migrasi ini **aman dijalankan di
+database yang sudah ada datanya** -- data lama otomatis diarahkan ke akun
+"Kas Utama" yang dibuatkan migrasi ini, tidak ada yang hilang.
+
+Jalankan filenya di SQL Editor seperti migrasi lain, satu kali saja.
+Migrasi selanjutnya (kalau ada) akan bernomor `0011`, dst. -- selalu jalankan
+yang belum pernah Anda jalankan, urut sesuai nomor.
+
+---
+
+## Yang harus Anda kerjakan (setup dari nol)
 
 ### 1. Buat proyek Supabase
 
@@ -38,13 +58,11 @@ supabase/migrations/0006_fungsi_trigger.sql
 supabase/migrations/0007_view_laporan.sql
 supabase/migrations/0008_rls.sql
 supabase/migrations/0009_seed_awal.sql
+supabase/migrations/0010_kas_bank.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan
 lanjut ke file berikutnya. Urutan file ini saling bergantung.
-
-**Belum pernah dijalankan di Postgres asli** — file-file ini baru pernah
-lolos review statis, belum pernah benar-benar tersentuh Postgres.
 
 ### 3. Isi kredensial
 
@@ -95,9 +113,13 @@ Sekarang seluruh alur bisa dikerjakan dari UI, urutan yang masuk akal:
 2. **Supplier** dan **Pelanggan** (kalau bukan lewat kanal online — order
    online otomatis pakai akun agregat SHOPEE/TOKPED/TIKTOK/WA-UMUM dari
    seed, tidak perlu bikin pelanggan manual per pembeli).
-3. **Saldo awal stok** — Inventori → Penyesuaian Stok → Baru, pilih jenis
+3. **Akun Kas & Bank** (Kas & Bank → Akun Baru) — minimal satu, mis. "Kas
+   Toko". Sudah ada default "Kas Utama" dari migrasi 0010, tinggal tambah
+   yang lain kalau punya rekening bank juga. Setiap Penerimaan Kas/
+   Pembayaran Supplier wajib memilih salah satu akun ini.
+4. **Saldo awal stok** — Inventori → Penyesuaian Stok → Baru, pilih jenis
    "Saldo Awal", isi qty + HPP per produk, lalu Posting.
-4. Dari sini alur normal: **Purchase Order** → Penerimaan Barang, atau
+5. Dari sini alur normal: **Purchase Order** → Penerimaan Barang, atau
    langsung **Sales Order** → Surat Jalan → Faktur → Penerimaan Kas.
 
 ---
@@ -115,28 +137,30 @@ src/components/ui.tsx      Button, Input, Card, Table, Badge, Spinner
 src/components/Combobox.tsx  dropdown pencarian generik (produk/pelanggan/supplier)
 src/components/Layout.tsx  sidebar, gating menu per peran
 src/pages/                 satu file per layar (lihat tabel Status di bawah)
-supabase/migrations/       9 file migrasi
+public/ayyubi-logo.jpeg    logo resmi -- favicon + sidebar + login
+supabase/migrations/       10 file migrasi (0001-0009 dijalankan, 0010 baru)
 ```
 
 ## Status
 
 Semua menu di sidebar sudah punya layar sungguhan — tidak ada lagi
 placeholder. `tsc --noEmit` dan `vite build` lolos di setiap langkah.
+Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 
 | Area | Layar | Status |
 |---|---|---|
 | Master | Produk, Supplier, Pelanggan | Selesai (CRUD penuh untuk Produk & Supplier) |
+| Kas & Bank | Akun Kas & Bank (saldo live), Kartu Kas & Bank (mutasi) | Selesai -- **butuh migrasi 0010**, lihat peringatan di atas |
 | Penjualan | Sales Order → Surat Jalan → Faktur → Penerimaan Kas → Retur | Selesai, ujung ke ujung |
 | Pembelian | Purchase Order → Penerimaan Barang → Faktur Pembelian → Pembayaran Supplier → Retur | Selesai, ujung ke ujung |
 | Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
 | Laporan | Piutang (aging), Laba Kotor (per produk/pelanggan) | Selesai |
-| Dasbor | Ringkasan 30 hari, produk perlu restock | Selesai |
+| Dasbor | Ringkasan 30 hari, tren omzet, produk perlu restock | Selesai |
+| Tampilan | Logo & tema warna Ayyubi Food, glassmorphism di sidebar/login | Selesai |
 | — | Transfer Gudang | Skema siap, UI sengaja belum dibuat — tidak berguna selama masih 1 gudang aktif |
 | Fase 3 | CRM (pipeline, kunjungan sales, loyalty) | Belum dirancang |
-| Fase 4 | Akuntansi penuh, pajak, HR | Belum dirancang |
+| Fase 4 | Akuntansi penuh (jurnal, buku besar), pajak, HR | Belum dirancang |
 
-**Belum pernah diverifikasi jalan beneran di browser** — sesi kerja yang
-membangun ini belum punya kredensial Supabase asli. Begitu Anda selesai
-langkah 1-6 di atas, tolong coba alur intinya dan kabari kalau ada yang
-janggal: buat produk → isi saldo awal → jual → kirim → tagih → bayar,
-lalu cek Stok/Laporan menampilkan angka yang benar.
+Setelah migrasi 0010 dijalankan, coba alur: buat/pilih akun Kas & Bank →
+Catat Pembayaran atau Bayar Supplier → cek saldo akunnya berubah di
+halaman Kas & Bank dan riwayatnya muncul di Kartu Kas & Bank.

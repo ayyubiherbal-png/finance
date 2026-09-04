@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { OpsiCombobox } from '@/components/Combobox'
-import type { Gudang, TierHarga, ProdukSatuan } from '@/types/db'
+import type { Gudang, TierHarga, ProdukSatuan, AkunKasBank } from '@/types/db'
 
 /**
  * Gudang aktif. Dipakai untuk selector "pintar": kalau cuma ada satu
@@ -23,6 +23,25 @@ export function useGudangAktif() {
       return data ?? []
     },
     staleTime: 5 * 60_000,
+  })
+}
+
+/** Akun kas/bank aktif -- untuk selector wajib di Penerimaan Kas & Pembayaran Supplier. */
+export function useAkunKasBankAktif() {
+  return useQuery({
+    queryKey: ['akun-kas-bank-aktif'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('akun_kas_bank')
+        .select('id, kode, nama, jenis, bank_nama, nomor_rekening, atas_nama, saldo_awal, aktif, catatan')
+        .eq('aktif', true)
+        .order('jenis')
+        .order('nama')
+        .returns<AkunKasBank[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 60_000,
   })
 }
 
