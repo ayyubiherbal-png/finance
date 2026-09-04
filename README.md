@@ -1,12 +1,15 @@
 # Ayyubi Finance
 
 Aplikasi bisnis **dagang / distribusi** end-to-end: pengadaan → persediaan →
-penjualan → penagihan → laporan.
+penjualan → penagihan → laporan. Fokus bisnis di awal: **B2C** — canvassing
+dan online (Tokopedia/Shopee/TikTok/WhatsApp), non-PKP.
 
 React + TypeScript + Vite + Tailwind + TanStack Query + Supabase.
 
 Rancangan database (Fase 1 & 2) ada di [`supabase/README.md`](supabase/README.md) —
-39 tabel, 12 view, HPP rata-rata bergerak, RLS 5 peran.
+39+ tabel, 12 view, HPP rata-rata bergerak, RLS 5 peran. Bagian "Keputusan
+desain" di situ menjelaskan kanal penjualan, non-PKP, dan hal lain yang
+memengaruhi bentuk form.
 
 ---
 
@@ -40,6 +43,9 @@ supabase/migrations/0009_seed_awal.sql
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan
 lanjut ke file berikutnya. Urutan file ini saling bergantung.
 
+**Belum pernah dijalankan di Postgres asli** — file-file ini baru pernah
+lolos review statis, belum pernah benar-benar tersentuh Postgres.
+
 ### 3. Isi kredensial
 
 ```bash
@@ -63,6 +69,7 @@ perintah di atas menaikkannya sekali saja.
 ### 5. Jalankan aplikasi
 
 ```bash
+npm install
 npm run dev
 ```
 
@@ -78,30 +85,20 @@ SUPABASE_PROJECT_ID=<project-id> npm run db:types
 Menghasilkan `src/types/database.ts` lengkap dari database asli.
 Sementara ini `src/types/db.ts` berisi tipe hasil pemetaan manual.
 
-### 7. Isi master data (urutannya penting)
+### 7. Isi data lewat aplikasi, bukan SQL manual
 
-1. **Gudang** — sudah ada `GD-01 Gudang Pusat` dari seed
-2. **Kategori produk**
-3. **Satuan** — sudah ada PCS, LSN, DUS, KRT, PAK, KG, BOX
-4. **Produk** + baris `produk_satuan` (wajib ada satuan dasar dengan `konversi = 1`)
-5. **Tier harga** — sudah ada RETAIL / SEMI / GROSIR / KONTRAK
-6. **Daftar harga** (`produk_harga`) per produk × tier × satuan
-7. **Pelanggan** (termin + limit kredit) dan **Supplier**
-8. **Saldo awal stok** lewat `penyesuaian_stok` dengan `jenis = 'saldo_awal'`
-   — `hpp_satuan` wajib diisi, karena itulah HPP awal produk Anda
+Sekarang seluruh alur bisa dikerjakan dari UI, urutan yang masuk akal:
 
----
-
-## Yang saya butuhkan dari Anda untuk lanjut
-
-Empat keputusan ini mengubah bentuk form transaksi:
-
-| Pertanyaan | Kenapa penting |
-|---|---|
-| Ayyubi PKP (pungut PPN) atau tidak? | Menentukan field PPN ditampilkan atau disembunyikan di semua form |
-| Satu gudang atau beberapa? | Kalau satu, pilihan gudang bisa dihilangkan dari semua form |
-| Sales canvassing (bawa barang) atau taking order (catat pesanan dulu)? | Canvassing butuh SO+SJ+Faktur dalam satu layar; taking order butuh alur bertahap |
-| Faktur = surat jalan, atau 1 faktur untuk beberapa pengiriman? | Menentukan perlu tidaknya pemilih multi-surat-jalan |
+1. **Produk** (Master → Produk Baru) — isi detail, satuan dasar; produk
+   bisa langsung dipakai begitu tersimpan. Tambah satuan berjenjang
+   (mis. LUSIN, DUS) dan harga jual per tier di halaman edit produknya.
+2. **Supplier** dan **Pelanggan** (kalau bukan lewat kanal online — order
+   online otomatis pakai akun agregat SHOPEE/TOKPED/TIKTOK/WA-UMUM dari
+   seed, tidak perlu bikin pelanggan manual per pembeli).
+3. **Saldo awal stok** — Inventori → Penyesuaian Stok → Baru, pilih jenis
+   "Saldo Awal", isi qty + HPP per produk, lalu Posting.
+4. Dari sini alur normal: **Purchase Order** → Penerimaan Barang, atau
+   langsung **Sales Order** → Surat Jalan → Faktur → Penerimaan Kas.
 
 ---
 
@@ -110,20 +107,36 @@ Empat keputusan ini mengubah bentuk form transaksi:
 ```
 src/lib/supabase.ts        client + guard env var
 src/lib/format.ts          rupiah(), angka(), tanggal() locale id-ID
+src/lib/queries.ts         hook react-query bersama (gudang, tier, satuan produk,
+                            RPC harga_produk, pencarian produk/pelanggan/supplier)
 src/types/db.ts            enum + tipe tabel & view
 src/contexts/AuthContext.tsx
 src/components/ui.tsx      Button, Input, Card, Table, Badge, Spinner
+src/components/Combobox.tsx  dropdown pencarian generik (produk/pelanggan/supplier)
 src/components/Layout.tsx  sidebar, gating menu per peran
-src/pages/                 Login, Dashboard, Produk, Pelanggan, SegeraHadir
+src/pages/                 satu file per layar (lihat tabel Status di bawah)
 supabase/migrations/       9 file migrasi
 ```
 
 ## Status
 
-| Bagian | Status |
-|---|---|
-| Skema database Fase 1 & 2 | Selesai, **belum pernah dijalankan di Postgres asli** |
-| Scaffold React + TS + Query + Tailwind | Selesai, `tsc --noEmit` dan `vite build` lolos |
-| Login, Dasbor, Produk, Pelanggan | Selesai (baca dari view) |
-| Sales Order, Surat Jalan, Faktur, PO, Penerimaan Barang | Placeholder `SegeraHadir` |
-| CRM, akuntansi, HR | Fase 3 & 4, belum dirancang |
+Semua menu di sidebar sudah punya layar sungguhan — tidak ada lagi
+placeholder. `tsc --noEmit` dan `vite build` lolos di setiap langkah.
+
+| Area | Layar | Status |
+|---|---|---|
+| Master | Produk, Supplier, Pelanggan | Selesai (CRUD penuh untuk Produk & Supplier) |
+| Penjualan | Sales Order → Surat Jalan → Faktur → Penerimaan Kas → Retur | Selesai, ujung ke ujung |
+| Pembelian | Purchase Order → Penerimaan Barang → Faktur Pembelian → Pembayaran Supplier → Retur | Selesai, ujung ke ujung |
+| Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
+| Laporan | Piutang (aging), Laba Kotor (per produk/pelanggan) | Selesai |
+| Dasbor | Ringkasan 30 hari, produk perlu restock | Selesai |
+| — | Transfer Gudang | Skema siap, UI sengaja belum dibuat — tidak berguna selama masih 1 gudang aktif |
+| Fase 3 | CRM (pipeline, kunjungan sales, loyalty) | Belum dirancang |
+| Fase 4 | Akuntansi penuh, pajak, HR | Belum dirancang |
+
+**Belum pernah diverifikasi jalan beneran di browser** — sesi kerja yang
+membangun ini belum punya kredensial Supabase asli. Begitu Anda selesai
+langkah 1-6 di atas, tolong coba alur intinya dan kabari kalau ada yang
+janggal: buat produk → isi saldo awal → jual → kirim → tagih → bayar,
+lalu cek Stok/Laporan menampilkan angka yang benar.

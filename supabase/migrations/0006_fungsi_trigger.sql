@@ -394,6 +394,14 @@ begin
            'penyesuaian_stok', new.id, new.nomor, i.catatan, new.dibuat_oleh
     from penyesuaian_stok_item i
     where i.penyesuaian_id = new.id;
+
+  elsif new.status = 'dibatalkan' and old.status = 'selesai' then
+    insert into stok_mutasi (tanggal, produk_id, gudang_id, jenis, qty_dasar, hpp_satuan,
+                             ref_tabel, ref_id, ref_nomor, catatan, dibuat_oleh)
+    select current_date, m.produk_id, m.gudang_id, 'penyesuaian', -m.qty_dasar, m.hpp_satuan,
+           'penyesuaian_stok', new.id, new.nomor, 'Pembatalan ' || new.nomor, new.dibuat_oleh
+    from stok_mutasi m
+    where m.ref_tabel = 'penyesuaian_stok' and m.ref_id = new.id;
   end if;
   return null;
 end;
@@ -421,6 +429,17 @@ begin
       values (new.tanggal, r.produk_id, new.gudang_tujuan, 'transfer_masuk', r.qty_dasar, v_hpp,
               'transfer_gudang', new.id, new.nomor, new.dibuat_oleh);
     end loop;
+
+  elsif new.status = 'dibatalkan' and old.status = 'selesai' then
+    -- Balikkan setiap mutasi yang pernah diposting dokumen ini (asal & tujuan sekaligus).
+    insert into stok_mutasi (tanggal, produk_id, gudang_id, jenis, qty_dasar, hpp_satuan,
+                             ref_tabel, ref_id, ref_nomor, catatan, dibuat_oleh)
+    select current_date, m.produk_id, m.gudang_id,
+           case when m.jenis = 'transfer_keluar' then 'transfer_masuk' else 'transfer_keluar' end,
+           -m.qty_dasar, m.hpp_satuan,
+           'transfer_gudang', new.id, new.nomor, 'Pembatalan ' || new.nomor, new.dibuat_oleh
+    from stok_mutasi m
+    where m.ref_tabel = 'transfer_gudang' and m.ref_id = new.id;
   end if;
   return null;
 end;
@@ -441,6 +460,14 @@ begin
     from retur_penjualan_item i
     join produk p on p.id = i.produk_id
     where i.retur_id = new.id;
+
+  elsif new.status = 'dibatalkan' and old.status = 'selesai' then
+    insert into stok_mutasi (tanggal, produk_id, gudang_id, jenis, qty_dasar, hpp_satuan,
+                             ref_tabel, ref_id, ref_nomor, catatan, dibuat_oleh)
+    select current_date, m.produk_id, m.gudang_id, 'penyesuaian', -m.qty_dasar, m.hpp_satuan,
+           'retur_penjualan', new.id, new.nomor, 'Pembatalan ' || new.nomor, new.dibuat_oleh
+    from stok_mutasi m
+    where m.ref_tabel = 'retur_penjualan' and m.ref_id = new.id;
   end if;
   return null;
 end;
@@ -460,6 +487,14 @@ begin
            'retur_pembelian', new.id, new.nomor, new.dibuat_oleh
     from retur_pembelian_item i
     where i.retur_id = new.id;
+
+  elsif new.status = 'dibatalkan' and old.status = 'selesai' then
+    insert into stok_mutasi (tanggal, produk_id, gudang_id, jenis, qty_dasar, hpp_satuan,
+                             ref_tabel, ref_id, ref_nomor, catatan, dibuat_oleh)
+    select current_date, m.produk_id, m.gudang_id, 'penyesuaian', -m.qty_dasar, m.hpp_satuan,
+           'retur_pembelian', new.id, new.nomor, 'Pembatalan ' || new.nomor, new.dibuat_oleh
+    from stok_mutasi m
+    where m.ref_tabel = 'retur_pembelian' and m.ref_id = new.id;
   end if;
   return null;
 end;

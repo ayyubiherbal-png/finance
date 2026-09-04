@@ -30,6 +30,12 @@ import { FakturPembelian } from '@/pages/FakturPembelian'
 import { FakturPembelianForm } from '@/pages/FakturPembelianForm'
 import { PembayaranSupplier } from '@/pages/PembayaranSupplier'
 import { PembayaranSupplierForm } from '@/pages/PembayaranSupplierForm'
+import { ReturPenjualan } from '@/pages/ReturPenjualan'
+import { ReturPenjualanForm } from '@/pages/ReturPenjualanForm'
+import { ReturPembelian } from '@/pages/ReturPembelian'
+import { ReturPembelianForm } from '@/pages/ReturPembelianForm'
+import { PenyesuaianStok } from '@/pages/PenyesuaianStok'
+import { PenyesuaianStokForm } from '@/pages/PenyesuaianStokForm'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,6 +71,8 @@ function Rute() {
         <Route path="supplier/:id" element={<SupplierForm />} />
         <Route path="stok" element={<Stok />} />
         <Route path="kartu-stok" element={<KartuStok />} />
+        <Route path="penyesuaian-stok" element={<PenyesuaianStok />} />
+        <Route path="penyesuaian-stok/:id" element={<PenyesuaianStokForm />} />
         <Route path="laporan/piutang" element={<LaporanPiutang />} />
         <Route path="laporan/laba" element={<LaporanLaba />} />
 
@@ -84,6 +92,10 @@ function Rute() {
         <Route path="faktur-pembelian/:id" element={<FakturPembelianForm />} />
         <Route path="pembayaran-supplier" element={<PembayaranSupplier />} />
         <Route path="pembayaran-supplier/:id" element={<PembayaranSupplierForm />} />
+        <Route path="retur-penjualan" element={<ReturPenjualan />} />
+        <Route path="retur-penjualan/:id" element={<ReturPenjualanForm />} />
+        <Route path="retur-pembelian" element={<ReturPembelian />} />
+        <Route path="retur-pembelian/:id" element={<ReturPembelianForm />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

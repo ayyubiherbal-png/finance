@@ -10,6 +10,8 @@ import {
   Warehouse,
   BarChart3,
   Building2,
+  Undo2,
+  ClipboardEdit,
   LogOut,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -41,6 +43,7 @@ const MENU: Grup[] = [
       { ke: '/surat-jalan', label: 'Surat Jalan', ikon: Truck },
       { ke: '/faktur-penjualan', label: 'Faktur Penjualan', ikon: Receipt },
       { ke: '/penerimaan-kas', label: 'Penerimaan Kas', ikon: Wallet },
+      { ke: '/retur-penjualan', label: 'Retur Penjualan', ikon: Undo2 },
     ],
   },
   {
@@ -50,6 +53,7 @@ const MENU: Grup[] = [
       { ke: '/penerimaan-barang', label: 'Penerimaan Barang', ikon: Warehouse },
       { ke: '/faktur-pembelian', label: 'Faktur Pembelian', ikon: Receipt },
       { ke: '/pembayaran-supplier', label: 'Pembayaran Supplier', ikon: Wallet },
+      { ke: '/retur-pembelian', label: 'Retur Pembelian', ikon: Undo2 },
     ],
   },
   {
@@ -57,6 +61,7 @@ const MENU: Grup[] = [
     item: [
       { ke: '/stok', label: 'Stok', ikon: Warehouse },
       { ke: '/kartu-stok', label: 'Kartu Stok', ikon: BarChart3 },
+      { ke: '/penyesuaian-stok', label: 'Penyesuaian Stok', ikon: ClipboardEdit },
     ],
   },
   {
