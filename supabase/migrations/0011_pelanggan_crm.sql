@@ -3,7 +3,11 @@
 --
 --  Migrasi tambahan, aman untuk database yang sudah berisi data:
 --  semua kolom baru nullable, tidak ada backfill/NOT NULL yang perlu
---  ditangani.
+--  ditangani. Aman dijalankan berkali-kali / diulang dari kondisi
+--  setengah jalan (semua create pakai "if not exists", policy di-drop
+--  dulu sebelum dibuat ulang) -- percobaan pertama migrasi ini sempat
+--  gagal di tengah jalan karena ukuran file terlalu besar untuk SQL
+--  Editor, jadi ini penting.
 --
 --  Fase 3 (CRM sungguhan -- pipeline, tugas follow-up, kampanye) belum
 --  dirancang di sini. Ini cuma field-field murah yang jelas akan
@@ -21,7 +25,7 @@ alter table pelanggan
   add column if not exists kanal_akuisisi kanal_penjualan,  -- dari mana pelanggan ini pertama kali datang
   add column if not exists tag text[] not null default '{}';  -- label bebas: VIP, reseller, dst.
 
-create index idx_pelanggan_tag on pelanggan using gin (tag);
+create index if not exists idx_pelanggan_tag on pelanggan using gin (tag);
 
 -- ---------------------------------------------------------------------
 -- Wilayah administratif Indonesia (Provinsi/Kab-Kota/Kecamatan/Kelurahan)
@@ -38,37 +42,45 @@ create index idx_pelanggan_tag on pelanggan using gin (tag);
 -- di bagian bawah file ini) -- datanya terlalu besar untuk SQL Editor.
 -- ---------------------------------------------------------------------
 
-create table wilayah_provinsi (
+create table if not exists wilayah_provinsi (
   kode text primary key,
   nama text not null
 );
 
-create table wilayah_kabupaten_kota (
+create table if not exists wilayah_kabupaten_kota (
   kode          text primary key,
   provinsi_kode text not null references wilayah_provinsi(kode),
   nama          text not null
 );
-create index idx_wilayah_kabkota_provinsi on wilayah_kabupaten_kota(provinsi_kode);
+create index if not exists idx_wilayah_kabkota_provinsi on wilayah_kabupaten_kota(provinsi_kode);
 
-create table wilayah_kecamatan (
+create table if not exists wilayah_kecamatan (
   kode           text primary key,
   kabupaten_kode text not null references wilayah_kabupaten_kota(kode),
   nama           text not null
 );
-create index idx_wilayah_kecamatan_kabkota on wilayah_kecamatan(kabupaten_kode);
+create index if not exists idx_wilayah_kecamatan_kabkota on wilayah_kecamatan(kabupaten_kode);
 
-create table wilayah_kelurahan (
+create table if not exists wilayah_kelurahan (
   kode           text primary key,
   kecamatan_kode text not null references wilayah_kecamatan(kode),
   nama           text not null,
   kode_pos       text
 );
-create index idx_wilayah_kelurahan_kecamatan on wilayah_kelurahan(kecamatan_kode);
+create index if not exists idx_wilayah_kelurahan_kecamatan on wilayah_kelurahan(kecamatan_kode);
 
 alter table wilayah_provinsi enable row level security;
 alter table wilayah_kabupaten_kota enable row level security;
 alter table wilayah_kecamatan enable row level security;
 alter table wilayah_kelurahan enable row level security;
+
+-- create policy tidak punya "if not exists" -- drop dulu baru buat ulang,
+-- supaya migrasi ini aman dijalankan berkali-kali (mis. setelah percobaan
+-- sebelumnya berhenti di tengah jalan).
+drop policy if exists baca on wilayah_provinsi;
+drop policy if exists baca on wilayah_kabupaten_kota;
+drop policy if exists baca on wilayah_kecamatan;
+drop policy if exists baca on wilayah_kelurahan;
 
 create policy baca on wilayah_provinsi for select to authenticated using (true);
 create policy baca on wilayah_kabupaten_kota for select to authenticated using (true);
