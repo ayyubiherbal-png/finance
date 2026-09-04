@@ -20,21 +20,21 @@ import {
   Thead,
   Tr,
 } from '@/components/ui'
-import type { VLimitKredit } from '@/types/db'
+import type { SumberPelanggan, TipePelanggan, VPelangganRingkas } from '@/types/db'
 
 function usePelanggan(cari: string) {
   return useQuery({
     queryKey: ['pelanggan', cari],
     queryFn: async () => {
       // Filter (.or) harus dipasang sebelum .order/.limit.
-      let q = supabase.from('v_limit_kredit').select('*')
+      let q = supabase.from('v_pelanggan_ringkas').select('*')
 
       if (cari.trim()) {
         const pola = `%${cari.trim()}%`
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
 
-      const { data, error } = await q.order('nama').limit(200).returns<VLimitKredit[]>()
+      const { data, error } = await q.order('nama').limit(200).returns<VPelangganRingkas[]>()
       if (error) throw error
       return data ?? []
     },
@@ -42,13 +42,26 @@ function usePelanggan(cari: string) {
   })
 }
 
-/** Pemakaian limit: aman < 75%, waspada 75-100%, terlampaui > 100% */
-function statusLimit(p: VLimitKredit) {
-  if (p.termin === 'cod' || p.limit_kredit <= 0) return null
-  const persen = p.pemakaian_persen ?? 0
-  if (persen > 100) return { label: 'Limit terlampaui', variant: 'bahaya' as const }
-  if (persen >= 75) return { label: `${persen.toFixed(0)}% terpakai`, variant: 'peringatan' as const }
-  return { label: `${persen.toFixed(0)}% terpakai`, variant: 'netral' as const }
+const LABEL_TIPE: Record<TipePelanggan, string> = {
+  customer: 'Customer',
+  mitra: 'Mitra',
+  horeka: 'Horeka',
+  perusahaan: 'Perusahaan',
+}
+
+const LABEL_SUMBER: Record<SumberPelanggan, string> = {
+  relasi: 'Relasi',
+  sosmed: 'Sosmed',
+  shopee: 'Shopee',
+  tiktok: 'TikTok',
+  website: 'Website',
+  custom: 'Custom',
+}
+
+function labelSumber(p: VPelangganRingkas) {
+  if (!p.sumber) return '-'
+  if (p.sumber === 'custom') return p.sumber_custom || 'Custom'
+  return LABEL_SUMBER[p.sumber]
 }
 
 export function Pelanggan() {
@@ -60,7 +73,7 @@ export function Pelanggan() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Pelanggan</h1>
-          <p className="text-sm text-muted-foreground">Termin, limit kredit, dan piutang berjalan</p>
+          <p className="text-sm text-muted-foreground">Tipe, kontak, dan piutang berjalan</p>
         </div>
 
         <div className="flex flex-1 justify-end gap-2 sm:flex-none">
@@ -100,42 +113,29 @@ export function Pelanggan() {
                 <Tr>
                   <Th>ID</Th>
                   <Th>Nama</Th>
-                  <Th>Termin</Th>
-                  <Th className="text-right">Limit kredit</Th>
+                  <Th>Tipe</Th>
+                  <Th>Kontak</Th>
+                  <Th>Sumber</Th>
                   <Th className="text-right">Piutang</Th>
-                  <Th className="text-right">Sisa limit</Th>
-                  <Th></Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {data.map((p) => {
-                  const status = statusLimit(p)
-                  return (
-                    <Tr key={p.pelanggan_id}>
-                      <Td className="font-mono text-xs">{p.kode}</Td>
-                      <Td className="font-medium">
-                        <Link to={`/pelanggan/${p.pelanggan_id}`} className="text-primary hover:underline">
-                          {p.nama}
-                        </Link>
-                      </Td>
-                      <Td className="text-muted-foreground">
-                        {p.termin === 'cod' ? 'COD' : `Tempo ${p.termin_hari} hari`}
-                      </Td>
-                      <Td className="tabular text-right">
-                        {p.limit_kredit > 0 ? rupiah(p.limit_kredit) : '-'}
-                      </Td>
-                      <Td className="tabular text-right">{rupiah(p.piutang_berjalan)}</Td>
-                      <Td
-                        className={`tabular text-right ${p.sisa_limit < 0 ? 'text-destructive' : ''}`}
-                      >
-                        {p.limit_kredit > 0 ? rupiah(p.sisa_limit) : '-'}
-                      </Td>
-                      <Td className="text-right">
-                        {status ? <Badge variant={status.variant}>{status.label}</Badge> : null}
-                      </Td>
-                    </Tr>
-                  )
-                })}
+                {data.map((p) => (
+                  <Tr key={p.pelanggan_id}>
+                    <Td className="font-mono text-xs">{p.kode}</Td>
+                    <Td className="font-medium">
+                      <Link to={`/pelanggan/${p.pelanggan_id}`} className="text-primary hover:underline">
+                        {p.nama}
+                      </Link>
+                    </Td>
+                    <Td>
+                      <Badge variant="netral">{LABEL_TIPE[p.tipe]}</Badge>
+                    </Td>
+                    <Td className="text-muted-foreground">{p.whatsapp || p.telepon || '-'}</Td>
+                    <Td className="text-muted-foreground">{labelSumber(p)}</Td>
+                    <Td className="tabular text-right">{p.piutang_berjalan > 0 ? rupiah(p.piutang_berjalan) : '-'}</Td>
+                  </Tr>
+                ))}
               </Tbody>
             </Table>
           )}

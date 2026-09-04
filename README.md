@@ -16,16 +16,22 @@ memengaruhi bentuk form.
 ## ⚠️ Migrasi baru yang perlu dijalankan sekarang
 
 Anda sudah menjalankan 0001-0010 (Kas & Bank sudah aktif) dan 0011
-(field CRM + tabel wilayah). Kalau Langkah B (3 import CSV) di bawah
-belum semua selesai, lanjutkan dulu itu. Setelah itu ada **satu migrasi
-lagi**, kecil, tidak perlu import CSV apa pun:
+(field CRM + tabel wilayah, termasuk 3 import CSV wilayah). Setelah itu
+ada **dua migrasi lagi**, kecil, tidak perlu import CSV apa pun:
 
 ```
 supabase/migrations/0012_pelanggan_tipe_sumber.sql
+supabase/migrations/0014_pelanggan_ringkas_view.sql
 ```
 
-Mengganti daftar Tipe Pelanggan (Customer/Mitra/Horeka/Perusahaan) dan
-menambah field Sumber. Aman dijalankan berkali-kali kalau perlu diulang.
+0012 mengganti daftar Tipe Pelanggan (Customer/Mitra/Horeka/Perusahaan)
+dan menambah field Sumber. 0014 mengganti view `v_limit_kredit` (dipakai
+daftar Pelanggan) jadi `v_pelanggan_ringkas` -- kolom Termin/Limit
+Kredit/Sisa Limit sudah tidak informatif lagi (selalu "COD"/"-" karena
+form Pelanggan sudah tidak punya field itu), diganti Tipe/Kontak/Sumber.
+Keduanya aman dijalankan berkali-kali kalau perlu diulang. (Nomor 0013
+sempat dibuat lalu dibatalkan/dihapus lagi -- lompat dari 0012 ke 0014
+memang disengaja, bukan ada yang hilang.)
 
 > Percobaan pertama migrasi ini menulis ~91.000 baris data wilayah
 > sebagai SQL langsung dan **gagal ditempel** di SQL Editor ("Failed to
@@ -95,6 +101,7 @@ supabase/migrations/0009_seed_awal.sql
 supabase/migrations/0010_kas_bank.sql
 supabase/migrations/0011_pelanggan_crm.sql
 supabase/migrations/0012_pelanggan_tipe_sumber.sql
+supabase/migrations/0014_pelanggan_ringkas_view.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

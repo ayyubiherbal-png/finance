@@ -382,6 +382,20 @@ jadi pesan bahasa Indonesia yang jelas ("ID ... sudah dipakai
 pelanggan lain") lewat `ramahkanErrorSimpan()`, bukan pesan teknis
 Postgres apa adanya.
 
+**Daftar Pelanggan: `v_limit_kredit` diganti `v_pelanggan_ringkas`
+(0014).** Sejak form Pelanggan dipersingkat, Termin & Limit Kredit
+tidak bisa diisi lagi lewat form (selalu default COD/0) -- kolom
+Termin/Limit Kredit/Sisa Limit di daftar Pelanggan jadi percuma,
+semua baris tampil "COD"/"-". `v_limit_kredit` cuma dipakai di SATU
+tempat (`Pelanggan.tsx`), jadi aman diganti total lewat migrasi baru:
+`drop view v_limit_kredit`, ganti `v_pelanggan_ringkas` dengan kolom
+yang sesuai bentuk form sekarang -- `tipe`, `telepon`, `whatsapp`,
+`sumber`/`sumber_custom` -- plus `piutang_berjalan` (TETAP
+dipertahankan, ini angka riil yang masih berguna terlepas dari ada/
+tidaknya limit kredit). Kolom tabel di UI berubah dari
+ID/Nama/Termin/Limit Kredit/Piutang/Sisa Limit jadi
+ID/Nama/Tipe/Kontak (WhatsApp atau Telepon)/Sumber/Piutang.
+
 **Notifikasi "Tersimpan" (toast) ditambah di SEMUA form (2026-09-04,
 tanpa migrasi -- ini perubahan frontend murni).** User laporan harus
 klik "Simpan" 2x. Ternyata bukan bug klik -- klik pertama sudah

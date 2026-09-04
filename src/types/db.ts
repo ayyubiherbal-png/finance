@@ -319,16 +319,16 @@ export interface VPiutangAging {
   umur_90_plus: number | null
 }
 
-export interface VLimitKredit {
+export interface VPelangganRingkas {
   pelanggan_id: string
   kode: string
   nama: string
-  termin: TerminBayar
-  termin_hari: number
-  limit_kredit: number
+  tipe: TipePelanggan
+  telepon: string | null
+  whatsapp: string | null
+  sumber: SumberPelanggan | null
+  sumber_custom: string | null
   piutang_berjalan: number
-  sisa_limit: number
-  pemakaian_persen: number | null
 }
 
 export interface VLabaProduk {
