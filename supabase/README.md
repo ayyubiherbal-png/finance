@@ -407,6 +407,23 @@ Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
 `overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
 dipotong/disembunyikan.
 
+**Filter kolom (checklist) di daftar Pelanggan (2026-09-04, murni
+frontend).** User: banyak baris yang bakal kosong ("-") di kolom
+opsional, minta bisa milih sendiri kolom mana yang mau tampil. Dibuat
+`KolomPicker` (langsung di `Pelanggan.tsx`, belum ada alasan
+diekstrak jadi komponen bersama karena baru satu tempat pakai) --
+tombol "Kolom" + panel checklist, pola outside-click sama seperti
+`Combobox.tsx`. ID/Nama/Tipe SELALU tampil (kolom inti); 9 kolom
+lain (Kontak, Sales, Telepon, WhatsApp, Email, Sumber, Tanggal lahir,
+Media sosial, Alamat) bisa dicentang/lepas. Default tampil cuma
+WhatsApp + Sumber + Alamat -- yang paling sering terisi; sisanya
+disembunyikan default karena Kontak/Telepon cuma relevan buat Horeka/
+Perusahaan (jarang), Tanggal lahir/Media sosial/Email masih jarang
+diisi di awal. Pilihan user disimpan di `localStorage`
+(`ayyubi-pelanggan-kolom`) -- per-browser, bukan per-akun (tidak ada
+tabel/kolom DB untuk ini, sengaja, ini preferensi tampilan bukan data
+bisnis).
+
 **Notifikasi "Tersimpan" (toast) ditambah di SEMUA form (2026-09-04,
 tanpa migrasi -- ini perubahan frontend murni).** User laporan harus
 klik "Simpan" 2x. Ternyata bukan bug klik -- klik pertama sudah
