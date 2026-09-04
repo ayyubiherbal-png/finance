@@ -145,7 +145,9 @@ export function Pelanggan() {
                     <Td className="text-muted-foreground">{labelSumber(p)}</Td>
                     <Td className="text-muted-foreground">{p.tanggal_lahir ? fmtTanggal(p.tanggal_lahir) : '-'}</Td>
                     <Td className="text-muted-foreground">{p.sosial_media || '-'}</Td>
-                    <Td className="max-w-xs text-muted-foreground">{p.alamat_lengkap || '-'}</Td>
+                    <Td className="max-w-xs truncate text-muted-foreground" title={p.alamat_lengkap ?? undefined}>
+                      {p.alamat_lengkap || '-'}
+                    </Td>
                   </Tr>
                 ))}
               </Tbody>
