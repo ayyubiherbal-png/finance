@@ -22,10 +22,14 @@ import {
 } from '@/components/ui'
 import type { VPenjualanHarian, VStokProduk, VPiutangAging } from '@/types/db'
 
-/** Aksen warna per kartu, dari palet kategorikal yang sudah divalidasi (dataviz skill). */
+/**
+ * Aksen warna per kartu -- hijau diambil dari logo Ayyubi Food, tiga lainnya
+ * dari palet kategorikal skill dataviz. Kombinasi ini sudah divalidasi lolos
+ * CVD-safe & normal-vision (lihat riwayat kerja) sebelum dipakai di sini.
+ */
 const AKSEN = {
+  hijau: '#3F7D20',
   biru: '#2a78d6',
-  aqua: '#1baf7a',
   ungu: '#4a3aa7',
   kuning: '#eda100',
   merah: '#d03b3b',
@@ -127,7 +131,7 @@ export function Dashboard() {
         <KartuStat
           judul="Omzet 30 hari"
           nilai={rupiah(data.omzet30Hari)}
-          warna={AKSEN.biru}
+          warna={AKSEN.hijau}
           ikon={<TrendingUp className="h-4 w-4" />}
           delta={data.deltaOmzetPersen}
           sparkline={data.trenHarian.map((t) => t.nilai)}
@@ -135,7 +139,7 @@ export function Dashboard() {
         <KartuStat
           judul="Laba kotor"
           nilai={rupiah(data.laba30Hari)}
-          warna={AKSEN.aqua}
+          warna={AKSEN.biru}
           ikon={<Coins className="h-4 w-4" />}
           catatan={`Margin ${margin.toFixed(1)}%`}
           sparkline={trenLaba7}
@@ -161,7 +165,7 @@ export function Dashboard() {
           <CardTitle className="text-base">Tren omzet harian</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <GrafikArea data={data.trenHarian} warna={AKSEN.biru} />
+          <GrafikArea data={data.trenHarian} warna={AKSEN.hijau} />
         </CardContent>
       </Card>
 

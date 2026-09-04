@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { Truck } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { Button, Card, CardContent, Input, Label, PesanError, Spinner } from '@/components/ui'
+import { Button, Input, Label, PesanError, Spinner } from '@/components/ui'
 
 export function Login() {
   const { masuk } = useAuth()
@@ -24,51 +23,53 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-sm">
-        <CardContent className="p-6">
-          <div className="mb-6 flex flex-col items-center gap-2 text-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Truck className="h-5 w-5" />
-            </div>
-            <h1 className="text-lg font-semibold">Ayyubi Finance</h1>
-            <p className="text-sm text-muted-foreground">Masuk untuk melanjutkan</p>
+    <div className="flex min-h-screen items-center justify-center bg-brand-wash p-4">
+      {/* Panel kaca -- ditulis manual (bukan komponen Card) supaya class .glass
+          tidak kalah rebutan sama bg-card bawaan Card. */}
+      <div className="glass w-full max-w-sm rounded-xl p-6 shadow-lg">
+        <div className="mb-6 flex flex-col items-center gap-2 text-center">
+          <img
+            src="/ayyubi-logo.jpeg"
+            alt="Ayyubi Food"
+            className="h-16 w-16 rounded-2xl object-cover shadow-md ring-1 ring-border"
+          />
+          <h1 className="mt-1 text-lg font-semibold">Ayyubi Finance</h1>
+          <p className="text-sm text-muted-foreground">Masuk untuk melanjutkan</p>
+        </div>
+
+        <form onSubmit={kirim} className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
 
-          <form onSubmit={kirim} className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="sandi">Kata sandi</Label>
+            <Input
+              id="sandi"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={sandi}
+              onChange={(e) => setSandi(e.target.value)}
+            />
+          </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="sandi">Kata sandi</Label>
-              <Input
-                id="sandi"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={sandi}
-                onChange={(e) => setSandi(e.target.value)}
-              />
-            </div>
+          {error ? <PesanError error={error} /> : null}
 
-            {error ? <PesanError error={error} /> : null}
-
-            <Button type="submit" className="w-full" disabled={proses}>
-              {proses ? <Spinner /> : null}
-              Masuk
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          <Button type="submit" className="w-full" disabled={proses}>
+            {proses ? <Spinner /> : null}
+            Masuk
+          </Button>
+        </form>
+      </div>
     </div>
   )
 }

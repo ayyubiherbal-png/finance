@@ -88,12 +88,10 @@ export function Layout() {
     !item.peran || (profil?.peran ? item.peran.includes(profil.peran) : false)
 
   return (
-    <div className="flex h-screen overflow-hidden bg-muted/30">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-card md:flex">
-        <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Truck className="h-4 w-4" />
-          </div>
+    <div className="flex h-screen overflow-hidden bg-brand-wash">
+      <aside className="glass hidden w-60 shrink-0 flex-col md:flex">
+        <div className="flex h-14 items-center gap-2 border-b border-border/70 px-4">
+          <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-9 w-9 shrink-0 rounded-lg object-cover ring-1 ring-border" />
           <span className="font-semibold">Ayyubi Finance</span>
         </div>
 
@@ -115,10 +113,10 @@ export function Layout() {
                         end={m.ke === '/'}
                         className={({ isActive }) =>
                           cn(
-                            'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+                            'flex items-center gap-2 rounded-md border-l-2 px-2 py-1.5 text-sm transition-colors',
                             isActive
-                              ? 'bg-primary/10 font-medium text-primary'
-                              : 'text-foreground/80 hover:bg-accent',
+                              ? 'border-primary bg-primary/10 font-medium text-primary'
+                              : 'border-transparent text-foreground/80 hover:bg-accent',
                           )
                         }
                       >
@@ -133,7 +131,7 @@ export function Layout() {
           })}
         </nav>
 
-        <div className="border-t border-border p-3">
+        <div className="border-t border-border/70 p-3">
           <div className="mb-2 flex items-center gap-2.5 px-2">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
               {(profil?.nama ?? '?').slice(0, 1).toUpperCase()}
@@ -150,7 +148,7 @@ export function Layout() {
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 overflow-y-auto">
+      <main className="min-w-0 flex-1 overflow-y-auto bg-background">
         <div className="mx-auto max-w-7xl p-4 md:p-6">
           <Outlet />
         </div>

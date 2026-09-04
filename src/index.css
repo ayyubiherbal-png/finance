@@ -5,43 +5,56 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    --foreground: 24 10% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --primary: 221 83% 45%;
+    --card-foreground: 24 10% 12%;
+
+    /* Hijau dari logo Ayyubi Food (validasi CVD lewat skill dataviz). */
+    --primary: 100 59% 31%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
+
+    --secondary: 100 25% 94%;
+    --secondary-foreground: 24 10% 15%;
+    --muted: 90 15% 95%;
+    --muted-foreground: 30 8% 42%;
+    --accent: 100 30% 93%;
+    --accent-foreground: 24 10% 15%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 45%;
-    --radius: 0.5rem;
+    --border: 90 15% 88%;
+    --input: 90 15% 88%;
+    --ring: 100 59% 31%;
+    --radius: 0.65rem;
+
+    /* Aksen tambahan dari logo -- coklat wordmark "Food" & emas kilau bintang.
+       Dipakai sesekali (aksen dekoratif, badge), bukan token utama shadcn. */
+    --brand-brown: 24 40% 22%;
+    --brand-gold: 38 86% 56%;
   }
 
   .dark {
-    --background: 222 47% 8%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    --background: 24 10% 7%;
+    --foreground: 60 9% 96%;
+    --card: 24 12% 10%;
+    --card-foreground: 60 9% 96%;
+
+    --primary: 100 45% 52%;
+    --primary-foreground: 24 40% 12%;
+
+    --secondary: 100 12% 16%;
+    --secondary-foreground: 60 9% 92%;
+    --muted: 100 10% 15%;
+    --muted-foreground: 90 8% 65%;
+    --accent: 100 14% 18%;
+    --accent-foreground: 60 9% 92%;
     --destructive: 0 63% 51%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 217 91% 60%;
+    --border: 100 12% 20%;
+    --input: 100 12% 20%;
+    --ring: 100 45% 52%;
+
+    --brand-brown: 30 30% 70%;
+    --brand-gold: 38 80% 62%;
   }
 
   * {
@@ -55,5 +68,24 @@
   /* Angka rupiah/kuantitas sejajar rapi di tabel */
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Glassmorphism ----------
+     Dipakai selektif di chrome aplikasi (sidebar, kartu login) -- BUKAN di
+     tabel/form data transaksi, supaya angka keuangan tetap tajam dibaca. */
+  .glass {
+    background: hsl(var(--card) / 0.68);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid hsl(var(--border) / 0.6);
+  }
+
+  /* Gradasi latar lembut bertema logo, tempat elemen glass "duduk" --
+     tanpa ini efek kaca tidak kelihatan (perlu warna di baliknya). */
+  .bg-brand-wash {
+    background:
+      radial-gradient(900px circle at -5% -10%, hsl(var(--primary) / 0.16), transparent 55%),
+      radial-gradient(700px circle at 105% 110%, hsl(var(--brand-gold) / 0.14), transparent 55%),
+      hsl(var(--muted));
   }
 }
