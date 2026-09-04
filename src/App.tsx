@@ -6,7 +6,14 @@ import { Spinner } from '@/components/ui'
 import { Login } from '@/pages/Login'
 import { Dashboard } from '@/pages/Dashboard'
 import { Produk } from '@/pages/Produk'
+import { ProdukForm } from '@/pages/ProdukForm'
 import { Pelanggan } from '@/pages/Pelanggan'
+import { Supplier } from '@/pages/Supplier'
+import { SupplierForm } from '@/pages/SupplierForm'
+import { Stok } from '@/pages/Stok'
+import { KartuStok } from '@/pages/KartuStok'
+import { LaporanPiutang } from '@/pages/LaporanPiutang'
+import { LaporanLaba } from '@/pages/LaporanLaba'
 import { SalesOrder } from '@/pages/SalesOrder'
 import { SalesOrderForm } from '@/pages/SalesOrderForm'
 import { SuratJalan } from '@/pages/SuratJalan'
@@ -23,7 +30,6 @@ import { FakturPembelian } from '@/pages/FakturPembelian'
 import { FakturPembelianForm } from '@/pages/FakturPembelianForm'
 import { PembayaranSupplier } from '@/pages/PembayaranSupplier'
 import { PembayaranSupplierForm } from '@/pages/PembayaranSupplierForm'
-import { SegeraHadir } from '@/pages/SegeraHadir'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,7 +59,14 @@ function Rute() {
       <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
         <Route path="produk" element={<Produk />} />
+        <Route path="produk/:id" element={<ProdukForm />} />
         <Route path="pelanggan" element={<Pelanggan />} />
+        <Route path="supplier" element={<Supplier />} />
+        <Route path="supplier/:id" element={<SupplierForm />} />
+        <Route path="stok" element={<Stok />} />
+        <Route path="kartu-stok" element={<KartuStok />} />
+        <Route path="laporan/piutang" element={<LaporanPiutang />} />
+        <Route path="laporan/laba" element={<LaporanLaba />} />
 
         <Route path="sales-order" element={<SalesOrder />} />
         <Route path="sales-order/:id" element={<SalesOrderForm />} />
@@ -71,13 +84,6 @@ function Rute() {
         <Route path="faktur-pembelian/:id" element={<FakturPembelianForm />} />
         <Route path="pembayaran-supplier" element={<PembayaranSupplier />} />
         <Route path="pembayaran-supplier/:id" element={<PembayaranSupplierForm />} />
-
-        {/* Fase 1 & 2 — skema siap, layar menyusul */}
-        <Route path="supplier" element={<SegeraHadir judul="Supplier" />} />
-        <Route path="stok" element={<SegeraHadir judul="Stok per Gudang" />} />
-        <Route path="kartu-stok" element={<SegeraHadir judul="Kartu Stok" />} />
-        <Route path="laporan/piutang" element={<SegeraHadir judul="Laporan Piutang" />} />
-        <Route path="laporan/laba" element={<SegeraHadir judul="Laporan Laba Kotor" />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

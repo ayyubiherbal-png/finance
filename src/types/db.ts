@@ -239,6 +239,23 @@ export interface VKartuStok {
   catatan: string | null
 }
 
+export interface VPiutang {
+  faktur_id: string
+  nomor: string
+  tanggal: string
+  jatuh_tempo: string
+  pelanggan_id: string
+  kode_pelanggan: string
+  nama_pelanggan: string
+  sales_id: string | null
+  nama_sales: string | null
+  total: number
+  terbayar: number
+  sisa: number
+  hari_lewat: number
+  bucket_umur: 'belum_jatuh_tempo' | '1-30' | '31-60' | '61-90' | '90+'
+}
+
 export interface VPiutangAging {
   pelanggan_id: string
   nama_pelanggan: string
@@ -267,6 +284,16 @@ export interface VLabaProduk {
   kode_produk: string
   nama_produk: string
   qty_terjual: number
+  omzet: number
+  hpp: number
+  laba_kotor: number
+  margin_persen: number
+}
+
+export interface VLabaPelanggan {
+  pelanggan_id: string
+  nama_pelanggan: string
+  jumlah_faktur: number
   omzet: number
   hpp: number
   laba_kotor: number

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Search } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { angka, rupiah } from '@/lib/format'
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   Input,
@@ -55,14 +57,22 @@ export function Produk() {
           </p>
         </div>
 
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-8"
-            placeholder="Cari nama atau kode..."
-            value={cari}
-            onChange={(e) => setCari(e.target.value)}
-          />
+        <div className="flex flex-1 justify-end gap-2 sm:flex-none">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="pl-8"
+              placeholder="Cari nama atau kode..."
+              value={cari}
+              onChange={(e) => setCari(e.target.value)}
+            />
+          </div>
+          <Button asChild>
+            <Link to="/produk/baru">
+              <Plus className="h-4 w-4" />
+              Produk Baru
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -97,7 +107,9 @@ export function Produk() {
                     <Td className="font-mono text-xs">{p.kode}</Td>
                     <Td className="font-medium">
                       <div className="flex items-center gap-2">
-                        {p.nama}
+                        <Link to={`/produk/${p.produk_id}`} className="text-primary hover:underline">
+                          {p.nama}
+                        </Link>
                         {p.perlu_restock ? (
                           <Badge variant={Number(p.qty) <= 0 ? 'bahaya' : 'peringatan'}>
                             {Number(p.qty) <= 0 ? 'Habis' : 'Menipis'}
