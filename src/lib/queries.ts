@@ -96,3 +96,10 @@ export async function cariPelanggan(kueri: string): Promise<OpsiCombobox[]> {
   const { data } = await q
   return (data ?? []).map((p) => ({ value: p.id, label: p.nama, sublabel: p.kode }))
 }
+
+export async function cariSupplier(kueri: string): Promise<OpsiCombobox[]> {
+  let q = supabase.from('supplier').select('id, kode, nama').eq('aktif', true).order('nama').limit(20)
+  if (kueri.trim()) q = q.or(`nama.ilike.%${kueri.trim()}%,kode.ilike.%${kueri.trim()}%`)
+  const { data } = await q
+  return (data ?? []).map((s) => ({ value: s.id, label: s.nama, sublabel: s.kode }))
+}

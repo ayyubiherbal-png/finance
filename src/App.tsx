@@ -15,6 +15,10 @@ import { FakturPenjualan } from '@/pages/FakturPenjualan'
 import { FakturPenjualanForm } from '@/pages/FakturPenjualanForm'
 import { PenerimaanKas } from '@/pages/PenerimaanKas'
 import { PenerimaanKasForm } from '@/pages/PenerimaanKasForm'
+import { PurchaseOrder } from '@/pages/PurchaseOrder'
+import { PurchaseOrderForm } from '@/pages/PurchaseOrderForm'
+import { PenerimaanBarang } from '@/pages/PenerimaanBarang'
+import { PenerimaanBarangForm } from '@/pages/PenerimaanBarangForm'
 import { SegeraHadir } from '@/pages/SegeraHadir'
 
 const queryClient = new QueryClient({
@@ -55,10 +59,12 @@ function Rute() {
         <Route path="faktur-penjualan/:id" element={<FakturPenjualanForm />} />
         <Route path="penerimaan-kas" element={<PenerimaanKas />} />
         <Route path="penerimaan-kas/:id" element={<PenerimaanKasForm />} />
+        <Route path="purchase-order" element={<PurchaseOrder />} />
+        <Route path="purchase-order/:id" element={<PurchaseOrderForm />} />
+        <Route path="penerimaan-barang" element={<PenerimaanBarang />} />
+        <Route path="penerimaan-barang/:id" element={<PenerimaanBarangForm />} />
 
         {/* Fase 1 & 2 — skema siap, layar menyusul */}
-        <Route path="purchase-order" element={<SegeraHadir judul="Purchase Order" />} />
-        <Route path="penerimaan-barang" element={<SegeraHadir judul="Penerimaan Barang" />} />
         <Route path="faktur-pembelian" element={<SegeraHadir judul="Faktur Pembelian" />} />
         <Route path="supplier" element={<SegeraHadir judul="Supplier" />} />
         <Route path="stok" element={<SegeraHadir judul="Stok per Gudang" />} />
