@@ -22,7 +22,7 @@ Cakupan file ini: **Fase 1** (jual sampai terima uang) dan **Fase 2**
 | `0008_rls.sql` | Row Level Security per peran |
 | `0009_seed_awal.sql` | Satuan, tier harga, gudang, kategori awal |
 | `0010_kas_bank.sql` | Akun kas/bank, saldo & kartu per akun -- **migrasi tambahan**, ditulis setelah 0001-0009 sudah dijalankan di database asli, jadi dirancang non-destruktif (backfill, bukan drop/replace) |
-| `0011_pelanggan_crm.sql` | Field persiapan CRM di `pelanggan` + 4 tabel wilayah administratif (Provinsi/Kab-Kota/Kecamatan/Kelurahan) berisi data resmi Kemendagri -- **butuh langkah tambahan**: import CSV kelurahan terpisah dari SQL, lihat README.md |
+| `0011_pelanggan_crm.sql` | Field persiapan CRM di `pelanggan` + 4 tabel wilayah administratif (Provinsi/Kab-Kota/Kecamatan/Kelurahan), data resmi Kemendagri -- **butuh langkah tambahan**: 3 import CSV terpisah dari SQL (kab/kota, kecamatan, kelurahan), lihat README.md |
 
 Total 44 tabel + 14 view (di luar ~91.600 baris data referensi wilayah).
 Migrasi 0010 dan seterusnya adalah tambahan
@@ -329,10 +329,15 @@ digabung jadi satu migrasi karena diminta di sesi yang sama:
    `"32.73.01.1001"`) supaya gampang disinkronkan ulang kalau sumbernya
    update. Tabel `wilayah_*` murni referensi: RLS baca-saja untuk semua
    pengguna, tidak ada policy tulis sama sekali (aplikasi tidak pernah
-   menulis ke situ). Data kelurahan (3,3 MB) sengaja **tidak** ikut
-   sebagai INSERT literal di migrasi — lihat `supabase/seed-data/` dan
-   README.md bagian atas untuk cara importnya (CSV via Table Editor,
-   bukan SQL Editor).
+   menulis ke situ). Data Kabupaten/Kota, Kecamatan, dan Kelurahan
+   (91.561 baris gabungan) sengaja **tidak** ikut sebagai INSERT literal
+   di migrasi — percobaan pertama (~280 KB SQL) gagal ditempel di SQL
+   Editor Supabase ("request entity too large", batas Supabase sendiri).
+   Disediakan sebagai 3 file CSV di `supabase/seed-data/`, diimpor lewat
+   **Table Editor** satu per satu dengan urutan yang wajib (kab/kota →
+   kecamatan → kelurahan, karena `kode`-nya foreign key berjenjang) —
+   lihat README.md bagian atas untuk langkah lengkapnya. Hanya Provinsi
+   (38 baris, kecil) yang tetap inline di migrasi sebagai SQL biasa.
 
 Kolom `pelanggan.kota` (teks bebas, dari skema awal) **dibiarkan**
 tidak dipakai lagi oleh form — digantikan `kabupaten_kode` yang

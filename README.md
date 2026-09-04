@@ -16,36 +16,42 @@ memengaruhi bentuk form.
 ## ⚠️ Migrasi baru yang perlu dijalankan sekarang
 
 Anda sudah menjalankan 0001-0010 (Kas & Bank sudah aktif). Ada tambahan
-**dua langkah** kali ini -- migrasi SQL seperti biasa, lalu satu import CSV:
+**empat langkah** kali ini -- migrasi SQL (kecil, aman), lalu tiga import CSV.
 
-### Langkah A -- jalankan migrasi seperti biasa
+> Percobaan pertama migrasi ini menulis ~91.000 baris data wilayah
+> sebagai SQL langsung dan **gagal ditempel** di SQL Editor ("Failed to
+> rename snippet: request entity too large" -- itu batas ukuran bawaan
+> Supabase, bukan masalah di kode). Sudah diperbaiki: sekarang migrasinya
+> kecil, dan semua data besar lewat **Table Editor**, bukan SQL Editor.
+
+### Langkah A -- jalankan migrasi (kecil, ~6 KB, aman ditempel)
 
 ```
 supabase/migrations/0011_pelanggan_crm.sql
 ```
 
-File ini agak besar (~280 KB, berisi data resmi wilayah Indonesia dari
-Kemendagri: 38 provinsi + 514 kabupaten/kota + 7.285 kecamatan) --
-wajar, bukan berarti ada yang salah. Aman dijalankan di database yang
-sudah ada datanya: kolom baru di `pelanggan` semuanya opsional, tabel
-`wilayah_*` baru dan kosong sampai diisi.
+Cuma bikin tabel + kolom baru + seed 38 provinsi (kecil). Aman
+dijalankan di database yang sudah ada datanya -- kolom baru di
+`pelanggan` semuanya opsional, tabel `wilayah_*` baru dan kosong
+sampai diisi lewat Langkah B.
 
-### Langkah B -- import data Kelurahan/Desa (WAJIB, terpisah dari SQL)
+### Langkah B -- import 3 file CSV lewat Table Editor (WAJIB, urutan penting)
 
-Data kelurahan (83.762 baris, ~3,3 MB) **tidak** ikut di file migrasi --
-kepanjangan buat ditempel di SQL Editor dengan andal. Setelah Langkah A
-sukses:
+Untuk **masing-masing** baris di bawah: Supabase Dashboard →
+**Table Editor** → pilih tabelnya → klik **Insert** → **Import data
+from CSV** → pilih file dari folder `supabase/seed-data/` di proyek.
+Mapping kolom harusnya otomatis cocok (header CSV sama persis dengan
+nama kolom tabel).
 
-1. Supabase Dashboard → **Table Editor** → pilih tabel `wilayah_kelurahan`
-2. Klik **Insert** → **Import data from CSV**
-3. Pilih file `supabase/seed-data/wilayah_kelurahan.csv` dari folder proyek
-4. Pastikan mapping kolom otomatis cocok (`kode`, `kecamatan_kode`, `nama`,
-   `kode_pos`) -- harusnya otomatis karena header CSV-nya sudah sama
-   persis dengan nama kolom tabel
-5. Import (mungkin makan waktu beberapa menit untuk 83 ribu baris)
+**Urutan wajib dari atas ke bawah** (kolom `kode`-nya foreign key
+berjenjang -- tabel induk harus terisi dulu, kalau kebalik akan error):
 
-Tanpa langkah ini, dropdown "Kelurahan/Desa" di form Pelanggan akan
-selalu kosong -- Provinsi/Kabupaten/Kecamatan tetap berfungsi normal.
+1. Tabel `wilayah_kabupaten_kota` ← `wilayah_kabupaten_kota.csv` (514 baris)
+2. Tabel `wilayah_kecamatan` ← `wilayah_kecamatan.csv` (7.285 baris)
+3. Tabel `wilayah_kelurahan` ← `wilayah_kelurahan.csv` (83.762 baris, paling lama -- beberapa menit)
+
+Tanpa langkah ini, dropdown wilayah di form Pelanggan cuma menampilkan
+Provinsi lalu berhenti (kosong di level berikutnya).
 
 Migrasi selanjutnya (kalau ada) akan bernomor `0012`, dst. -- selalu jalankan
 yang belum pernah Anda jalankan, urut sesuai nomor.
@@ -171,7 +177,7 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 |---|---|---|
 | Master | Produk, Supplier, Pelanggan | Selesai, CRUD penuh -- Pelanggan sekarang termasuk alamat berjenjang (Provinsi/Kab-Kota/Kecamatan/Kelurahan) dan field persiapan CRM |
 | Kas & Bank | Akun Kas & Bank (saldo live), Kartu Kas & Bank (mutasi) | Selesai -- **butuh migrasi 0010**, lihat peringatan di atas |
-| Wilayah | Data resmi Kemendagri (38 provinsi -> 83.762 kelurahan) untuk dropdown alamat Pelanggan | Selesai -- **butuh migrasi 0011 + import CSV**, lihat peringatan di atas |
+| Wilayah | Data resmi Kemendagri (38 provinsi -> 83.762 kelurahan) untuk dropdown alamat Pelanggan | Selesai -- **butuh migrasi 0011 + 3 import CSV**, lihat peringatan di atas |
 | Penjualan | Sales Order → Surat Jalan → Faktur → Penerimaan Kas → Retur | Selesai, ujung ke ujung |
 | Pembelian | Purchase Order → Penerimaan Barang → Faktur Pembelian → Pembayaran Supplier → Retur | Selesai, ujung ke ujung |
 | Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
