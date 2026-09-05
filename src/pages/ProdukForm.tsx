@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  InputAngka,
   Label,
   PesanError,
   Select,
@@ -777,13 +778,7 @@ function FormEdit({ produkId }: { produkId: string }) {
               value={hargaBaru.min_qty}
               onChange={(e) => setHargaBaru((h) => ({ ...h, min_qty: Number(e.target.value) }))}
             />
-            <Input
-              type="number"
-              min={0}
-              placeholder="Harga"
-              value={hargaBaru.harga}
-              onChange={(e) => setHargaBaru((h) => ({ ...h, harga: Number(e.target.value) }))}
-            />
+            <InputAngka placeholder="Harga" value={hargaBaru.harga} onChange={(nilai) => setHargaBaru((h) => ({ ...h, harga: nilai }))} />
             <Input
               type="date"
               value={hargaBaru.berlaku_mulai}

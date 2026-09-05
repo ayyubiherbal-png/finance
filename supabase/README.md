@@ -407,6 +407,31 @@ Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
 `overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
 dipotong/disembunyikan.
 
+**Input uang pakai pemisah ribuan "1.000.000" (2026-09-05, murni
+frontend, tanpa migrasi).** User tanya "Harga beli" di form Purchase
+Order itu per satuan atau sudah gabungan -- jawabannya per satuan
+(field DB namanya `harga_satuan`, subtotal dihitung trigger dari
+`qty * harga_satuan`), diperjelas labelnya jadi "Harga beli / satuan"
+(dan padanannya di SO/Retur: "Harga / satuan"). Sekalian diminta
+format angka pakai titik ribuan biar tidak salah ketik nol.
+
+Dibuat `InputAngka` di `src/components/ui.tsx` -- pembungkus `Input`
+yang menampilkan angka terformat (`toLocaleString('id-ID')`, mis.
+"6.500.000") sambil tetap menyimpan `number` biasa sebagai value.
+Diketik live (bukan cuma format saat blur) -- posisi kursor dihitung
+ulang berdasarkan jumlah DIGIT (bukan karakter) sebelum posisi
+semula, supaya titik pemisah yang muncul/hilang saat mengetik tidak
+mendorong kursor ke tempat salah. Value 0 ditampilkan kosong (bukan
+"0") supaya gampang mulai ngetik dari nol tanpa masalah "0" nyangkut
+di depan.
+
+Dipasang HANYA di field nominal uang (bukan qty/persen/hari, yang
+risiko salah-ketiknya beda dan biasanya angkanya kecil): Saldo awal
+(Akun Kas & Bank), Harga beli/jual per satuan (PO, SO, Retur jual/beli,
+harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
+Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
+(Penyesuaian Stok).
+
 **Script reset sebelum go-live (2026-09-05, `reset-sebelum-live.sql`).**
 User: "ini kan masih uji coba ya, saya mau ketika deploy nanti,
 angka-angka yang di input itu bisa 0 dulu semuanya." Diklarifikasi

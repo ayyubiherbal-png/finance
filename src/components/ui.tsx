@@ -57,6 +57,65 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
 )
 Input.displayName = 'Input'
 
+function formatRibuan(n: number): string {
+  return Number.isFinite(n) ? n.toLocaleString('id-ID') : ''
+}
+
+interface InputAngkaProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type'> {
+  value: number
+  onChange: (nilai: number) => void
+}
+
+/**
+ * Input angka dengan pemisah ribuan ("1.000.000") supaya gampang dibaca
+ * & kelihatan kalau salah ketik nolnya -- dipakai untuk field nominal
+ * uang (harga, saldo, dsb.), bukan qty/persen/hari yang biasanya kecil.
+ * Value asli tetap number biasa, cuma tampilannya yang diformat.
+ */
+export const InputAngka = React.forwardRef<HTMLInputElement, InputAngkaProps>(
+  ({ value, onChange, className, ...props }, ref) => {
+    const innerRef = React.useRef<HTMLInputElement>(null)
+    React.useImperativeHandle(ref, () => innerRef.current as HTMLInputElement)
+
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+      const input = e.target
+      const posisiKursor = input.selectionStart ?? input.value.length
+      const digitSebelumKursor = (input.value.slice(0, posisiKursor).match(/\d/g) ?? []).length
+      const angkaBersih = input.value.replace(/\D/g, '')
+      const angka = angkaBersih ? Number(angkaBersih) : 0
+      onChange(angka)
+
+      // Kursor diposisikan ulang berdasarkan jumlah DIGIT (bukan karakter)
+      // sebelum posisi semula, supaya titik pemisah yang baru muncul/hilang
+      // tidak mendorong kursor ke tempat yang salah.
+      requestAnimationFrame(() => {
+        const elemen = innerRef.current
+        if (!elemen) return
+        const teksBaru = formatRibuan(angka)
+        let posisi = 0
+        let hitung = 0
+        while (posisi < teksBaru.length && hitung < digitSebelumKursor) {
+          if (/\d/.test(teksBaru.charAt(posisi))) hitung++
+          posisi++
+        }
+        elemen.setSelectionRange(posisi, posisi)
+      })
+    }
+
+    return (
+      <Input
+        ref={innerRef}
+        inputMode="numeric"
+        value={value === 0 ? '' : formatRibuan(value)}
+        onChange={handleChange}
+        className={cn('text-right tabular', className)}
+        {...props}
+      />
+    )
+  },
+)
+InputAngka.displayName = 'InputAngka'
+
 export const Select = React.forwardRef<
   HTMLSelectElement,
   React.SelectHTMLAttributes<HTMLSelectElement>

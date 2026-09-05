@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  InputAngka,
   KondisiKosong,
   Label,
   PesanError,
@@ -235,14 +236,11 @@ function FormBaru() {
                           {fmtTanggal(f.tanggal)} &middot; sisa {rupiah(f.sisa)}
                         </p>
                       </div>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={f.sisa}
+                      <InputAngka
                         disabled={!f.dipilih}
                         value={f.jumlah}
-                        onChange={(e) => ubahJumlah(f.id, Number(e.target.value))}
-                        className="w-32 text-right"
+                        onChange={(nilai) => ubahJumlah(f.id, nilai)}
+                        className="w-32"
                       />
                     </div>
                   ))}

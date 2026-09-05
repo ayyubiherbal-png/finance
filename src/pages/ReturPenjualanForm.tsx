@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  InputAngka,
   Label,
   PesanError,
   Select,
@@ -458,13 +459,8 @@ function FormEdit({ returId }: { returId: string }) {
                   <Input type="number" min={0} value={addRow.qty} onChange={(e) => setAddRow((r) => ({ ...r, qty: Number(e.target.value) }))} />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Harga</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={addRow.harga_satuan}
-                    onChange={(e) => setAddRow((r) => ({ ...r, harga_satuan: Number(e.target.value) }))}
-                  />
+                  <Label className="text-xs">Harga / satuan</Label>
+                  <InputAngka value={addRow.harga_satuan} onChange={(nilai) => setAddRow((r) => ({ ...r, harga_satuan: nilai }))} />
                 </div>
                 <Button onClick={tambahItem} disabled={menambah}>
                   {menambah ? <Spinner /> : null}

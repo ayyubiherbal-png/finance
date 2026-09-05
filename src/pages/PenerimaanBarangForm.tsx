@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  InputAngka,
   Label,
   PesanError,
   Spinner,
@@ -261,13 +262,7 @@ function FormBaru({ poId }: { poId: string | null }) {
                       />
                     </Td>
                     <Td className="text-right">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={r.hargaTerima}
-                        onChange={(e) => ubahHarga(r.id, Number(e.target.value))}
-                        className="ml-auto w-28 text-right"
-                      />
+                      <InputAngka value={r.hargaTerima} onChange={(nilai) => ubahHarga(r.id, nilai)} className="ml-auto w-28" />
                     </Td>
                   </Tr>
                 )
@@ -305,12 +300,7 @@ function FormBaru({ poId }: { poId: string | null }) {
           </div>
           <div className="space-y-1.5">
             <Label>Biaya tambahan (ongkos angkut/bongkar)</Label>
-            <Input
-              type="number"
-              min={0}
-              value={header.biaya_tambahan}
-              onChange={(e) => setHeader((h) => ({ ...h, biaya_tambahan: Number(e.target.value) }))}
-            />
+            <InputAngka value={header.biaya_tambahan} onChange={(nilai) => setHeader((h) => ({ ...h, biaya_tambahan: nilai }))} />
             <p className="text-xs text-muted-foreground">
               Dibagi proporsional ke tiap produk dan ikut masuk perhitungan HPP.
             </p>

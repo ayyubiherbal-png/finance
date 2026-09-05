@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/components/Toast'
 import { rupiah } from '@/lib/format'
-import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
+import { Button, Card, CardContent, Input, InputAngka, Label, PesanError, Select, Spinner } from '@/components/ui'
 import type { AkunKasBank, JenisAkunKas, VSaldoKasBank } from '@/types/db'
 
 interface FormState {
@@ -206,12 +206,7 @@ export function AkunKasBankForm() {
 
           <div className="space-y-1.5">
             <Label>Saldo awal</Label>
-            <Input
-              type="number"
-              min={0}
-              value={form.saldo_awal}
-              onChange={(e) => ubah('saldo_awal', Number(e.target.value))}
-            />
+            <InputAngka value={form.saldo_awal} onChange={(nilai) => ubah('saldo_awal', nilai)} />
             {!isBaru ? (
               <p className="text-xs text-muted-foreground">
                 Saldo dihitung ulang otomatis (saldo awal + semua transaksi), jadi mengubah ini langsung

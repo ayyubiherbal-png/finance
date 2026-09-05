@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  InputAngka,
   Label,
   PesanError,
   Select,
@@ -432,12 +433,7 @@ function FormEdit({ adjId }: { adjId: string }) {
                 {addRow.qty > 0 ? (
                   <div className="space-y-1">
                     <Label className="text-xs">HPP {adj.jenis === 'saldo_awal' ? '(wajib)' : '(opsional)'}</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={addRow.hpp_satuan}
-                      onChange={(e) => setAddRow((r) => ({ ...r, hpp_satuan: Number(e.target.value) }))}
-                    />
+                    <InputAngka value={addRow.hpp_satuan} onChange={(nilai) => setAddRow((r) => ({ ...r, hpp_satuan: nilai }))} />
                   </div>
                 ) : (
                   <div />

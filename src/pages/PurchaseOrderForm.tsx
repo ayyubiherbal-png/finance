@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  InputAngka,
   Label,
   PesanError,
   Select,
@@ -502,13 +503,8 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Harga beli</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={addRow.harga_satuan}
-                    onChange={(e) => setAddRow((r) => ({ ...r, harga_satuan: Number(e.target.value) }))}
-                  />
+                  <Label className="text-xs">Harga beli / satuan</Label>
+                  <InputAngka value={addRow.harga_satuan} onChange={(nilai) => setAddRow((r) => ({ ...r, harga_satuan: nilai }))} />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Diskon%</Label>
