@@ -360,14 +360,16 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
     }
   }
 
-  async function ubahStatus(statusBaru: 'disetujui' | 'dibatalkan') {
+  async function ubahStatus(statusBaru: 'disetujui' | 'dibatalkan' | 'draf') {
     if (statusBaru === 'dibatalkan' && !window.confirm('Batalkan Purchase Order ini?')) return
     setErrorStatus(null)
     setMemprosesStatus(true)
     try {
       const { error } = await supabase.from('purchase_order').update({ status: statusBaru }).eq('id', poId)
       if (error) throw error
-      toast(statusBaru === 'disetujui' ? 'Purchase Order disetujui.' : 'Purchase Order dibatalkan.')
+      toast(
+        statusBaru === 'disetujui' ? 'Purchase Order disetujui.' : statusBaru === 'draf' ? 'Purchase Order dibuka lagi.' : 'Purchase Order dibatalkan.',
+      )
       invalidateSemua()
     } catch (e) {
       setErrorStatus(e)
@@ -558,6 +560,13 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
         <div className="flex justify-end">
           <Button asChild>
             <Link to={`/penerimaan-barang/baru?po=${po.id}`}>Buat Penerimaan Barang</Link>
+          </Button>
+        </div>
+      ) : po.status === 'dibatalkan' ? (
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={() => ubahStatus('draf')} disabled={memprosesStatus}>
+            {memprosesStatus ? <Spinner /> : null}
+            Buka Lagi jadi Draf
           </Button>
         </div>
       ) : null}

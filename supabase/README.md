@@ -407,6 +407,22 @@ Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
 `overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
 dipotong/disembunyikan.
 
+**PO/SO yang dibatalkan bisa dibuka lagi jadi Draf (2026-09-05, murni
+frontend, tanpa migrasi).** User tunjuk PO berstatus "Dibatalkan"
+(Total Rp 0, tidak pernah punya item) minta bisa diedit lagi. Dicek:
+`Batalkan` HANYA bisa dipanggil dari status `draf` (bukan dari
+`disetujui`/`sebagian`) -- artinya dokumen yang sampai ke status
+`dibatalkan` PASTI belum pernah lewat proses Setujui (yang mengunci
+stok/efek finansial), jadi aman dibuka lagi ke `draf` tanpa perlu
+membalik efek apa pun. Ditambah tombol "Buka Lagi jadi Draf" untuk
+status `dibatalkan` di **Purchase Order** dan **Sales Order** (2 form
+yang punya pola draf->dibatalkan persis sama). Diperiksa juga
+Penyesuaian Stok/Retur/Surat Jalan/Penerimaan Barang -- SENGAJA TIDAK
+diberi tombol serupa, karena `dibatalkan` di situ dicapai dari status
+`selesai` (bukan `draf`) yang berarti ADA efek stok nyata yang sudah
+dibalik trigger -- membuka lagi ke draf di situ jauh lebih berisiko
+(perlu re-apply efek, bukan sekadar ganti status).
+
 **Audit menyeluruh: data master yang perlu "ikut" ke dokumen transaksi
 (0018, 2026-09-05).** User minta prinsip umum, bukan cuma Sales Order:
 "semua data yang ada di master data itu, ketika di orderan/pembelian,
