@@ -97,3 +97,16 @@
       hsl(var(--muted));
   }
 }
+
+/* Browser secara default TIDAK mencetak warna latar belakang (background-
+   color/gradient) kecuali user mencentang "Background graphics" di dialog
+   print -- band warna, kop tabel berwarna, dan bar Total di halaman cetak
+   (Invoice, Surat Jalan) jadi hilang total tanpa ini. Aturan ini memaksa
+   warna latar tetap tercetak apa pun pengaturan browsernya. */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}

@@ -432,6 +432,24 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Ketemu akar masalah "invoice masih jauh dari contoh": browser TIDAK
+mencetak warna latar belakang secara default (2026-09-05,
+`src/index.css`, murni CSS).** User bandingkan hasil cetak Invoice vs
+contoh template -- band hijau, kop tabel berwarna, bar Total semuanya
+HILANG TOTAL di hasil cetak (cuma warna teks yang tetap muncul, mis.
+"INVOICE"/"LUNAS" tetap hijau). Ini BUKAN salah desain -- Chrome/Edge
+secara default tidak mencetak `background-color`/gradient sama sekali
+kecuali user mencentang "Background graphics" di dialog print (opsi
+yang hampir tidak pernah disadari kebanyakan orang). Fix: aturan
+global di `index.css` --
+`@media print { * { print-color-adjust: exact !important; ... } }`
+(plus prefix `-webkit-`) -- memaksa warna latar tetap tercetak apa pun
+pengaturan browser pengguna. Berlaku otomatis untuk SEMUA halaman
+cetak (Invoice sekarang, Surat Jalan, dan yang berikutnya) tanpa perlu
+diulang per file. **Pelajaran:** kalau desain cetak yang mengandalkan
+warna latar "hilang" di hasil print padahal kodenya benar, curigai
+dulu `print-color-adjust` sebelum mengutak-atik warna/kelasnya.
+
 **Label pengiriman SJ dirombak jadi Pengirim/Penerima (2026-09-05,
 lanjutan cetak SJ, murni frontend).** User tunjuk 2 screenshot: hasil
 cetak SJ sebelumnya, dan tampilan detail SJ di aplikasi (2 kolom info
