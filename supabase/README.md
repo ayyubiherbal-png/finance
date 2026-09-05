@@ -432,6 +432,37 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Cetak Surat Jalan (2026-09-05, murni frontend, tanpa migrasi).** User:
+"dimana saya bisa print orderan untuk saya serahkan ke jasa kirim" --
+aplikasi ini belum punya fitur cetak/print sama sekali (dicek, tidak
+ada `window.print`/`@media print` di mana pun sebelum ini). Dokumen
+yang relevan untuk diserahkan ke kurir/jasa kirim adalah **Surat
+Jalan** (bukan Sales Order -- SJ yang punya alamat kirim, nama/telepon
+penerima, ekspedisi), jadi fitur cetak dipasang di situ.
+
+Dibuat halaman baru `src/pages/SuratJalanCetak.tsx` di route
+`surat-jalan/:id/cetak` -- SENGAJA didaftarkan sebagai route ROOT
+terpisah di `App.tsx` (sejajar dengan `<Route element={<Layout />}>`,
+bukan di dalamnya) supaya render TANPA sidebar/chrome aplikasi, cuma
+kop surat + tabel item + kolom tanda tangan pengirim/penerima -- siap
+cetak. Tombol "Kembali"/"Cetak" di halaman itu sendiri disembunyikan
+saat print lewat utility bawaan Tailwind `print:hidden` (bukan CSS
+custom). Link "Cetak" ditambah di halaman detail Surat Jalan, buka
+tab baru (`target="_blank"`) supaya halaman detail aslinya tidak
+hilang. Tetap butuh login (halaman ini ada di dalam gate sesi yang
+sama, cuma di luar `Layout` -- akses tanpa session tetap kena redirect
+ke Login seperti biasa).
+
+**Ongkir pembelian sudah ADA, cuma beda halaman (dijelaskan ke user,
+bukan fitur baru).** User: "saya juga tidak bisa isi ongkir untuk
+pembelian" -- dicek, field "Biaya tambahan (ongkos angkut/bongkar)"
+sudah ada dan berfungsi penuh (`penerimaan_barang.biaya_tambahan`,
+sejak awal), TAPI letaknya di form **Penerimaan Barang** (saat barang
+benar-benar diterima), bukan di **Purchase Order** (saat pesan) --
+sengaja begitu karena ongkos riil biasanya baru diketahui saat barang
+sampai, bukan saat pesan. User kemungkinan cuma belum sampai ke layar
+Penerimaan Barang.
+
 **Kolom "Total" live di baris tambah item (2026-09-05, murni frontend,
 tanpa migrasi).** Lanjutan langsung dari penjelasan "Harga beli itu per
 satuan" -- user minta ditambah kolom Total supaya kelihatan hasil

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Printer } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
@@ -457,6 +457,12 @@ function FormDetail({ sjId }: { sjId: string }) {
           </p>
         </div>
         <Badge variant={VARIAN_STATUS[sj.status]}>{LABEL_STATUS[sj.status]}</Badge>
+        <Button variant="outline" asChild>
+          <Link to={`/surat-jalan/${sj.id}/cetak`} target="_blank">
+            <Printer className="h-4 w-4" />
+            Cetak
+          </Link>
+        </Button>
       </div>
 
       <Card>

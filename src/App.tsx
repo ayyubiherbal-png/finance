@@ -23,6 +23,7 @@ import { SalesOrder } from '@/pages/SalesOrder'
 import { SalesOrderForm } from '@/pages/SalesOrderForm'
 import { SuratJalan } from '@/pages/SuratJalan'
 import { SuratJalanForm } from '@/pages/SuratJalanForm'
+import { SuratJalanCetak } from '@/pages/SuratJalanCetak'
 import { FakturPenjualan } from '@/pages/FakturPenjualan'
 import { FakturPenjualanForm } from '@/pages/FakturPenjualanForm'
 import { PenerimaanKas } from '@/pages/PenerimaanKas'
@@ -67,6 +68,7 @@ function Rute() {
 
   return (
     <Routes>
+      <Route path="surat-jalan/:id/cetak" element={<SuratJalanCetak />} />
       <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
         <Route path="produk" element={<Produk />} />
