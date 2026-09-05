@@ -78,6 +78,7 @@ const MENU: Grup[] = [
       { ke: '/produk', label: 'Produk', ikon: Package },
       { ke: '/pelanggan', label: 'Pelanggan', ikon: Users },
       { ke: '/supplier', label: 'Supplier', ikon: Building2, peran: ['owner', 'admin'] },
+      { ke: '/gudang', label: 'Gudang', ikon: Warehouse, peran: ['owner', 'admin'] },
     ],
   },
   {

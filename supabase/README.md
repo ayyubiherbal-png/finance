@@ -432,6 +432,28 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Menu Gudang (master data) dibuat -- ternyata belum pernah ada UI-nya
+sama sekali (2026-09-05).** User tanya "di mana saya bisa memasukkan
+alamat gudang?" setelah fitur alamat-gudang-di-invoice ditambahkan --
+dicek, sama seperti kasus Pelanggan/Supplier di awal sesi ini, ternyata
+`gudang` MEMANG cuma bisa diisi/diedit lewat SQL manual, tidak ada
+menu/form sama sekali di aplikasi (beda dari kolom `alamat` yang sudah
+ada di skema sejak 0002, dan konsep `utama` yang sudah dipakai internal
+lewat unique partial index -- tapi tidak ada UI untuk mengaturnya).
+Dibuat `src/pages/Gudang.tsx` (list) + `GudangForm.tsx` (create/edit),
+pola identik Supplier (kode/nama/alamat/aktif), plus checkbox "Jadikan
+gudang utama" -- kalau dicentang, `simpan()` melepas status utama dari
+gudang lain dulu (`update ... where utama=true and id <> ini`) sebelum
+set yang sekarang, supaya konsisten dengan unique partial index
+`uq_gudang_utama` di DB (yang cuma izinkan 1 baris `utama=true`).
+Menu baru ini digating `peran: ['owner','admin']` (sama seperti
+Supplier) -- pengaturan gudang dianggap keputusan administratif, bukan
+operasional harian sales. **Pola berulang lagi (sudah beberapa kali di
+sesi ini):** kalau user butuh mengisi suatu field master data dan
+ternyata TIDAK ADA tempat untuk menginputnya di UI, itu sinyal ada
+menu/form yang terlewat dibangun -- cek dulu sebelum menjawab "coba
+cek menu X" kalau menu X itu sendiri belum tentu ada.
+
 **Identitas toko di dokumen cetak: "Ayyubi Finance" -> "Ayyubi Food" +
 alamat gudang utama (2026-09-05).** User koreksi: nama yang tampil di
 kop dokumen ke pelanggan HARUS "Ayyubi Food" (brand dagangnya, sesuai
