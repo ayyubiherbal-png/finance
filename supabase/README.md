@@ -407,6 +407,24 @@ Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
 `overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
 dipotong/disembunyikan.
 
+**Sales Order: pilih Pelanggan -> alamat kirim & telepon terisi
+otomatis (0017, 2026-09-05).** User: "kita sudah buat master data
+customer, kenapa saat pilih customer alamat dan nomor HP tidak terisi
+otomatis?" -- benar, `pilihPelanggan()` di `SalesOrderForm.tsx`
+sebelumnya cuma menarik `tier_harga_id`/`termin`/`termin_hari` dari
+pelanggan terpilih, alamat & telepon dibiarkan kosong padahal datanya
+sudah ada di master Pelanggan sejak 0011. Diperbaiki: query saat pilih
+pelanggan diperluas, embed join ke 4 tabel `wilayah_*` (pola sama
+`Supplier.tsx`) untuk menyusun `alamat_kirim` (concat alamat + nama
+wilayah), dan ambil `whatsapp`/`telepon` untuk field baru
+**Telepon/WA penerima**. Kolom itu belum ada di `sales_order` -- 0017
+menambah `telepon_penerima` (pasangan `nama_penerima` yang sudah ada,
+sama-sama field override kalau penerima beda dari akun pelanggan
+terdaftar, mis. pesanan online). Auto-isi ini MENIMPA tanpa guard
+kalau ganti pelanggan (konsisten dengan `tier_harga_id`/`termin` yang
+memang sudah begitu dari awal di fungsi yang sama) -- field-nya tetap
+bisa diedit manual setelah terisi.
+
 **Alamat Supplier disamakan dengan Pelanggan -- wilayah berjenjang
 (0016, 2026-09-05).** User: "input alamatnya di buat kaya bagian
 customer ya". Tabel `supplier` belum punya kolom wilayah sama sekali

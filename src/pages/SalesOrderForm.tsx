@@ -48,8 +48,22 @@ interface HeaderForm {
   termin: TerminBayar
   termin_hari: number
   nama_penerima: string
+  telepon_penerima: string
   alamat_kirim: string
   catatan: string
+}
+
+interface PelangganAlamatSingkat {
+  tier_harga_id: string | null
+  termin: TerminBayar
+  termin_hari: number
+  alamat: string | null
+  telepon: string | null
+  whatsapp: string | null
+  kelurahan: { nama: string } | null
+  kecamatan: { nama: string } | null
+  kabupaten_kota: { nama: string } | null
+  provinsi: { nama: string } | null
 }
 
 interface SODetail {
@@ -64,6 +78,7 @@ interface SODetail {
   termin: TerminBayar
   termin_hari: number
   nama_penerima: string | null
+  telepon_penerima: string | null
   alamat_kirim: string | null
   catatan: string | null
   subtotal: number
@@ -127,6 +142,7 @@ export function SalesOrderForm() {
     termin: 'cod',
     termin_hari: 0,
     nama_penerima: '',
+    telepon_penerima: '',
     alamat_kirim: '',
     catatan: '',
   }))
@@ -152,15 +168,25 @@ export function SalesOrderForm() {
     setHeader((h) => ({ ...h, pelanggan_id: idPel, pelangganLabel: opsi }))
     const { data } = await supabase
       .from('pelanggan')
-      .select('tier_harga_id, termin, termin_hari')
+      .select(
+        'tier_harga_id, termin, termin_hari, alamat, telepon, whatsapp, ' +
+          'kelurahan:kelurahan_kode(nama), kecamatan:kecamatan_kode(nama), ' +
+          'kabupaten_kota:kabupaten_kode(nama), provinsi:provinsi_kode(nama)',
+      )
       .eq('id', idPel)
       .single()
-    if (data) {
+    const d = data as unknown as PelangganAlamatSingkat | null
+    if (d) {
+      const alamatKirim = [d.alamat, d.kelurahan?.nama, d.kecamatan?.nama, d.kabupaten_kota?.nama, d.provinsi?.nama]
+        .filter(Boolean)
+        .join(', ')
       setHeader((h) => ({
         ...h,
-        tier_harga_id: data.tier_harga_id ?? h.tier_harga_id,
-        termin: data.termin,
-        termin_hari: data.termin_hari,
+        tier_harga_id: d.tier_harga_id ?? h.tier_harga_id,
+        termin: d.termin,
+        termin_hari: d.termin_hari,
+        alamat_kirim: alamatKirim,
+        telepon_penerima: d.whatsapp || d.telepon || '',
       }))
     }
   }
@@ -210,6 +236,7 @@ export function SalesOrderForm() {
           termin: header.termin,
           termin_hari: header.termin_hari,
           nama_penerima: header.nama_penerima || null,
+          telepon_penerima: header.telepon_penerima || null,
           alamat_kirim: header.alamat_kirim || null,
           catatan: header.catatan || null,
           sales_id: profil?.id ?? null,
@@ -400,6 +427,14 @@ function FormBaru({
           </div>
 
           <div className="space-y-1.5">
+            <Label>Telepon/WA penerima</Label>
+            <Input
+              value={header.telepon_penerima}
+              onChange={(e) => setHeader((h) => ({ ...h, telepon_penerima: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-1.5">
             <Label>Catatan</Label>
             <Input value={header.catatan} onChange={(e) => setHeader((h) => ({ ...h, catatan: e.target.value }))} />
           </div>
@@ -433,7 +468,7 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
       const { data, error } = await supabase
         .from('sales_order')
         .select(
-          'id, nomor, tanggal, status, kanal, pelanggan_id, gudang_id, tier_harga_id, termin, termin_hari, nama_penerima, alamat_kirim, catatan, subtotal, diskon_header, total, pelanggan:pelanggan_id(nama, kode), gudang:gudang_id(nama)',
+          'id, nomor, tanggal, status, kanal, pelanggan_id, gudang_id, tier_harga_id, termin, termin_hari, nama_penerima, telepon_penerima, alamat_kirim, catatan, subtotal, diskon_header, total, pelanggan:pelanggan_id(nama, kode), gudang:gudang_id(nama)',
         )
         .eq('id', soId)
         .single()
@@ -600,6 +635,7 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
           <InfoField label="Gudang" value={so.gudang?.nama ?? '-'} />
           <InfoField label="Termin" value={so.termin === 'cod' ? 'COD' : `Tempo ${so.termin_hari} hari`} />
           {so.nama_penerima ? <InfoField label="Nama penerima" value={so.nama_penerima} /> : null}
+          {so.telepon_penerima ? <InfoField label="Telepon/WA penerima" value={so.telepon_penerima} /> : null}
           {so.alamat_kirim ? <InfoField label="Alamat kirim" value={so.alamat_kirim} /> : null}
           {so.catatan ? <InfoField label="Catatan" value={so.catatan} /> : null}
         </CardContent>
