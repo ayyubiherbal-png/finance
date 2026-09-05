@@ -432,6 +432,15 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Perbaikan kecil: kotak kosong saat rekening pembayaran tidak tampil
+(2026-09-05).** User tunjuk kotak kosong kelihatan di layout saat
+rekening tidak ada (invoice Lunas, atau belum ada akun Bank
+terdaftar) -- karena `grid-cols-2` tetap mengalokasikan ruang kolom
+kiri meski isinya `null`. Diganti jadi `flex justify-between` dengan
+`ml-auto` di blok tanda tangan, supaya kalau kolom rekening tidak
+dirender sama sekali, tanda tangan tetap rapi di kanan tanpa
+menyisakan celah kosong yang kelihatan seperti kotak.
+
 **Invoice: tambah info rekening pembayaran (data ASLI, bukan hardcode)
 + blok tanda tangan (2026-09-05).** User minta 2 tambahan di bagian
 bawah Invoice: kiri = info rekening bank untuk transfer, kanan = tanda

@@ -236,25 +236,23 @@ export function FakturPenjualanCetak() {
             </p>
           ) : null}
 
-          <div className="grid grid-cols-2 gap-6 border-t border-gray-200 pt-6 text-sm">
-            <div>
-              {rekening && rekening.length > 0 ? (
-                <>
-                  <p className="mb-2 text-xs font-semibold uppercase text-gray-500">Informasi Rekening Pembayaran</p>
-                  <div className="space-y-2">
-                    {rekening.map((r) => (
-                      <div key={r.nama}>
-                        <p className="font-semibold">{r.bank_nama || r.nama}</p>
-                        <p className="text-gray-600">
-                          {r.nomor_rekening} a.n. {r.atas_nama}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : null}
-            </div>
-            <div className="text-center">
+          <div className="flex justify-between gap-6 border-t border-gray-200 pt-6 text-sm">
+            {rekening && rekening.length > 0 ? (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase text-gray-500">Informasi Rekening Pembayaran</p>
+                <div className="space-y-2">
+                  {rekening.map((r) => (
+                    <div key={r.nama}>
+                      <p className="font-semibold">{r.bank_nama || r.nama}</p>
+                      <p className="text-gray-600">
+                        {r.nomor_rekening} a.n. {r.atas_nama}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <div className="ml-auto text-center">
               <p>Hormat kami,</p>
               <div className="mt-12 border-t border-gray-400 pt-1">Ayyubi Finance</div>
             </div>
