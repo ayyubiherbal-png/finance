@@ -45,6 +45,8 @@ interface SOSumber {
   pelanggan_id: string
   gudang_id: string
   alamat_kirim: string | null
+  nama_penerima: string | null
+  telepon_penerima: string | null
   pelanggan: { nama: string } | null
   gudang: { nama: string } | null
 }
@@ -71,6 +73,8 @@ function FormBaru({ soId }: { soId: string | null }) {
   const [header, setHeader] = useState({
     tanggal: tanggalISO(),
     alamat_kirim: '',
+    nama_penerima: '',
+    telepon_penerima: '',
     ekspedisi: '',
     nomor_kendaraan: '',
     nama_sopir: '',
@@ -85,7 +89,7 @@ function FormBaru({ soId }: { soId: string | null }) {
       const { data, error } = await supabase
         .from('sales_order')
         .select(
-          'id, nomor, status, pelanggan_id, gudang_id, alamat_kirim, pelanggan:pelanggan_id(nama), gudang:gudang_id(nama)',
+          'id, nomor, status, pelanggan_id, gudang_id, alamat_kirim, nama_penerima, telepon_penerima, pelanggan:pelanggan_id(nama), gudang:gudang_id(nama)',
         )
         .eq('id', soId as string)
         .single()
@@ -119,8 +123,14 @@ function FormBaru({ soId }: { soId: string | null }) {
   }, [itemSO])
 
   useEffect(() => {
-    if (so?.alamat_kirim) setHeader((h) => ({ ...h, alamat_kirim: so.alamat_kirim ?? '' }))
-  }, [so?.alamat_kirim])
+    if (!so) return
+    setHeader((h) => ({
+      ...h,
+      alamat_kirim: so.alamat_kirim ?? h.alamat_kirim,
+      nama_penerima: so.nama_penerima ?? h.nama_penerima,
+      telepon_penerima: so.telepon_penerima ?? h.telepon_penerima,
+    }))
+  }, [so])
 
   if (!soId) {
     return (
@@ -173,6 +183,8 @@ function FormBaru({ soId }: { soId: string | null }) {
           pelanggan_id: so.pelanggan_id,
           gudang_id: so.gudang_id,
           alamat_kirim: header.alamat_kirim || null,
+          nama_penerima: header.nama_penerima || null,
+          telepon_penerima: header.telepon_penerima || null,
           ekspedisi: header.ekspedisi || null,
           nomor_kendaraan: header.nomor_kendaraan || null,
           nama_sopir: header.nama_sopir || null,
@@ -299,6 +311,22 @@ function FormBaru({ soId }: { soId: string | null }) {
               onChange={(e) => setHeader((h) => ({ ...h, alamat_kirim: e.target.value }))}
             />
           </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Nama penerima</Label>
+              <Input
+                value={header.nama_penerima}
+                onChange={(e) => setHeader((h) => ({ ...h, nama_penerima: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Telepon/WA penerima</Label>
+              <Input
+                value={header.telepon_penerima}
+                onChange={(e) => setHeader((h) => ({ ...h, telepon_penerima: e.target.value }))}
+              />
+            </div>
+          </div>
 
           {error ? <PesanError error={error} /> : null}
 
@@ -331,6 +359,8 @@ interface SJDetail {
   so_id: string | null
   pelanggan_id: string
   alamat_kirim: string | null
+  nama_penerima: string | null
+  telepon_penerima: string | null
   ekspedisi: string | null
   nomor_kendaraan: string | null
   nama_sopir: string | null
@@ -360,7 +390,7 @@ function FormDetail({ sjId }: { sjId: string }) {
       const { data, error } = await supabase
         .from('surat_jalan')
         .select(
-          'id, nomor, tanggal, status, so_id, pelanggan_id, alamat_kirim, ekspedisi, nomor_kendaraan, nama_sopir, catatan, pelanggan:pelanggan_id(nama), gudang:gudang_id(nama), so:so_id(nomor)',
+          'id, nomor, tanggal, status, so_id, pelanggan_id, alamat_kirim, nama_penerima, telepon_penerima, ekspedisi, nomor_kendaraan, nama_sopir, catatan, pelanggan:pelanggan_id(nama), gudang:gudang_id(nama), so:so_id(nomor)',
         )
         .eq('id', sjId)
         .single()
@@ -436,6 +466,8 @@ function FormDetail({ sjId }: { sjId: string }) {
           {sj.ekspedisi ? <InfoField label="Ekspedisi" value={sj.ekspedisi} /> : null}
           {sj.nomor_kendaraan ? <InfoField label="No. kendaraan" value={sj.nomor_kendaraan} /> : null}
           {sj.nama_sopir ? <InfoField label="Sopir" value={sj.nama_sopir} /> : null}
+          {sj.nama_penerima ? <InfoField label="Nama penerima" value={sj.nama_penerima} /> : null}
+          {sj.telepon_penerima ? <InfoField label="Telepon/WA penerima" value={sj.telepon_penerima} /> : null}
           {sj.alamat_kirim ? <InfoField label="Alamat kirim" value={sj.alamat_kirim} /> : null}
           {sj.catatan ? <InfoField label="Catatan" value={sj.catatan} /> : null}
         </CardContent>

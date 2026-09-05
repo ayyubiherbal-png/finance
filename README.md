@@ -25,6 +25,7 @@ supabase/migrations/0014_pelanggan_ringkas_view.sql
 supabase/migrations/0015_pelanggan_akun_agregat.sql
 supabase/migrations/0016_supplier_wilayah.sql
 supabase/migrations/0017_sales_order_telepon_penerima.sql
+supabase/migrations/0018_surat_jalan_penerima.sql
 ```
 
 0012 mengganti daftar Tipe Pelanggan (Customer/Mitra/Horeka/Perusahaan)
@@ -41,9 +42,13 @@ tetap ada, masih dipakai alur pesanan online). 0016 menambah alamat
 berjenjang (Provinsi/Kab-Kota/Kecamatan/Kelurahan) ke Supplier, sama
 seperti Pelanggan. Semuanya aman dijalankan berkali-kali kalau perlu
 diulang. 0017 menambah kolom `telepon_penerima` di Sales Order supaya
-alamat & nomor HP terisi otomatis begitu Pelanggan dipilih. (Nomor
-0013 sempat dibuat lalu dibatalkan/dihapus lagi -- lompat dari 0012 ke
-0014 memang disengaja, bukan ada yang hilang.)
+alamat & nomor HP terisi otomatis begitu Pelanggan dipilih. 0018
+menambah `nama_penerima`/`telepon_penerima` di Surat Jalan juga
+(di-carry otomatis dari SO sumbernya) -- hasil audit menyeluruh semua
+form transaksi supaya data master ikut terbawa sesuai kebutuhan
+masing-masing dokumen. (Nomor 0013 sempat dibuat lalu dibatalkan/
+dihapus lagi -- lompat dari 0012 ke 0014 memang disengaja, bukan ada
+yang hilang.)
 
 > Percobaan pertama migrasi ini menulis ~91.000 baris data wilayah
 > sebagai SQL langsung dan **gagal ditempel** di SQL Editor ("Failed to
@@ -117,6 +122,7 @@ supabase/migrations/0014_pelanggan_ringkas_view.sql
 supabase/migrations/0015_pelanggan_akun_agregat.sql
 supabase/migrations/0016_supplier_wilayah.sql
 supabase/migrations/0017_sales_order_telepon_penerima.sql
+supabase/migrations/0018_surat_jalan_penerima.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

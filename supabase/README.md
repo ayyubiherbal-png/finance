@@ -407,6 +407,28 @@ Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
 `overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
 dipotong/disembunyikan.
 
+**Audit menyeluruh: data master yang perlu "ikut" ke dokumen transaksi
+(0018, 2026-09-05).** User minta prinsip umum, bukan cuma Sales Order:
+"semua data yang ada di master data itu, ketika di orderan/pembelian,
+mestinya kalau datanya diambil ikut semua dong, disesuaikan dengan
+data apa yang perlu diambil." Diaudit SEMUA form yang memilih Pelanggan/
+Supplier:
+- **Purchase Order** -- sudah lengkap, cuma `termin_hari` yang relevan
+  dari master Supplier (PO tidak butuh alamat, barang masuk KE kita).
+- **Faktur Penjualan/Pembelian, Penerimaan Kas, Pembayaran Supplier,
+  Retur Penjualan/Pembelian** -- pelanggan/supplier cuma dipilih untuk
+  memfilter daftar dokumen outstanding (SJ/PB/faktur) yang mau
+  digabung/dibayar/diretur -- tidak ada field alamat/kontak di
+  tabelnya, jadi memang tidak ada yang perlu ditarik.
+- **Surat Jalan** -- INI yang ketinggalan. Sudah ikut `alamat_kirim`
+  dari SO (dari awal), tapi TIDAK ikut `nama_penerima`/
+  `telepon_penerima` (field baru di SO dari 0017) -- padahal ini
+  persis info yang dibutuhkan sopir/kurir (tahu serahkan ke siapa,
+  bisa hubungi siapa kalau alamat susah dicari). 0018 menambah 2
+  kolom itu ke `surat_jalan`, di-carry otomatis dari SO sumbernya
+  (pola sama `alamat_kirim`), tetap bisa diedit manual di form Surat
+  Jalan Baru kalau beda dari SO.
+
 **Sales Order: pilih Pelanggan -> alamat kirim & telepon terisi
 otomatis (0017, 2026-09-05).** User: "kita sudah buat master data
 customer, kenapa saat pilih customer alamat dan nomor HP tidak terisi
