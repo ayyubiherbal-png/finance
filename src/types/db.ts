@@ -183,6 +183,10 @@ export interface Supplier {
   termin_hari: number
   aktif: boolean
   catatan: string | null
+  provinsi_kode: string | null
+  kabupaten_kode: string | null
+  kecamatan_kode: string | null
+  kelurahan_kode: string | null
 }
 
 export interface AkunKasBank {

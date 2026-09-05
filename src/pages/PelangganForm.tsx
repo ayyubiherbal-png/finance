@@ -3,9 +3,15 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useWilayahProvinsi, useWilayahKabupatenKota, useWilayahKecamatan, useWilayahKelurahan } from '@/lib/queries'
+import {
+  useWilayahProvinsi,
+  useWilayahKabupatenKota,
+  useWilayahKecamatan,
+  useWilayahKelurahan,
+  buatCariWilayah,
+} from '@/lib/queries'
 import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
-import { Combobox, type OpsiCombobox } from '@/components/Combobox'
+import { Combobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
 import type { Pelanggan, SumberPelanggan, TipePelanggan } from '@/types/db'
 
@@ -70,21 +76,6 @@ const LABEL_SUMBER: Record<SumberPelanggan, string> = {
   tiktok: 'TikTok',
   website: 'Website',
   custom: 'Custom...',
-}
-
-// Filter lokal atas daftar yang sudah dimuat penuh (staleTime: Infinity di
-// hook-nya) -- tidak perlu query baru tiap ketikan, tinggal saring array.
-function buatCariWilayah<T extends { kode: string; nama: string }>(
-  daftar: T[] | undefined,
-  sublabel?: (item: T) => string | undefined,
-) {
-  return async (kueri: string): Promise<OpsiCombobox[]> => {
-    const q = kueri.trim().toLowerCase()
-    const list = daftar ?? []
-    const hasil = q ? list.filter((w) => w.nama.toLowerCase().includes(q)) : list
-    const opsi = hasil.map((w) => ({ value: w.kode, label: w.nama, sublabel: sublabel?.(w) }))
-    return q ? opsi : [{ value: '', label: '- (kosongkan)' }, ...opsi]
-  }
 }
 
 // ID (kode) dijaga unik di database (constraint, lihat 0002). Kalau

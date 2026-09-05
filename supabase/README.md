@@ -407,6 +407,28 @@ Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
 `overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
 dipotong/disembunyikan.
 
+**Alamat Supplier disamakan dengan Pelanggan -- wilayah berjenjang
+(0016, 2026-09-05).** User: "input alamatnya di buat kaya bagian
+customer ya". Tabel `supplier` belum punya kolom wilayah sama sekali
+(beda dari `pelanggan` yang sudah dapat di 0011) -- 0016 menambah 4
+kolom (`provinsi_kode`/`kabupaten_kode`/`kecamatan_kode`/
+`kelurahan_kode`, referencing tabel `wilayah_*` yang sama, pola persis
+0011). Kolom `kota` (teks bebas lama) DIBIARKAN tidak dipakai form
+lagi, tidak di-drop -- pola sama seperti `pelanggan.kota` sebelumnya.
+
+`SupplierForm.tsx` sekarang pakai 4 `Combobox` wilayah + Alamat, identik
+strukturnya dengan `PelangganForm.tsx`. Karena logikanya (filter lokal
+`cariOpsi`) sekarang dipakai 2 form, `buatCariWilayah()` DIPINDAH dari
+`PelangganForm.tsx` ke `src/lib/queries.ts` (di-export, diimpor kedua
+form) -- supaya tidak duplikasi kode.
+
+Efek samping: daftar Supplier (`Supplier.tsx`) yang tadinya menampilkan
+kolom "Kota" (teks bebas, bakal selalu kosong untuk supplier baru sejak
+form-nya diganti) diubah embed join `kabupaten_kode(nama)` lewat
+PostgREST, fallback ke `kota` lama kalau kosong -- supaya tidak
+mengulang masalah "kolom selalu kosong" yang sudah pernah kejadian di
+daftar Pelanggan.
+
 **SKU Produk diprefix otomatis dari kode Kategori (2026-09-05, murni
 frontend, tanpa migrasi).** User minta pola sama seperti prefix ID
 Pelanggan per Tipe: pilih Kategori -> SKU otomatis diawali kode

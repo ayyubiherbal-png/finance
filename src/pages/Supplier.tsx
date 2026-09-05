@@ -21,16 +21,18 @@ import {
 } from '@/components/ui'
 import type { Supplier as SupplierRow } from '@/types/db'
 
+type SupplierBaris = SupplierRow & { kabupaten_kota: { nama: string } | null }
+
 function useSupplier(cari: string) {
   return useQuery({
     queryKey: ['supplier', cari],
     queryFn: async () => {
-      let q = supabase.from('supplier').select('*')
+      let q = supabase.from('supplier').select('*, kabupaten_kota:kabupaten_kode(nama)')
       if (cari.trim()) {
         const pola = `%${cari.trim()}%`
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
-      const { data, error } = await q.order('nama').limit(200).returns<SupplierRow[]>()
+      const { data, error } = await q.order('nama').limit(200).returns<SupplierBaris[]>()
       if (error) throw error
       return data ?? []
     },
@@ -82,7 +84,7 @@ export function Supplier() {
                   <Th>Kode</Th>
                   <Th>Nama</Th>
                   <Th>Kontak</Th>
-                  <Th>Kota</Th>
+                  <Th>Kabupaten/Kota</Th>
                   <Th>Termin</Th>
                   <Th></Th>
                 </Tr>
@@ -97,7 +99,7 @@ export function Supplier() {
                       </Link>
                     </Td>
                     <Td className="text-muted-foreground">{s.kontak_nama ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{s.kota ?? '-'}</Td>
+                    <Td className="text-muted-foreground">{s.kabupaten_kota?.nama ?? s.kota ?? '-'}</Td>
                     <Td className="text-muted-foreground">{s.termin_hari > 0 ? `${s.termin_hari} hari` : 'COD'}</Td>
                     <Td className="text-right">{!s.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
                   </Tr>

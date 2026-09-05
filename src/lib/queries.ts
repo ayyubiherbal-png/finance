@@ -204,3 +204,22 @@ export function useWilayahKelurahan(kecamatanKode: string | null) {
     staleTime: Infinity,
   })
 }
+
+/**
+ * Filter lokal atas daftar wilayah yang sudah dimuat penuh (staleTime:
+ * Infinity di hook-hook di atas) -- untuk dipakai sebagai `cariOpsi`
+ * Combobox tanpa perlu query baru tiap ketikan. Dipakai di form
+ * Pelanggan & Supplier (alamat berjenjang).
+ */
+export function buatCariWilayah<T extends { kode: string; nama: string }>(
+  daftar: T[] | undefined,
+  sublabel?: (item: T) => string | undefined,
+) {
+  return async (kueri: string): Promise<OpsiCombobox[]> => {
+    const q = kueri.trim().toLowerCase()
+    const list = daftar ?? []
+    const hasil = q ? list.filter((w) => w.nama.toLowerCase().includes(q)) : list
+    const opsi = hasil.map((w) => ({ value: w.kode, label: w.nama, sublabel: sublabel?.(w) }))
+    return q ? opsi : [{ value: '', label: '- (kosongkan)' }, ...opsi]
+  }
+}
