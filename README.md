@@ -188,6 +188,36 @@ Sekarang seluruh alur bisa dikerjakan dari UI, urutan yang masuk akal:
 
 ---
 
+## Sebelum mulai pakai sungguhan (go-live)
+
+Selama ini Anda menguji coba aplikasi dengan data & transaksi
+percobaan. Begitu siap dipakai sungguhan (bukan sekarang -- nanti,
+kalau sudah yakin), bersihkan dulu angka-angka hasil uji coba supaya
+mulai dari nol:
+
+```
+supabase/reset-sebelum-live.sql
+```
+
+**Ini BUKAN migrasi** -- sengaja tidak ditaruh di `supabase/migrations/`
+dan tidak dijalankan sebagai bagian dari urutan migrasi biasa. Jalankan
+manual di SQL Editor, **satu kali saja**, tepat sebelum go-live.
+
+- **Dihapus**: semua dokumen transaksi (Sales Order, Surat Jalan,
+  Faktur, Penerimaan Kas, Purchase Order, Penerimaan Barang,
+  Pembayaran Supplier, Retur, Penyesuaian Stok) beserta kartu stok dan
+  nomor urut dokumen (penomoran mulai dari 00001 lagi).
+- **Direset ke 0**: HPP rata-rata produk, saldo awal Akun Kas & Bank.
+- **Tetap utuh**: Produk, Kategori, Pelanggan, Supplier, Gudang, Akun
+  Kas & Bank (akunnya, cuma saldonya yang di-reset), Wilayah, dan
+  akun login Anda.
+
+> **Ini operasi permanen, tidak bisa dibatalkan.** Kalau ada data uji
+> coba yang ingin disimpan sebagai catatan, export dulu tabelnya lewat
+> Table Editor → Export sebelum menjalankan script ini.
+
+---
+
 ## Struktur
 
 ```

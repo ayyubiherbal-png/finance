@@ -407,6 +407,29 @@ Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
 `overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
 dipotong/disembunyikan.
 
+**Script reset sebelum go-live (2026-09-05, `reset-sebelum-live.sql`).**
+User: "ini kan masih uji coba ya, saya mau ketika deploy nanti,
+angka-angka yang di input itu bisa 0 dulu semuanya." Diklarifikasi
+dulu lewat AskUserQuestion (2 pertanyaan: master data ikut dihapus
+atau tidak; saldo awal Kas & Bank ikut direset atau tidak) sebelum
+menulis satu baris SQL pun -- ini operasi destruktif, salah asumsi di
+sini jauh lebih mahal daripada di fitur biasa. Hasil: master data
+(Produk/Pelanggan/Supplier/Kategori/Gudang/Akun Kas & Bank/Wilayah/
+profil) TETAP, cuma transaksi & angka turunannya yang direset.
+
+Dibuat `supabase/reset-sebelum-live.sql` -- **SENGAJA DI LUAR**
+`supabase/migrations/`, supaya tidak ketiban dianggap bagian dari
+urutan migrasi biasa (skrip ini destruktif & sekali-jalankan-saja,
+beda sifat total dari migrasi skema yang idempotent by design). Isinya:
+satu `TRUNCATE ... CASCADE` untuk 29 tabel transaksi (semua dokumen +
+item + alokasi + stok_mutasi + stok + dokumen_counter, terverifikasi
+lengkap lewat cross-check ke semua `create table` di seluruh file
+migrasi), plus `UPDATE produk SET hpp_rata2 = 0` dan
+`UPDATE akun_kas_bank SET saldo_awal = 0`. Dibungkus `begin`/`commit`
+biar atomic. Didokumentasikan di README.md root sebagai section
+terpisah "Sebelum mulai pakai sungguhan (go-live)", bukan di daftar
+migrasi yang perlu dijalankan.
+
 **PO/SO yang dibatalkan bisa dibuka lagi jadi Draf (2026-09-05, murni
 frontend, tanpa migrasi).** User tunjuk PO berstatus "Dibatalkan"
 (Total Rp 0, tidak pernah punya item) minta bisa diedit lagi. Dicek:
