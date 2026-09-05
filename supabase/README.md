@@ -432,6 +432,34 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Label pengiriman SJ dirombak jadi Pengirim/Penerima (2026-09-05,
+lanjutan cetak SJ, murni frontend).** User tunjuk 2 screenshot: hasil
+cetak SJ sebelumnya, dan tampilan detail SJ di aplikasi (2 kolom info
+"Dari SO/Ekspedisi/Telepon-WA penerima" vs "Gudang/Nama penerima/
+Alamat kirim") sebagai contoh GAYA yang disukai. Instruksinya presisi:
+ganti "Dari SO" jadi "Pengirim", "Telepon/WA penerima" (posisi kiri)
+jadi "No. WA Pengirim", Ekspedisi pindah ke bawah nomor (bukan lagi
+judul besar), "Gudang" diganti "Nama Penerima", dan "Nama penerima"
+lama diganti "No Penerima" dipindah ke bawah Alamat. Hasil akhir:
+header cuma nomor SJ + Ekspedisi + tanggal (bukan Ekspedisi sebagai
+judul raksasa lagi), lalu grid 2 kolom murni Pengirim vs Penerima.
+
+Nama & nomor WA pengirim (`NAMA_PENGIRIM`/`NOMOR_WA_PENGIRIM` di atas
+komponen) HARDCODE, bukan dari database -- tidak ada tabel/kolom
+pengaturan identitas toko di skema mana pun. User kasih nomornya
+langsung di chat (082211369433) setelah ditanya (tidak dikarang).
+Kalau nanti field serupa dibutuhkan di dokumen lain (Invoice, dst.),
+pertimbangkan bikin 1 lokasi pengaturan bersama alih-alih hardcode
+berulang di tiap file cetak.
+
+**Print preview browser SELALU membesarkan halaman memenuhi jendela
+preview, apa pun ukuran kertas sebenarnya (A6 vs A4 akan TERLIHAT sama
+besar di situ)** -- user sempat curiga ukuran A6-nya tidak berfungsi
+padahal cuma efek visual dialog print, bukan bug kode. Cara verifikasi
+sungguhan: cek field "Ukuran kertas" di dialog print (biasanya
+"Custom"/menampilkan mm-nya), atau simpan sebagai PDF dan lihat ukuran
+halaman PDF-nya.
+
 **Desain cetak Invoice dirombak sesuai contoh referensi (2026-09-05,
 murni frontend).** User kirim screenshot template invoice (band hijau
 di atas, "INVOICE" besar di kanan, baris info 3 kolom, tabel item

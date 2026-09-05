@@ -5,6 +5,12 @@ import { supabase } from '@/lib/supabase'
 import { tanggal as fmtTanggal } from '@/lib/format'
 import { Button, Spinner, PesanError } from '@/components/ui'
 
+// Belum ada field untuk kontak toko di master data mana pun -- ditaruh
+// di sini dulu (bukan dari database) sampai ada tempat pengaturan yang
+// lebih semestinya kalau nanti dibutuhkan di tempat lain juga.
+const NAMA_PENGIRIM = 'Ayyubi Finance'
+const NOMOR_WA_PENGIRIM = '082211369433'
+
 interface SJCetakDetail {
   id: string
   nomor: string
@@ -99,24 +105,36 @@ export function SuratJalanCetak() {
         <div className="flex items-start justify-between border-b border-black pb-2">
           <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-8 w-8 rounded object-cover" />
           <div className="text-right">
+            <p className="font-mono text-sm font-bold">{sj.nomor}</p>
             {/* Belum ada aset logo ekspedisi -- tampil nama ekspedisi dulu
-                sebagai teks besar. Kirim file logo JNE/J&T/dst. kalau mau
+                sebagai teks. Kirim file logo JNE/J&T/dst. kalau mau
                 diganti jadi gambar logo aslinya. */}
-            <p className="text-base font-bold uppercase tracking-wide">{sj.ekspedisi || 'Ekspedisi'}</p>
-            <p className="font-mono text-[10px] text-gray-600">{sj.nomor}</p>
+            <p className="font-semibold uppercase tracking-wide">{sj.ekspedisi || 'Ekspedisi'}</p>
             <p className="text-[10px] text-gray-600">{fmtTanggal(sj.tanggal)}</p>
           </div>
         </div>
 
-        <div>
-          <p className="mb-0.5 text-[10px] font-semibold uppercase text-gray-500">Kepada</p>
-          <p className="font-semibold">{sj.pelanggan?.nama ?? '-'}</p>
-          {sj.nama_penerima ? <p>Penerima: {sj.nama_penerima}</p> : null}
-          {sj.telepon_penerima ?? kontak ? <p>Telepon/WA: {sj.telepon_penerima ?? kontak}</p> : null}
-          {sj.alamat_kirim ? <p className="whitespace-pre-line">{sj.alamat_kirim}</p> : null}
-          {sj.nomor_kendaraan ? <p>No. kendaraan: {sj.nomor_kendaraan}</p> : null}
-          {sj.nama_sopir ? <p>Sopir: {sj.nama_sopir}</p> : null}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="mb-0.5 text-[10px] font-semibold uppercase text-gray-500">Pengirim</p>
+            <p className="font-semibold">{NAMA_PENGIRIM}</p>
+            <p>No. WA: {NOMOR_WA_PENGIRIM}</p>
+          </div>
+          <div>
+            <p className="mb-0.5 text-[10px] font-semibold uppercase text-gray-500">Penerima</p>
+            <p className="font-semibold">{sj.nama_penerima || sj.pelanggan?.nama || '-'}</p>
+            {sj.alamat_kirim ? <p className="whitespace-pre-line">{sj.alamat_kirim}</p> : null}
+            {sj.telepon_penerima ?? kontak ? <p>No. WA: {sj.telepon_penerima ?? kontak}</p> : null}
+          </div>
         </div>
+
+        {sj.nomor_kendaraan ?? sj.nama_sopir ? (
+          <p className="text-[10px] text-gray-600">
+            {sj.nomor_kendaraan ? `No. kendaraan: ${sj.nomor_kendaraan}` : null}
+            {sj.nomor_kendaraan && sj.nama_sopir ? ' · ' : null}
+            {sj.nama_sopir ? `Sopir: ${sj.nama_sopir}` : null}
+          </p>
+        ) : null}
 
         <table className="w-full border-collapse">
           <thead>
