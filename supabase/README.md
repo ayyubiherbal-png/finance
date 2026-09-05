@@ -432,6 +432,22 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Desain cetak Invoice dirombak sesuai contoh referensi (2026-09-05,
+murni frontend).** User kirim screenshot template invoice (band hijau
+di atas, "INVOICE" besar di kanan, baris info 3 kolom, tabel item
+berkop warna, total digarisbawahi bar warna). Diterapkan ulang di
+`FakturPenjualanCetak.tsx` dengan warna brand Ayyubi sendiri (pakai
+utility `bg-primary`/`text-primary`/`text-primary-foreground` yang
+sudah ada -- bukan warna hijau contoh langsung, supaya konsisten
+dengan tema aplikasi yang sudah divalidasi CVD-safe) -- bukan tiru
+persis warna templatenya. Field yang tidak ada padanan datanya di
+sistem ini (metode pembayaran, tanda tangan "Accounts Manager", detail
+kontak perusahaan) SENGAJA tidak dipaksakan ada -- tidak fabrikasi
+data yang tidak dimiliki, cukup diganti kalimat penutup "Terima kasih"
+generik. Status pembayaran (Lunas/Belum Bayar/Sebagian) ditonjolkan
+sebagai pengganti "TOTAL DUE" di contoh (konsep beda: kita punya
+status bayar bertingkat, bukan cuma "dibayar berapa").
+
 **Ukuran kertas cetak: Surat Jalan A6, Invoice A4 (2026-09-05, murni
 frontend).** User: label pengiriman (SJ) dicetak A6, invoice dicetak
 A4. Diterapkan lewat `<style>{@media print { @page { size: ...; margin:

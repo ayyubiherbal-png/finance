@@ -120,87 +120,104 @@ export function FakturPenjualanCetak() {
         </Button>
       </div>
 
-      <div className="mx-auto w-[210mm] space-y-6 border border-border p-8 print:w-auto print:border-0 print:p-0">
-        <div className="flex items-start justify-between border-b border-black pb-4">
-          <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-16 w-16 rounded object-cover" />
-          <div className="text-right">
-            <p className="text-2xl font-bold uppercase tracking-wide">Invoice</p>
-            <p className="font-mono text-sm text-gray-600">{faktur.nomor}</p>
-            <p className="text-sm text-gray-600">{fmtTanggal(faktur.tanggal)}</p>
-          </div>
-        </div>
+      <div className="mx-auto w-[210mm] overflow-hidden border border-border print:w-auto print:border-0">
+        <div className="h-2 bg-primary" />
 
-        <div className="grid grid-cols-2 gap-6 text-sm">
-          <div>
-            <p className="mb-1 text-xs font-semibold uppercase text-gray-500">Kepada</p>
-            <p className="font-semibold">{p?.nama ?? '-'}</p>
-            {kontak ? <p>Telepon/WA: {kontak}</p> : null}
-            {alamatLengkap ? <p className="whitespace-pre-line">{alamatLengkap}</p> : null}
+        <div className="space-y-6 p-10">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-14 w-14 rounded object-cover" />
+              <p className="font-semibold text-gray-700">Ayyubi Finance</p>
+            </div>
+            <p className="text-3xl font-bold uppercase tracking-wide text-primary">Invoice</p>
           </div>
-          <div className="text-right">
-            <p className="mb-1 text-xs font-semibold uppercase text-gray-500">Jatuh tempo</p>
-            <p>{fmtTanggal(faktur.jatuh_tempo)}</p>
-            <p className="mt-2 text-base font-semibold">{LABEL_BAYAR[faktur.status_bayar]}</p>
-          </div>
-        </div>
 
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b-2 border-black text-left">
-              <th className="py-1 pr-2">No.</th>
-              <th className="py-1 pr-2">Produk</th>
-              <th className="py-1 pr-2 text-right">Qty</th>
-              <th className="py-1 pr-2">Satuan</th>
-              <th className="py-1 pr-2 text-right">Harga</th>
-              <th className="py-1 pr-2 text-right">Disk.%</th>
-              <th className="py-1 text-right">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(items ?? []).map((it, i) => (
-              <tr key={it.id} className="border-b border-gray-300">
-                <td className="py-1 pr-2">{i + 1}</td>
-                <td className="py-1 pr-2">
-                  {it.produk?.nama}
-                  <span className="ml-1 font-mono text-xs text-gray-500">{it.produk?.kode}</span>
-                </td>
-                <td className="py-1 pr-2 text-right">{it.qty}</td>
-                <td className="py-1 pr-2">{it.satuan?.kode}</td>
-                <td className="py-1 pr-2 text-right">{rupiah(it.harga_satuan)}</td>
-                <td className="py-1 pr-2 text-right">{it.diskon_persen > 0 ? `${it.diskon_persen}%` : '-'}</td>
-                <td className="py-1 text-right">{rupiah(it.subtotal)}</td>
+          <div className="grid grid-cols-3 gap-4 border-y border-gray-200 py-4 text-sm">
+            <div>
+              <p className="text-xs uppercase text-gray-500">No. Invoice</p>
+              <p className="font-mono font-semibold">{faktur.nomor}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase text-gray-500">Tanggal / Jatuh tempo</p>
+              <p className="font-semibold">
+                {fmtTanggal(faktur.tanggal)} &middot; {fmtTanggal(faktur.jatuh_tempo)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase text-gray-500">Ditagihkan kepada</p>
+              <p className="font-semibold">{p?.nama ?? '-'}</p>
+              {kontak ? <p className="text-xs text-gray-600">{kontak}</p> : null}
+              {alamatLengkap ? <p className="text-xs text-gray-600">{alamatLengkap}</p> : null}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-md bg-muted px-4 py-3">
+            <span className="text-sm font-medium text-gray-600">Status pembayaran</span>
+            <span className="text-lg font-bold uppercase text-primary">{LABEL_BAYAR[faktur.status_bayar]}</span>
+          </div>
+
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-primary text-left text-primary-foreground">
+                <th className="rounded-l-md py-2 pl-3">Produk</th>
+                <th className="py-2 text-right">Qty</th>
+                <th className="py-2">Satuan</th>
+                <th className="py-2 text-right">Harga</th>
+                <th className="py-2 text-right">Disk.%</th>
+                <th className="rounded-r-md py-2 pr-3 text-right">Subtotal</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {(items ?? []).map((it, i) => (
+                <tr key={it.id} className={i % 2 === 1 ? 'bg-muted/50' : undefined}>
+                  <td className="py-2 pl-3">
+                    {it.produk?.nama}
+                    <span className="ml-1 font-mono text-xs text-gray-500">{it.produk?.kode}</span>
+                  </td>
+                  <td className="py-2 text-right">{it.qty}</td>
+                  <td className="py-2">{it.satuan?.kode}</td>
+                  <td className="py-2 text-right">{rupiah(it.harga_satuan)}</td>
+                  <td className="py-2 text-right">{it.diskon_persen > 0 ? `${it.diskon_persen}%` : '-'}</td>
+                  <td className="py-2 pr-3 text-right">{rupiah(it.subtotal)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-        <div className="flex justify-end">
-          <div className="w-full max-w-xs space-y-1 text-sm">
-            <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>
-              <span>{rupiah(faktur.subtotal)}</span>
-            </div>
-            <div className="flex justify-between border-t border-black pt-1 text-base font-bold">
-              <span>Total</span>
-              <span>{rupiah(faktur.total)}</span>
-            </div>
-            <div className="flex justify-between text-gray-600">
-              <span>Sudah dibayar</span>
-              <span>{rupiah(faktur.terbayar)}</span>
-            </div>
-            <div className="flex justify-between font-semibold">
-              <span>Sisa tagihan</span>
-              <span>{rupiah(faktur.sisa)}</span>
+          <div className="flex justify-end">
+            <div className="w-full max-w-xs space-y-1.5 text-sm">
+              <div className="flex justify-between text-gray-600">
+                <span>Subtotal</span>
+                <span>{rupiah(faktur.subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Sudah dibayar</span>
+                <span>{rupiah(faktur.terbayar)}</span>
+              </div>
+              <div className="flex items-center justify-between rounded-md bg-primary px-3 py-2 text-base font-bold text-primary-foreground">
+                <span>Total</span>
+                <span>{rupiah(faktur.total)}</span>
+              </div>
+              {faktur.sisa > 0 ? (
+                <div className="flex justify-between font-semibold text-destructive">
+                  <span>Sisa tagihan</span>
+                  <span>{rupiah(faktur.sisa)}</span>
+                </div>
+              ) : null}
             </div>
           </div>
-        </div>
 
-        {faktur.catatan ? (
-          <p className="text-sm">
-            <span className="font-semibold">Catatan: </span>
-            {faktur.catatan}
+          {faktur.catatan ? (
+            <p className="text-sm">
+              <span className="font-semibold">Catatan: </span>
+              {faktur.catatan}
+            </p>
+          ) : null}
+
+          <p className="border-t border-gray-200 pt-4 text-center text-xs text-gray-500">
+            Terima kasih atas kepercayaan Anda berbelanja di Ayyubi Finance.
           </p>
-        ) : null}
+        </div>
       </div>
     </div>
   )
