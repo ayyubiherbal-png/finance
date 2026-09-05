@@ -95,6 +95,7 @@ function FormBaru() {
 
   const [form, setForm] = useState<DetailForm>(KOSONG)
   const [kategoriBaru, setKategoriBaru] = useState('')
+  const [kodeKategoriBaru, setKodeKategoriBaru] = useState('')
   const [tampilkanKategoriBaru, setTampilkanKategoriBaru] = useState(false)
   const [menyimpan, setMenyimpan] = useState(false)
   const [error, setError] = useState<unknown>(null)
@@ -103,25 +104,41 @@ function FormBaru() {
     setForm((f) => ({ ...f, [kunci]: nilai }))
   }
 
+  // Pilih kategori -> SKU diprefix otomatis dari kode kategori (mis. MKR-),
+  // kecuali user sudah mengetik sesuatu setelah prefix kategori sebelumnya
+  // (pola sama dengan prefix ID per Tipe di form Pelanggan).
+  function pilihKategori(kategoriId: string, kodeAwal: string) {
+    setForm((f) => {
+      if (!kodeAwal) return { ...f, kategori_id: kategoriId }
+      const prefixBaru = `${kodeAwal}-`
+      const kategoriLama = (kategori ?? []).find((k) => k.id === f.kategori_id)
+      const prefixLama = kategoriLama ? `${kategoriLama.kode}-` : ''
+      const bolehGanti = f.kode === '' || f.kode === prefixLama
+      return { ...f, kategori_id: kategoriId, kode: bolehGanti ? prefixBaru : f.kode }
+    })
+  }
+
   async function buatKategori() {
-    if (!kategoriBaru.trim()) return
-    const kode = kategoriBaru
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]+/g, '-')
-      .slice(0, 20)
+    setError(null)
+    if (!kategoriBaru.trim() || !kodeKategoriBaru.trim()) {
+      setError(new Error('Nama dan kode awal kategori wajib diisi.'))
+      return
+    }
+    const kode = kodeKategoriBaru.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-').slice(0, 10)
     const { data, error } = await supabase
       .from('kategori_produk')
       .insert({ kode, nama: kategoriBaru.trim() })
-      .select('id')
+      .select('id, kode')
       .single()
     if (error) {
-      setError(error)
+      const err = error as { code?: string }
+      setError(err.code === '23505' ? new Error(`Kode "${kode}" sudah dipakai kategori lain.`) : error)
       return
     }
     queryClient.invalidateQueries({ queryKey: ['kategori-produk'] })
-    ubah('kategori_id', data.id)
+    pilihKategori(data.id, data.kode)
     setKategoriBaru('')
+    setKodeKategoriBaru('')
     setTampilkanKategoriBaru(false)
   }
 
@@ -201,27 +218,45 @@ function FormBaru() {
           <div className="space-y-1.5">
             <Label>Kategori</Label>
             {tampilkanKategoriBaru ? (
-              <div className="flex gap-2">
-                <Input
-                  autoFocus
-                  placeholder="Nama kategori baru"
-                  value={kategoriBaru}
-                  onChange={(e) => setKategoriBaru(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && buatKategori()}
-                />
-                <Button type="button" onClick={buatKategori}>
-                  Buat
-                </Button>
-                <Button type="button" variant="ghost" onClick={() => setTampilkanKategoriBaru(false)}>
-                  Batal
-                </Button>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    autoFocus
+                    placeholder="Nama kategori baru"
+                    value={kategoriBaru}
+                    onChange={(e) => setKategoriBaru(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && buatKategori()}
+                  />
+                  <Input
+                    className="w-32"
+                    placeholder="Kode awal"
+                    value={kodeKategoriBaru}
+                    onChange={(e) => setKodeKategoriBaru(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === 'Enter' && buatKategori()}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Kode awal dipakai sebagai awalan SKU produk di kategori ini, mis. "MKR" jadi MKR-001.
+                </p>
+                <div className="flex gap-2">
+                  <Button type="button" onClick={buatKategori}>
+                    Buat
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={() => setTampilkanKategoriBaru(false)}>
+                    Batal
+                  </Button>
+                </div>
               </div>
             ) : (
               <Select
                 value={form.kategori_id}
                 onChange={(e) => {
-                  if (e.target.value === '__baru__') setTampilkanKategoriBaru(true)
-                  else ubah('kategori_id', e.target.value)
+                  if (e.target.value === '__baru__') {
+                    setTampilkanKategoriBaru(true)
+                    return
+                  }
+                  const k = (kategori ?? []).find((kat) => kat.id === e.target.value)
+                  pilihKategori(e.target.value, k?.kode ?? '')
                 }}
               >
                 <option value="">Tanpa kategori</option>

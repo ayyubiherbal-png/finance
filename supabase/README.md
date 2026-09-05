@@ -407,6 +407,21 @@ Tabelnya jadi lebar (12 kolom) -- `Table` sudah otomatis
 `overflow-x-auto` (lihat `ui.tsx`), jadi discroll horizontal, bukan
 dipotong/disembunyikan.
 
+**SKU Produk diprefix otomatis dari kode Kategori (2026-09-05, murni
+frontend, tanpa migrasi).** User minta pola sama seperti prefix ID
+Pelanggan per Tipe: pilih Kategori -> SKU otomatis diawali kode
+kategorinya. `kategori_produk.kode` sudah ada dari skema awal (unique)
+-- TIDAK perlu kolom baru, cukup ubah alur "+ Tambah kategori baru..."
+di `ProdukForm.tsx`: sebelumnya `kode` auto-slugify dari nama lengkap
+(bisa panjang, mis. "KERUPUK-PEDAS-ORIGINAL"), sekarang user ETIK
+sendiri "Kode awal" pendek (mis. "MKR") terpisah dari Nama, dibatasi 10
+karakter. Pilih/buat kategori -> field Kode (SKU) di form Produk Baru
+auto-terisi `<kode>-` (fungsi `pilihKategori`, pola guard sama persis
+`ubahTipe` di `PelangganForm.tsx` -- tidak menimpa kalau user sudah
+ketik nomor). Kategori yang SUDAH ada dari sebelum perubahan ini
+kode-nya tetap yang lama (hasil auto-slugify) -- tidak ada migrasi data,
+cuma kategori baru ke depannya yang pakai kode pendek pilihan user.
+
 **4 akun agregat marketplace disembunyikan dari daftar Pelanggan (0015).**
 User lihat SHOPEE/TIKTOK/TOKPED/WA-UMUM tercampur di daftar Pelanggan,
 minta dihapus -- setelah diklarifikasi (2x AskUserQuestion), maksudnya
