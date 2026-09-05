@@ -103,8 +103,11 @@ export function FakturPenjualanCetak() {
     : ''
 
   return (
-    <div className="mx-auto min-h-screen max-w-3xl bg-white p-6 text-black print:p-0">
-      <div className="mb-4 flex items-center justify-between print:hidden">
+    <div className="mx-auto min-h-screen bg-white p-6 text-black print:p-0">
+      {/* Ukuran kertas A4 -- invoice/dokumen formal. */}
+      <style>{`@media print { @page { size: A4; margin: 15mm; } }`}</style>
+
+      <div className="mx-auto mb-4 flex w-[210mm] items-center justify-between print:hidden">
         <Button variant="outline" asChild>
           <Link to={`/faktur-penjualan/${faktur.id}`}>
             <ArrowLeft className="h-4 w-4" />
@@ -117,7 +120,7 @@ export function FakturPenjualanCetak() {
         </Button>
       </div>
 
-      <div className="space-y-6 border border-border p-8 print:border-0 print:p-0">
+      <div className="mx-auto w-[210mm] space-y-6 border border-border p-8 print:w-auto print:border-0 print:p-0">
         <div className="flex items-start justify-between border-b border-black pb-4">
           <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-16 w-16 rounded object-cover" />
           <div className="text-right">

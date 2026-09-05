@@ -17,8 +17,6 @@ interface SJCetakDetail {
   nama_sopir: string | null
   catatan: string | null
   pelanggan: { nama: string; kode: string; telepon: string | null; whatsapp: string | null } | null
-  gudang: { nama: string } | null
-  so: { nomor: string } | null
 }
 
 interface SJCetakItem {
@@ -38,7 +36,7 @@ export function SuratJalanCetak() {
         .from('surat_jalan')
         .select(
           'id, nomor, tanggal, alamat_kirim, nama_penerima, telepon_penerima, ekspedisi, nomor_kendaraan, nama_sopir, catatan, ' +
-            'pelanggan:pelanggan_id(nama, kode, telepon, whatsapp), gudang:gudang_id(nama), so:so_id(nomor)',
+            'pelanggan:pelanggan_id(nama, kode, telepon, whatsapp)',
         )
         .eq('id', id as string)
         .single()
@@ -79,75 +77,68 @@ export function SuratJalanCetak() {
   const kontak = sj.pelanggan?.whatsapp || sj.pelanggan?.telepon
 
   return (
-    <div className="mx-auto min-h-screen max-w-3xl bg-white p-6 text-black print:p-0">
-      <div className="mb-4 flex items-center justify-between print:hidden">
-        <Button variant="outline" asChild>
+    <div className="mx-auto min-h-screen bg-white p-4 text-black print:p-0">
+      {/* Ukuran kertas A6 (105 x 148mm) -- label pengiriman ringkas untuk
+          ditempel/diserahkan ke jasa ekspedisi, bukan dokumen formal. */}
+      <style>{`@media print { @page { size: 105mm 148mm; margin: 4mm; } }`}</style>
+
+      <div className="mb-3 flex items-center justify-between print:hidden">
+        <Button variant="outline" size="sm" asChild>
           <Link to={`/surat-jalan/${sj.id}`}>
             <ArrowLeft className="h-4 w-4" />
             Kembali
           </Link>
         </Button>
-        <Button onClick={() => window.print()}>
+        <Button size="sm" onClick={() => window.print()}>
           <Printer className="h-4 w-4" />
           Cetak
         </Button>
       </div>
 
-      <div className="space-y-6 border border-border p-8 print:border-0 print:p-0">
-        <div className="flex items-start justify-between border-b border-black pb-4">
-          <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-16 w-16 rounded object-cover" />
+      <div className="mx-auto w-[105mm] space-y-2 border border-border p-3 text-xs print:border-0 print:p-0">
+        <div className="flex items-start justify-between border-b border-black pb-2">
+          <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-8 w-8 rounded object-cover" />
           <div className="text-right">
             {/* Belum ada aset logo ekspedisi -- tampil nama ekspedisi dulu
                 sebagai teks besar. Kirim file logo JNE/J&T/dst. kalau mau
                 diganti jadi gambar logo aslinya. */}
-            <p className="text-2xl font-bold uppercase tracking-wide">{sj.ekspedisi || 'Ekspedisi'}</p>
-            <p className="font-mono text-sm text-gray-600">{sj.nomor}</p>
-            <p className="text-sm text-gray-600">{fmtTanggal(sj.tanggal)}</p>
+            <p className="text-base font-bold uppercase tracking-wide">{sj.ekspedisi || 'Ekspedisi'}</p>
+            <p className="font-mono text-[10px] text-gray-600">{sj.nomor}</p>
+            <p className="text-[10px] text-gray-600">{fmtTanggal(sj.tanggal)}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 text-sm">
-          <div>
-            <p className="mb-1 text-xs font-semibold uppercase text-gray-500">Kepada</p>
-            <p className="font-semibold">{sj.pelanggan?.nama ?? '-'}</p>
-            {sj.nama_penerima ? <p>Penerima: {sj.nama_penerima}</p> : null}
-            {sj.telepon_penerima ?? kontak ? <p>Telepon/WA: {sj.telepon_penerima ?? kontak}</p> : null}
-            {sj.alamat_kirim ? <p className="whitespace-pre-line">{sj.alamat_kirim}</p> : null}
-          </div>
-          <div>
-            <p className="mb-1 text-xs font-semibold uppercase text-gray-500">Pengiriman</p>
-            <p>Gudang asal: {sj.gudang?.nama ?? '-'}</p>
-            {sj.so ? <p>Sales Order: {sj.so.nomor}</p> : null}
-            {sj.nomor_kendaraan ? <p>No. kendaraan: {sj.nomor_kendaraan}</p> : null}
-            {sj.nama_sopir ? <p>Sopir: {sj.nama_sopir}</p> : null}
-          </div>
+        <div>
+          <p className="mb-0.5 text-[10px] font-semibold uppercase text-gray-500">Kepada</p>
+          <p className="font-semibold">{sj.pelanggan?.nama ?? '-'}</p>
+          {sj.nama_penerima ? <p>Penerima: {sj.nama_penerima}</p> : null}
+          {sj.telepon_penerima ?? kontak ? <p>Telepon/WA: {sj.telepon_penerima ?? kontak}</p> : null}
+          {sj.alamat_kirim ? <p className="whitespace-pre-line">{sj.alamat_kirim}</p> : null}
+          {sj.nomor_kendaraan ? <p>No. kendaraan: {sj.nomor_kendaraan}</p> : null}
+          {sj.nama_sopir ? <p>Sopir: {sj.nama_sopir}</p> : null}
         </div>
 
-        <table className="w-full border-collapse text-sm">
+        <table className="w-full border-collapse">
           <thead>
             <tr className="border-b-2 border-black text-left">
-              <th className="py-1 pr-2">No.</th>
-              <th className="py-1 pr-2">Produk</th>
-              <th className="py-1 pr-2">Kode</th>
-              <th className="py-1 pr-2 text-right">Qty</th>
-              <th className="py-1">Satuan</th>
+              <th className="py-0.5 pr-1">Produk</th>
+              <th className="py-0.5 pr-1 text-right">Qty</th>
+              <th className="py-0.5">Satuan</th>
             </tr>
           </thead>
           <tbody>
-            {(items ?? []).map((it, i) => (
+            {(items ?? []).map((it) => (
               <tr key={it.id} className="border-b border-gray-300">
-                <td className="py-1 pr-2">{i + 1}</td>
-                <td className="py-1 pr-2">{it.produk?.nama}</td>
-                <td className="py-1 pr-2 font-mono text-xs">{it.produk?.kode}</td>
-                <td className="py-1 pr-2 text-right">{it.qty}</td>
-                <td className="py-1">{it.satuan?.kode}</td>
+                <td className="py-0.5 pr-1">{it.produk?.nama}</td>
+                <td className="py-0.5 pr-1 text-right">{it.qty}</td>
+                <td className="py-0.5">{it.satuan?.kode}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
         {sj.catatan ? (
-          <p className="text-sm">
+          <p>
             <span className="font-semibold">Catatan: </span>
             {sj.catatan}
           </p>

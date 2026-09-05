@@ -432,6 +432,22 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Ukuran kertas cetak: Surat Jalan A6, Invoice A4 (2026-09-05, murni
+frontend).** User: label pengiriman (SJ) dicetak A6, invoice dicetak
+A4. Diterapkan lewat `<style>{@media print { @page { size: ...; margin:
+...; } }}</style>` inline di tiap komponen cetak (scoped per halaman,
+bukan CSS global -- karena tiap dokumen cetak butuh ukuran kertas
+beda, taruh di `index.css` akan berlaku salah untuk salah satu). Lebar
+kontainer juga diset eksplisit pakai satuan mm (`w-[105mm]`/
+`w-[210mm]`) supaya preview di layar sebelum print sudah proporsional
+dengan ukuran kertas asli, bukan cuma benar pas dicetak.
+
+Sekalian `SuratJalanCetak.tsx` dirapikan buat muat di A6 yang sempit:
+font & padding diperkecil, blok "Kepada"+"Pengiriman" 2 kolom disatukan
+jadi 1 kolom (2 kolom kepenuhan di lebar 105mm), field Gudang asal/
+Sales Order dibuang (referensi internal, tidak perlu di label
+pengiriman B2C), No. kendaraan/Sopir digabung ke blok Kepada.
+
 **Cetak Surat Jalan disederhanakan untuk B2C + Invoice ditambah
 (2026-09-05, lanjutan langsung dari cetak SJ, murni frontend).** User
 kasih koreksi begitu lihat hasil cetak pertama: "untuk customer b2c,
