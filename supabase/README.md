@@ -432,6 +432,33 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Cetak Surat Jalan disederhanakan untuk B2C + Invoice ditambah
+(2026-09-05, lanjutan langsung dari cetak SJ, murni frontend).** User
+kasih koreksi begitu lihat hasil cetak pertama: "untuk customer b2c,
+tidak perlu ada surat jalan. yang perlu ada itu paket itu dikirim
+pakai ekspedisi apa." Tiga perbaikan di `SuratJalanCetak.tsx`:
+1. Header kiri cuma logo Ayyubi Food (dibuang teks "Ayyubi Finance /
+   Dagang & Distribusi" di sampingnya).
+2. Judul "SURAT JALAN" diganti nama ekspedisi (`sj.ekspedisi`) sebagai
+   teks besar -- BELUM logo asli ekspedisi (JNE/J&T/dst.) karena tidak
+   ada aset logo-nya di proyek ini; kalau user kirim file logo,
+   tinggal ganti `<p>{sj.ekspedisi}</p>` jadi `<img>`. Baris "Ekspedisi:
+   ..." yang tadinya duplikat di blok "Pengiriman" juga dibuang karena
+   sudah jadi judul.
+3. Blok tanda tangan Pengirim/Penerima dihapus total.
+
+Sekalian dibuat **Invoice** (`src/pages/FakturPenjualanCetak.tsx`,
+route `faktur-penjualan/:id/cetak`) -- user tanya di mana invoice-nya,
+ternyata belum ada versi cetaknya sama sekali (Faktur Penjualan
+sendiri sebagai FITUR/menu sudah ada dari awal, cuma belum bisa
+dicetak). Pola sama persis cetak SJ (route root di luar `Layout`,
+tombol `print:hidden`, tombol "Cetak" di halaman detail buka tab
+baru) -- isinya kop (cuma logo, tanpa tanda tangan, konsisten dengan
+poin di atas), info pelanggan (nama, kontak, alamat gabungan via
+nested embed ke 4 tabel wilayah lewat relasi `pelanggan`), tabel item
+lengkap dengan harga/diskon/subtotal, dan ringkasan Subtotal/Total/
+Terbayar/Sisa tagihan.
+
 **Cetak Surat Jalan (2026-09-05, murni frontend, tanpa migrasi).** User:
 "dimana saya bisa print orderan untuk saya serahkan ke jasa kirim" --
 aplikasi ini belum punya fitur cetak/print sama sekali (dicek, tidak

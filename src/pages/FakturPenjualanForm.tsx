@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Printer } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { cariPelanggan } from '@/lib/queries'
@@ -407,9 +407,15 @@ function FormDetail({ fakturId }: { fakturId: string }) {
             {fmtTanggal(faktur.tanggal)} &middot; {faktur.pelanggan?.nama ?? '-'}
           </p>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex items-center gap-1.5">
           <Badge variant={VARIAN_STATUS[faktur.status]}>{LABEL_STATUS[faktur.status]}</Badge>
           <Badge variant={VARIAN_BAYAR[faktur.status_bayar]}>{LABEL_BAYAR[faktur.status_bayar]}</Badge>
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/faktur-penjualan/${faktur.id}/cetak`} target="_blank">
+              <Printer className="h-4 w-4" />
+              Cetak
+            </Link>
+          </Button>
         </div>
       </div>
 
