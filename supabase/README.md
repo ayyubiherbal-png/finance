@@ -432,6 +432,21 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Kolom "Total" live di baris tambah item (2026-09-05, murni frontend,
+tanpa migrasi).** Lanjutan langsung dari penjelasan "Harga beli itu per
+satuan" -- user minta ditambah kolom Total supaya kelihatan hasil
+kali-nya sebelum klik Tambah, tidak perlu mengira-ngira sendiri.
+Ditambah kolom "Total" (non-editable, cuma tampilan hasil hitung
+`qty * harga_satuan * (1 - diskon_persen/100)`, format `rupiah()`)
+di baris tambah item **Purchase Order, Sales Order, Retur Penjualan,
+Retur Pembelian** -- 4 form yang punya pola "tambah baris item via
+Combobox" yang identik. Retur (tidak punya Diskon%) hitungannya cuma
+`qty * harga_satuan`. Grid kolom diperlebar 1 slot (`1fr`) untuk
+menampung kolom baru ini. TIDAK diterapkan di Penerimaan Barang/
+Penyesuaian Stok -- bentuk UI-nya beda (tabel baris-existing dengan sel
+yang diedit langsung, bukan form tambah-baris-baru terpisah), butuh
+pendekatan berbeda kalau nanti diminta.
+
 **Script reset sebelum go-live (2026-09-05, `reset-sebelum-live.sql`).**
 User: "ini kan masih uji coba ya, saya mau ketika deploy nanti,
 angka-angka yang di input itu bisa 0 dulu semuanya." Diklarifikasi

@@ -469,7 +469,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
 
           {bisaEdit ? (
             <div className="space-y-2 border-t border-border p-3">
-              <div className="grid gap-2 sm:grid-cols-[2fr_1fr_0.8fr_1fr_0.8fr_auto] sm:items-end">
+              <div className="grid gap-2 sm:grid-cols-[2fr_1fr_0.8fr_1fr_0.8fr_1fr_auto] sm:items-end">
                 <div className="space-y-1">
                   <Label className="text-xs">Produk</Label>
                   <Combobox
@@ -515,6 +515,12 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
                     value={addRow.diskon_persen}
                     onChange={(e) => setAddRow((r) => ({ ...r, diskon_persen: Number(e.target.value) }))}
                   />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Total</Label>
+                  <div className="flex h-9 items-center justify-end rounded-md border border-input bg-muted px-3 text-sm tabular">
+                    {rupiah(addRow.qty * addRow.harga_satuan * (1 - addRow.diskon_persen / 100))}
+                  </div>
                 </div>
                 <Button onClick={tambahItem} disabled={menambah}>
                   {menambah ? <Spinner /> : null}

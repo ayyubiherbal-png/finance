@@ -430,7 +430,7 @@ function FormEdit({ returId }: { returId: string }) {
 
           {bisaEdit ? (
             <div className="space-y-2 border-t border-border p-3">
-              <div className="grid gap-2 sm:grid-cols-[2fr_1fr_0.8fr_1fr_auto] sm:items-end">
+              <div className="grid gap-2 sm:grid-cols-[2fr_1fr_0.8fr_1fr_1fr_auto] sm:items-end">
                 <div className="space-y-1">
                   <Label className="text-xs">Produk</Label>
                   <Combobox
@@ -461,6 +461,12 @@ function FormEdit({ returId }: { returId: string }) {
                 <div className="space-y-1">
                   <Label className="text-xs">Harga / satuan</Label>
                   <InputAngka value={addRow.harga_satuan} onChange={(nilai) => setAddRow((r) => ({ ...r, harga_satuan: nilai }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Total</Label>
+                  <div className="flex h-9 items-center justify-end rounded-md border border-input bg-muted px-3 text-sm tabular">
+                    {rupiah(addRow.qty * addRow.harga_satuan)}
+                  </div>
                 </div>
                 <Button onClick={tambahItem} disabled={menambah}>
                   {menambah ? <Spinner /> : null}
