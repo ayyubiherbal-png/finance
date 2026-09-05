@@ -432,6 +432,28 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Invoice: tambah info rekening pembayaran (data ASLI, bukan hardcode)
++ blok tanda tangan (2026-09-05).** User minta 2 tambahan di bagian
+bawah Invoice: kiri = info rekening bank untuk transfer, kanan = tanda
+tangan. Beda dari kasus "No. WA Pengirim" di Surat Jalan (harus
+hardcode karena benar-benar tidak ada sumber data), rekening bank
+SUDAH ADA datanya -- tabel `akun_kas_bank` (dari modul Kas & Bank,
+0010) punya `bank_nama`/`nomor_rekening`/`atas_nama` untuk akun
+`jenis = 'bank'`. `FakturPenjualanCetak.tsx` query semua akun bank
+aktif dan tampilkan (bukan fabrikasi). Section ini HANYA muncul kalau
+`faktur.sisa > 0` (masih ada tagihan) -- percuma minta transfer di
+invoice yang sudah Lunas. Tanda tangan cuma teks generik "Hormat
+kami, Ayyubi Finance" + garis kosong (tidak ada data nama penanggung
+jawab/gambar tanda tangan tersimpan di sistem manapun untuk
+ditampilkan sungguhan).
+
+**Header/footer bawaan browser (tanggal+judul di atas, URL+nomor
+halaman di bawah) TIDAK BISA dihilangkan lewat kode/CSS** -- itu
+fitur "Headers and footers" di dialog print Chrome/Edge (biasanya di
+bagian "More settings"), murni pengaturan browser si user, bukan
+sesuatu yang bisa dikontrol dari halaman web. Solusinya: user matikan
+sendiri centang itu di dialog print saat mau cetak dokumen bersih.
+
 **Ketemu akar masalah "invoice masih jauh dari contoh": browser TIDAK
 mencetak warna latar belakang secara default (2026-09-05,
 `src/index.css`, murni CSS).** User bandingkan hasil cetak Invoice vs

@@ -39,6 +39,13 @@ interface FakturCetakItem {
   satuan: { kode: string } | null
 }
 
+interface RekeningBayar {
+  nama: string
+  bank_nama: string | null
+  nomor_rekening: string | null
+  atas_nama: string | null
+}
+
 const LABEL_BAYAR: Record<StatusBayar, string> = {
   belum: 'Belum Bayar',
   sebagian: 'Bayar Sebagian',
@@ -78,6 +85,21 @@ export function FakturPenjualanCetak() {
       return (data ?? []) as unknown as FakturCetakItem[]
     },
     enabled: !!faktur,
+  })
+
+  const { data: rekening } = useQuery({
+    queryKey: ['faktur-cetak-rekening'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('akun_kas_bank')
+        .select('nama, bank_nama, nomor_rekening, atas_nama')
+        .eq('jenis', 'bank')
+        .eq('aktif', true)
+        .order('nama')
+      if (error) throw error
+      return (data ?? []) as RekeningBayar[]
+    },
+    enabled: !!faktur && faktur.sisa > 0,
   })
 
   if (isLoading) {
@@ -213,6 +235,30 @@ export function FakturPenjualanCetak() {
               {faktur.catatan}
             </p>
           ) : null}
+
+          <div className="grid grid-cols-2 gap-6 border-t border-gray-200 pt-6 text-sm">
+            <div>
+              {rekening && rekening.length > 0 ? (
+                <>
+                  <p className="mb-2 text-xs font-semibold uppercase text-gray-500">Informasi Rekening Pembayaran</p>
+                  <div className="space-y-2">
+                    {rekening.map((r) => (
+                      <div key={r.nama}>
+                        <p className="font-semibold">{r.bank_nama || r.nama}</p>
+                        <p className="text-gray-600">
+                          {r.nomor_rekening} a.n. {r.atas_nama}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : null}
+            </div>
+            <div className="text-center">
+              <p>Hormat kami,</p>
+              <div className="mt-12 border-t border-gray-400 pt-1">Ayyubi Finance</div>
+            </div>
+          </div>
 
           <p className="border-t border-gray-200 pt-4 text-center text-xs text-gray-500">
             Terima kasih atas kepercayaan Anda berbelanja di Ayyubi Finance.
