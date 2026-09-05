@@ -4,12 +4,7 @@ import { Printer, ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggal as fmtTanggal } from '@/lib/format'
 import { Button, Spinner, PesanError } from '@/components/ui'
-
-// Belum ada field untuk kontak toko di master data mana pun -- ditaruh
-// di sini dulu (bukan dari database) sampai ada tempat pengaturan yang
-// lebih semestinya kalau nanti dibutuhkan di tempat lain juga.
-const NAMA_PENGIRIM = 'Ayyubi Finance'
-const NOMOR_WA_PENGIRIM = '082211369433'
+import { NAMA_TOKO, NOMOR_WA_TOKO } from '@/lib/identitasToko'
 
 interface SJCetakDetail {
   id: string
@@ -117,8 +112,8 @@ export function SuratJalanCetak() {
         <div className="grid grid-cols-2 gap-2">
           <div>
             <p className="mb-0.5 text-[10px] font-semibold uppercase text-gray-500">Pengirim</p>
-            <p className="font-semibold">{NAMA_PENGIRIM}</p>
-            <p>No. WA: {NOMOR_WA_PENGIRIM}</p>
+            <p className="font-semibold">{NAMA_TOKO}</p>
+            <p>No. WA: {NOMOR_WA_TOKO}</p>
           </div>
           <div>
             <p className="mb-0.5 text-[10px] font-semibold uppercase text-gray-500">Penerima</p>

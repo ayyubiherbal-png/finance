@@ -4,6 +4,7 @@ import { Printer, ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal as fmtTanggal } from '@/lib/format'
 import { Button, Spinner, PesanError } from '@/components/ui'
+import { NAMA_TOKO, NOMOR_WA_TOKO } from '@/lib/identitasToko'
 import type { StatusBayar } from '@/types/db'
 
 interface FakturCetakDetail {
@@ -102,6 +103,15 @@ export function FakturPenjualanCetak() {
     enabled: !!faktur && faktur.sisa > 0,
   })
 
+  const { data: gudangUtama } = useQuery({
+    queryKey: ['faktur-cetak-gudang-utama'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gudang').select('alamat').eq('utama', true).maybeSingle()
+      if (error) throw error
+      return data as { alamat: string | null } | null
+    },
+  })
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -148,8 +158,12 @@ export function FakturPenjualanCetak() {
         <div className="space-y-6 p-10">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-14 w-14 rounded object-cover" />
-              <p className="font-semibold text-gray-700">Ayyubi Finance</p>
+              <img src="/ayyubi-logo.jpeg" alt={NAMA_TOKO} className="h-14 w-14 rounded object-cover" />
+              <div className="text-sm">
+                <p className="font-semibold text-gray-700">{NAMA_TOKO}</p>
+                {gudangUtama?.alamat ? <p className="text-xs text-gray-500">{gudangUtama.alamat}</p> : null}
+                <p className="text-xs text-gray-500">No. WA: {NOMOR_WA_TOKO}</p>
+              </div>
             </div>
             <p className="text-3xl font-bold uppercase tracking-wide text-primary">Invoice</p>
           </div>
@@ -254,12 +268,12 @@ export function FakturPenjualanCetak() {
             ) : null}
             <div className="ml-auto text-center">
               <p>Hormat kami,</p>
-              <div className="mt-12 border-t border-gray-400 pt-1">Ayyubi Finance</div>
+              <div className="mt-12 border-t border-gray-400 pt-1">{NAMA_TOKO}</div>
             </div>
           </div>
 
           <p className="border-t border-gray-200 pt-4 text-center text-xs text-gray-500">
-            Terima kasih atas kepercayaan Anda berbelanja di Ayyubi Finance.
+            Terima kasih atas kepercayaan Anda berbelanja di {NAMA_TOKO}.
           </p>
         </div>
       </div>

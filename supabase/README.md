@@ -432,6 +432,24 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Identitas toko di dokumen cetak: "Ayyubi Finance" -> "Ayyubi Food" +
+alamat gudang utama (2026-09-05).** User koreksi: nama yang tampil di
+kop dokumen ke pelanggan HARUS "Ayyubi Food" (brand dagangnya, sesuai
+logo), bukan "Ayyubi Finance" (nama aplikasi/sistem internal ini --
+dua identitas yang beda tapi sempat tertukar di kode). Sekalian minta
+alamat gudang & nomor WA ditambah di kop, sejajar logo.
+
+Konstanta identitas toko (`NAMA_TOKO`, `NOMOR_WA_TOKO`) DIPINDAH dari
+`SuratJalanCetak.tsx` ke file bersama baru `src/lib/identitasToko.ts`
+--diekspor, diimpor kedua halaman cetak (Invoice & SJ) supaya kalau
+nomor WA-nya berubah lagi, cukup ubah 1 tempat, bukan 2. Alamat gudang
+BUKAN hardcode -- diambil live dari `gudang` yang `utama = true` (kolom
+`alamat` sudah ada dari skema awal, dan konsep "gudang utama" sudah
+ada juga lewat unique partial index `uq_gudang_utama`, tidak perlu
+migrasi baru). Pola ini (helper identitas 1 lokasi + data live kalau
+memang ada sumbernya) yang dipakai kalau field serupa dibutuhkan lagi
+di dokumen cetak lain nanti.
+
 **Perbaikan kecil: kotak kosong saat rekening pembayaran tidak tampil
 (2026-09-05).** User tunjuk kotak kosong kelihatan di layout saat
 rekening tidak ada (invoice Lunas, atau belum ada akun Bank
