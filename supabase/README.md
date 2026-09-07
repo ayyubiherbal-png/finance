@@ -432,6 +432,28 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Pembeli Marketplace: kunci dedup pakai username kalau telepon kosong
+(0025, 2026-09-08).** User klik "Sinkronkan dari Pesanan" (fitur 0024
+di bawah) -- hasilnya 0 baris untuk 877 pesanan TikTok yang sudah
+diimpor. Diverifikasi lewat query yang dijalankan user sendiri: SEMUA
+877 baris `sales_order` punya `telepon_penerima` KOSONG. Ternyata
+TikTok (kemungkinan juga Shopee) tidak menyertakan nomor HP pembeli di
+file export Seller Centre SAMA SEKALI -- alasan privasi yang sama
+dengan kenapa usernamenya disensor. Desain 0024 yang mengandalkan
+telepon sebagai SATU-SATUNYA kunci dedup jadi tidak berguna untuk
+kasus nyata ini.
+
+Kolom baru `kunci` (bukan lagi `telepon` langsung) jadi kunci unique --
+diisi nomor telepon ternormalisasi KALAU ADA, kalau tidak (kasus paling
+umum sekarang) jatuh ke username/nama penerima (lowercase+trim)
+sebagai cadangan. Username yang disensor platform tetap KONSISTEN
+untuk akun yang sama, jadi tetap bisa dipakai membedakan satu pembeli
+dari yang lain walau bukan identitas asli -- risiko kecil (dua pembeli
+beda kebetulan tersensor identik akan tergabung) diterima demi punya
+cara mengelompokkan sama sekali. Kolom `telepon` sendiri dibuat boleh
+kosong (`drop not null`) -- tetap kolom tampilan, dipakai kalau
+suatu saat platform menyertakannya atau diisi manual.
+
 **Tab baru "Pembeli Marketplace" -- bisa diedit & dihapus, untuk
 follow-up manual (0024, 2026-09-08).** User tanya kenapa pembeli
 Shopee/TikTok tidak masuk Master Data > Customer -- dijelaskan itu

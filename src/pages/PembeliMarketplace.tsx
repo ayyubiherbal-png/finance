@@ -105,7 +105,7 @@ export function PembeliMarketplace() {
   }
 
   async function hapus(p: BarisPembeli) {
-    if (!window.confirm(`Hapus ${p.nama || p.telepon} dari daftar ini? Data pesanan/Faktur asli TIDAK ikut terhapus, ini cuma daftar follow-up.`)) return
+    if (!window.confirm(`Hapus ${p.nama || p.telepon || p.kunci} dari daftar ini? Data pesanan/Faktur asli TIDAK ikut terhapus, ini cuma daftar follow-up.`)) return
     setErrorAksi(null)
     try {
       const { error: err } = await supabase.from('pembeli_marketplace').delete().eq('id', p.id)
@@ -189,7 +189,7 @@ export function PembeliMarketplace() {
                             {p.telepon}
                           </a>
                         ) : (
-                          p.telepon
+                          p.telepon || <span className="text-muted-foreground">-</span>
                         )}
                       </Td>
                       <Td className="min-w-[12rem] max-w-xs">

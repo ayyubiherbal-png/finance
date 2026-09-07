@@ -376,7 +376,9 @@ export interface VPelangganRingkas {
 export interface PembeliMarketplace {
   id: string
   kanal: Extract<KanalPenjualan, 'shopee' | 'tiktok'>
-  telepon: string
+  /** Kunci dedup -- telepon ternormalisasi kalau ada, kalau tidak jatuh ke username/nama (lihat 0025). */
+  kunci: string
+  telepon: string | null
   nama: string | null
   alamat: string | null
   diedit_manual: boolean
