@@ -432,6 +432,42 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Penjualan Cepat: 4 dokumen dari 1 layar (0020, 2026-09-07).** User:
+"apakah ada yang bisa disederhanakan atau dipersingkat dari proses
+ini?" Alur normal butuh 4 form berurutan (SO → Surat Jalan → Faktur →
+Penerimaan Kas) -- masuk akal untuk kirim bertahap/tempo, tapi
+berlebihan untuk penjualan B2C yang tuntas di tempat.
+
+Dibuat fungsi `penjualan_cepat(...)` yang membuat keempatnya sekaligus.
+**Dikerjakan sebagai fungsi Postgres, bukan 4 panggilan dari browser**,
+karena keempat dokumen itu harus jadi SATU transaksi: kalau gagal di
+tengah (koneksi putus, stok kurang), yang sudah terlanjur dibuat harus
+ikut batal -- kalau tidak, bisa tersisa Surat Jalan yatim yang sudah
+memotong stok tapi tidak punya faktur.
+
+Urutan di dalam fungsi mengikuti arsitektur trigger yang sudah ada,
+bukan menambah logika baru -- inilah kenapa urutannya terlihat berputar:
+
+- `nomor` TIDAK diisi -- `fn_set_nomor()` (BEFORE INSERT) yang mengisi.
+- Surat Jalan di-insert `'draf'` dulu, itemnya dimasukkan, BARU
+  di-`update` ke `'selesai'`. Sebab `trg_posting_sj` adalah
+  `after update of status` dan membaca `surat_jalan_item` -- kalau
+  langsung di-insert `'selesai'`, trigger tidak pernah jalan dan stok
+  tidak terpotong.
+- `hpp_satuan` faktur tidak diisi -- `trg_snapshot_hpp` (BEFORE INSERT
+  di `faktur_penjualan_item`) yang mengambilnya dari `produk.hpp_rata2`.
+- Total header tidak dihitung manual -- `trg_subtotal_fp` →
+  `trg_total_fp` yang menghitung. Karena itu `select total` untuk nilai
+  Penerimaan Kas dilakukan SETELAH item di-insert.
+- Status SO tidak di-set `'selesai'` manual -- `refresh_status_so()`
+  yang menaikkannya begitu qty terkirim penuh.
+
+`p_akun_id` null = sengaja dibiarkan jadi piutang (bayar menyusul lewat
+Penerimaan Kas seperti biasa). Fungsi ini `security invoker`, jadi RLS
+tetap berlaku persis seperti kalau user mengisi keempat form manual.
+Alur 4 langkah yang lama TIDAK diubah dan tetap dipakai untuk kirim
+bertahap / tempo.
+
 **CRM tahap 1: segmentasi RFM + profil pelanggan 360° (0019,
 2026-09-07).** Sebelum membangun, diriset dulu CRM yang ada di pasar
 (HubSpot/Pipedrive/Zoho/Odoo global; Mekari Qontak/Barantum/Qiscus

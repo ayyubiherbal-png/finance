@@ -25,6 +25,7 @@ import { LaporanPiutang } from '@/pages/LaporanPiutang'
 import { LaporanLaba } from '@/pages/LaporanLaba'
 import { SalesOrder } from '@/pages/SalesOrder'
 import { SalesOrderForm } from '@/pages/SalesOrderForm'
+import { PenjualanCepat } from '@/pages/PenjualanCepat'
 import { SuratJalan } from '@/pages/SuratJalan'
 import { SuratJalanForm } from '@/pages/SuratJalanForm'
 import { SuratJalanCetak } from '@/pages/SuratJalanCetak'
@@ -97,6 +98,7 @@ function Rute() {
         <Route path="laporan/piutang" element={<LaporanPiutang />} />
         <Route path="laporan/laba" element={<LaporanLaba />} />
 
+        <Route path="penjualan-cepat" element={<PenjualanCepat />} />
         <Route path="sales-order" element={<SalesOrder />} />
         <Route path="sales-order/:id" element={<SalesOrderForm />} />
         <Route path="surat-jalan" element={<SuratJalan />} />

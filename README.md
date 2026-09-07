@@ -15,11 +15,15 @@ memengaruhi bentuk form.
 
 ## ✅ Status migrasi
 
-Semua migrasi sampai **0019** sudah dijalankan di database live Anda
-(0001-0012, 0014-0019), termasuk 3 file CSV wilayah
-(`supabase/seed-data/`) lewat Table Editor. Tidak ada migrasi yang
-tertunda saat ini. (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum
-sempat dijalankan, bukan ada yang hilang.)
+Migrasi 0001-0012 dan 0014-0019 sudah dijalankan di database live Anda,
+termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
+(Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
+bukan ada yang hilang.)
+
+> ⏳ **Belum dijalankan: `0020_penjualan_cepat.sql`** — dibutuhkan
+> supaya menu **Penjualan Cepat** berfungsi. Sebelum file ini
+> dijalankan, tombol "Proses Penjualan" akan gagal karena fungsinya
+> belum ada di database.
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
 Editor Supabase, dan setiap file aman dijalankan berkali-kali
@@ -61,6 +65,7 @@ supabase/migrations/0016_supplier_wilayah.sql
 supabase/migrations/0017_sales_order_telepon_penerima.sql
 supabase/migrations/0018_surat_jalan_penerima.sql
 supabase/migrations/0019_crm_segmentasi_pelanggan.sql
+supabase/migrations/0020_penjualan_cepat.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan
@@ -123,6 +128,11 @@ Sekarang seluruh alur bisa dikerjakan dari UI, urutan yang masuk akal:
    "Saldo Awal", isi qty + HPP per produk, lalu Posting.
 5. Dari sini alur normal: **Purchase Order** → Penerimaan Barang, atau
    langsung **Sales Order** → Surat Jalan → Faktur → Penerimaan Kas.
+
+Untuk penjualan yang tuntas di tempat (barang langsung diserahkan dan
+langsung dibayar), pakai **Penjualan Cepat** — satu layar, keempat
+dokumen dibuat otomatis. Alur 4 langkah di atas tetap dipakai kalau
+barang dikirim bertahap atau pembayarannya tempo.
 
 ---
 
@@ -187,6 +197,7 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Wilayah | Data resmi Kemendagri (38 provinsi -> 83.762 kelurahan) untuk dropdown alamat Pelanggan & Supplier | Selesai |
 | Cetak | Invoice (Faktur Penjualan, A4) dan label pengiriman (Surat Jalan, A6) | Selesai -- logo ekspedisi asli JNE/J&T/Paxel sudah terpasang; ekspedisi lain tampil sebagai teks sampai logonya dikirim |
 | Penjualan | Sales Order → Surat Jalan → Faktur → Penerimaan Kas → Retur | Selesai, ujung ke ujung |
+| Penjualan Cepat | Satu layar: isi pembeli + barang + pembayaran sekali, keempat dokumen dibuat otomatis dalam satu transaksi database | Selesai -- **butuh migrasi 0020** |
 | Pembelian | Purchase Order → Penerimaan Barang → Faktur Pembelian → Pembayaran Supplier → Retur | Selesai, ujung ke ujung |
 | Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
 | Laporan | Piutang (aging), Laba Kotor (per produk/pelanggan) | Selesai |

@@ -14,6 +14,7 @@ import {
   ClipboardEdit,
   Landmark,
   HeartHandshake,
+  Zap,
   LogOut,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -41,6 +42,7 @@ const MENU: Grup[] = [
   {
     judul: 'Penjualan',
     item: [
+      { ke: '/penjualan-cepat', label: 'Penjualan Cepat', ikon: Zap },
       { ke: '/sales-order', label: 'Sales Order', ikon: ShoppingCart },
       { ke: '/surat-jalan', label: 'Surat Jalan', ikon: Truck },
       { ke: '/faktur-penjualan', label: 'Faktur Penjualan', ikon: Receipt },
