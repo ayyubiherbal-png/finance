@@ -13,19 +13,12 @@ memengaruhi bentuk form.
 
 ---
 
-## ⚠️ Migrasi yang perlu dijalankan
+## ✅ Status migrasi
 
-```
-supabase/migrations/0019_crm_segmentasi_pelanggan.sql
-```
-
-Menambah 2 view untuk fitur CRM (segmentasi RFM pelanggan & produk
-favorit). **Tidak menyentuh tabel/data yang ada sama sekali** -- murni
-menambah view, jadi aman dan bisa dijalankan berkali-kali.
-
-Migrasi sebelumnya (0001-0012, 0014-0018) sudah dijalankan semua di
-database live Anda, termasuk 3 file CSV wilayah (`supabase/seed-data/`)
-lewat Table Editor. (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum
+Semua migrasi sampai **0019** sudah dijalankan di database live Anda
+(0001-0012, 0014-0019), termasuk 3 file CSV wilayah
+(`supabase/seed-data/`) lewat Table Editor. Tidak ada migrasi yang
+tertunda saat ini. (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum
 sempat dijalankan, bukan ada yang hilang.)
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
@@ -177,7 +170,7 @@ src/components/Combobox.tsx  dropdown pencarian generik (produk/pelanggan/suppli
 src/components/Layout.tsx  sidebar, gating menu per peran
 src/pages/                 satu file per layar (lihat tabel Status di bawah)
 public/ayyubi-logo.jpeg    logo resmi -- favicon + sidebar + login
-supabase/migrations/       18 file migrasi (0019 belum dijalankan -- lihat bagian atas)
+supabase/migrations/       18 file migrasi, semua sudah dijalankan
 supabase/reset-sebelum-live.sql  script reset data uji coba -- BUKAN migrasi, jalankan manual sebelum go-live
 ```
 
@@ -192,7 +185,7 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Master | Produk, Supplier, Pelanggan, Gudang | Selesai, CRUD penuh -- Pelanggan sekarang termasuk alamat berjenjang (Provinsi/Kab-Kota/Kecamatan/Kelurahan) dan field persiapan CRM; Gudang baru (kode/nama/alamat/status utama) |
 | Kas & Bank | Akun Kas & Bank (saldo live), Kartu Kas & Bank (mutasi) | Selesai |
 | Wilayah | Data resmi Kemendagri (38 provinsi -> 83.762 kelurahan) untuk dropdown alamat Pelanggan & Supplier | Selesai |
-| Cetak | Invoice (Faktur Penjualan, A4) dan label pengiriman (Surat Jalan, A6) | Selesai -- logo ekspedisi (JNE/dll.) masih teks, belum gambar logo asli (kirim file kalau mau diganti) |
+| Cetak | Invoice (Faktur Penjualan, A4) dan label pengiriman (Surat Jalan, A6) | Selesai -- logo ekspedisi asli JNE/J&T/Paxel sudah terpasang; ekspedisi lain tampil sebagai teks sampai logonya dikirim |
 | Penjualan | Sales Order → Surat Jalan → Faktur → Penerimaan Kas → Retur | Selesai, ujung ke ujung |
 | Pembelian | Purchase Order → Penerimaan Barang → Faktur Pembelian → Pembayaran Supplier → Retur | Selesai, ujung ke ujung |
 | Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
@@ -200,7 +193,7 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Dasbor | Ringkasan 30 hari, tren omzet, produk perlu restock | Selesai |
 | Tampilan | Logo & tema warna Ayyubi Food, glassmorphism di sidebar/login | Selesai |
 | — | Transfer Gudang | Skema siap, UI sengaja belum dibuat — tidak berguna selama masih 1 gudang aktif |
-| CRM | Segmen Pelanggan (RFM otomatis), profil pelanggan 360°, tombol chat WhatsApp | Selesai -- **butuh migrasi 0019** |
+| CRM | Segmen Pelanggan (RFM otomatis), profil pelanggan 360°, tombol chat WhatsApp | Selesai |
 | Fase 3 lanjutan | Catatan kunjungan sales (canvassing), pipeline prospek, loyalty/poin | Belum dibangun |
 | Fase 4 | Akuntansi penuh (jurnal, buku besar), pajak, HR | Belum dirancang |
 
