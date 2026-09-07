@@ -213,11 +213,15 @@ export function Dashboard() {
         area kiri (3/4 lebar) -- sementara Perlu Restock jadi kartu TINGGI
         di kolom kanan (sejajar dengan kedua baris kiri sekaligus, seperti
         kartu "Project" di referensi), dengan Saldo Kas & Bank di
-        bawahnya (padanan "Time Tracker"). `items-stretch` (default grid)
-        yang membuat kolom kanan otomatis setinggi kolom kiri.
+        bawahnya (padanan "Time Tracker"). Grid terluar sengaja TETAP pakai
+        stretch (default) supaya kolom kanan otomatis setinggi kolom kiri --
+        tapi grid bagian dalam (4 kartu kiri) dikunci `items-start` supaya
+        kartu berisi sedikit (mis. "Jatuh tempo terdekat" waktu kosong)
+        TIDAK ikut melar mengikuti kartu di sebelahnya yang lebih tinggi
+        (chart/donut) dan menyisakan area putih kosong di dalamnya.
       */}
       <div className="grid gap-4 lg:grid-cols-4">
-        <div className="grid gap-4 sm:grid-cols-3 lg:col-span-3">
+        <div className="grid items-start gap-4 sm:grid-cols-3 lg:col-span-3">
           <Card className={cn(GAYA_KARTU, 'sm:col-span-2')}>
             <CardHeader>
               <CardTitle className="text-base">{t('dasbor.trenOmzetHarian')}</CardTitle>

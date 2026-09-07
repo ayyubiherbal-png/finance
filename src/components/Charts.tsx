@@ -245,7 +245,7 @@ export function GrafikBatang({
  * ini dipakai di Dasbor untuk kesan lebih hidup, hari kosong (nilai 0)
  * ditampilkan bermotif garis diagonal, bukan batang kosong polos.
  */
-export function GrafikKapsul({ data, tinggi = 200 }: { data: TitikTren[]; tinggi?: number }) {
+export function GrafikKapsul({ data, tinggi = 160 }: { data: TitikTren[]; tinggi?: number }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null)
   const patternId = useId()
   const lebar = 600
@@ -321,7 +321,7 @@ export function GrafikKapsul({ data, tinggi = 200 }: { data: TitikTren[]; tinggi
 export function GrafikDonut({
   persen,
   warna = 'hsl(var(--primary))',
-  ukuran = 160,
+  ukuran = 132,
   tebal = 16,
 }: {
   persen: number
