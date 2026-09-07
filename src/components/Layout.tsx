@@ -109,14 +109,20 @@ const MENU: Grup[] = [
   {
     judul: 'grup.lainnya',
     item: [
-      { label: 'grup.crm', ikon: HeartHandshake, tab: [{ ke: '/crm', label: 'menu.segmenPelanggan' }] },
+      {
+        label: 'grup.crm',
+        ikon: HeartHandshake,
+        tab: [
+          { ke: '/crm', label: 'menu.segmenPelanggan' },
+          { ke: '/pembeli-marketplace', label: 'menu.pembeliMarketplace' },
+        ],
+      },
       {
         label: 'grup.master',
         ikon: Boxes,
         tab: [
           { ke: '/produk', label: 'menu.produk' },
           { ke: '/pelanggan', label: 'menu.pelanggan' },
-          { ke: '/pembeli-marketplace', label: 'menu.pembeliMarketplace' },
           { ke: '/supplier', label: 'menu.supplier', peran: ['owner', 'admin'] },
           { ke: '/gudang', label: 'menu.gudang', peran: ['owner', 'admin'] },
         ],

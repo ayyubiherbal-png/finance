@@ -20,12 +20,10 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0025_pembeli_marketplace_kunci_fallback.sql`**
-> — dibutuhkan supaya tombol "Sinkronkan dari Pesanan" di tab Pembeli
-> Marketplace berguna. (0020-0024 terkonfirmasi sudah jalan.) Tanpa
-> ini, sinkronisasi akan selalu 0 hasil untuk data TikTok/Shopee yang
-> nomor teleponnya kosong (ternyata SEMUA pesanan TikTok yang sudah
-> diimpor begitu -- lihat catatan di 0025).
+> ⏳ **Belum dijalankan: `0026_pembeli_marketplace_nama_junk.sql`** —
+> dibutuhkan supaya sinkronisasi Pembeli Marketplace tidak lagi
+> menghasilkan baris dengan "Nama" = angka polos ("100", "1400" dst.).
+> (0020-0025 terkonfirmasi sudah jalan.)
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
 Editor Supabase, dan setiap file aman dijalankan berkali-kali
@@ -73,6 +71,7 @@ supabase/migrations/0022_status_platform_impor.sql
 supabase/migrations/0023_perbarui_status_impor.sql
 supabase/migrations/0024_pembeli_marketplace.sql
 supabase/migrations/0025_pembeli_marketplace_kunci_fallback.sql
+supabase/migrations/0026_pembeli_marketplace_nama_junk.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

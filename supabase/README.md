@@ -432,6 +432,31 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Pembeli Marketplace: pindah ke menu CRM + bug nama angka polos jadi
+kunci dedup (0026, 2026-09-08).** Dua hal sekaligus setelah segmentasi
+RFM ditambahkan:
+
+1. User tanya kenapa tab ini ada di menu Master Data, bukan CRM --
+   masuk akal, apalagi setelah dapat segmentasi Juara/Setia/dst. yang
+   sama seperti CRM Pelanggan. Dipindah: menu "CRM" (`Layout.tsx`)
+   sekarang punya 2 tab -- "Segmen Pelanggan" dan "Pembeli Marketplace"
+   -- bukan lagi digabung ke menu "Master".
+
+2. Screenshot user menunjukkan baris dengan "Nama" = "100"/"1400" --
+   BUG YANG SAMA seperti yang sudah diperbaiki di daftar SO/SJ/Faktur
+   (`terlihatSepertiNama()`, 2026-09-07) muncul lagi, kali ini lebih
+   parah: karena telepon SEMUA pesanan TikTok kosong (0025), angka
+   sampah itu bukan cuma salah tampil tapi jadi KUNCI DEDUP itu sendiri
+   (`kunci`) untuk baris-baris ini. Fungsi SQL baru `terlihat_seperti_
+   nama()` (logika sama persis versi TypeScript-nya) dipasang di
+   `sinkron_pembeli_marketplace()` -- pesanan yang nama_penerima-nya
+   cuma angka TIDAK dipakai jadi nama atau kunci; kalau pesanan itu
+   juga tidak punya telepon, otomatis tidak ikut disinkronkan sama
+   sekali (lebih baik tidak muncul daripada muncul dengan identitas
+   yang jelas salah). Baris yang sudah kadung tersimpan dari
+   sinkronisasi sebelumnya dibersihkan sekali di migrasi ini (kecuali
+   yang sudah pernah diedit manual).
+
 **Pembeli Marketplace: segmentasi RFM juga (murni frontend, 2026-09-08).**
 User perhatikan CRM Pelanggan tidak menghitung transaksi marketplace
 sama sekali (kartu Juara/Setia/dst. semua 0 kecuali 1 pelanggan biasa)
