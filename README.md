@@ -195,7 +195,7 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Master | Produk, Supplier, Pelanggan, Gudang | Selesai, CRUD penuh -- Pelanggan sekarang termasuk alamat berjenjang (Provinsi/Kab-Kota/Kecamatan/Kelurahan) dan field persiapan CRM; Gudang baru (kode/nama/alamat/status utama) |
 | Kas & Bank | Akun Kas & Bank (saldo live), Kartu Kas & Bank (mutasi) | Selesai |
 | Wilayah | Data resmi Kemendagri (38 provinsi -> 83.762 kelurahan) untuk dropdown alamat Pelanggan & Supplier | Selesai |
-| Cetak | Invoice (Faktur Penjualan, A4) dan label pengiriman (Surat Jalan, A6) | Selesai -- logo ekspedisi asli JNE/J&T/Paxel sudah terpasang; ekspedisi lain tampil sebagai teks sampai logonya dikirim |
+| Cetak | Invoice (Faktur Penjualan, A4) dan label pengiriman (Surat Jalan, A6) | Selesai -- logo ekspedisi asli JNE/J&T/Paxel sudah terpasang; ekspedisi lain tampil sebagai teks sampai logonya dikirim. Label bisa dicentang banyak sekaligus di daftar Surat Jalan lalu dicetak dalam satu print job ("Cetak N Label") |
 | Penjualan | Sales Order → Surat Jalan → Faktur → Penerimaan Kas → Retur | Selesai, ujung ke ujung |
 | Penjualan Cepat | Satu layar: isi pembeli + barang + pembayaran sekali, keempat dokumen dibuat otomatis dalam satu transaksi database | Selesai -- **butuh migrasi 0020** |
 | Pembelian | Purchase Order → Penerimaan Barang → Faktur Pembelian → Pembayaran Supplier → Retur | Selesai, ujung ke ujung |

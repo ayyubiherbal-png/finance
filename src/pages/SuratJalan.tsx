@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Printer, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggal } from '@/lib/format'
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   Input,
@@ -52,16 +53,40 @@ export function SuratJalan() {
   const [status, setStatus] = useState('')
   const { data, isLoading, error, isFetching } = useDaftarSJ(cari, status)
 
+  // Untuk cetak massal label pengiriman -- lihat SuratJalanCetakMassal.
+  // Dikosongkan tiap kali daftar berubah (filter/pencarian) supaya tidak
+  // ada id yang kecentang tapi sudah tidak kelihatan di layar.
+  const [dipilih, setDipilih] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    setDipilih(new Set())
+  }, [cari, status])
+
+  function toggleSatu(id: string) {
+    setDipilih((s) => {
+      const n = new Set(s)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
+  }
+
+  const semuaTercentang = !!data && data.length > 0 && data.every((sj) => dipilih.has(sj.id))
+  function toggleSemua() {
+    if (!data) return
+    setDipilih(semuaTercentang ? new Set() : new Set(data.map((sj) => sj.id)))
+  }
+
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-semibold">Surat Jalan</h1>
         <p className="text-sm text-muted-foreground">
           Dibuat dari Sales Order yang sudah disetujui. Untuk membuat baru, buka SO-nya dan klik "Buat Surat Jalan".
+          Centang beberapa baris untuk mencetak banyak label pengiriman sekaligus.
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-8" placeholder="Cari nomor SJ..." value={cari} onChange={(e) => setCari(e.target.value)} />
@@ -74,6 +99,18 @@ export function SuratJalan() {
             </option>
           ))}
         </Select>
+
+        {dipilih.size > 0 ? (
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">{dipilih.size} dipilih</span>
+            <Button size="sm" asChild>
+              <Link to={`/surat-jalan/cetak-massal?id=${[...dipilih].join(',')}`} target="_blank">
+                <Printer className="h-4 w-4" />
+                Cetak {dipilih.size} Label
+              </Link>
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       <Card>
@@ -92,6 +129,15 @@ export function SuratJalan() {
             <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
               <Thead>
                 <Tr>
+                  <Th className="w-8">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4"
+                      checked={semuaTercentang}
+                      onChange={toggleSemua}
+                      aria-label="Pilih semua"
+                    />
+                  </Th>
                   <Th>Nomor</Th>
                   <Th>Tanggal</Th>
                   <Th>Pelanggan</Th>
@@ -102,6 +148,15 @@ export function SuratJalan() {
               <Tbody>
                 {data.map((sj) => (
                   <Tr key={sj.id}>
+                    <Td>
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={dipilih.has(sj.id)}
+                        onChange={() => toggleSatu(sj.id)}
+                        aria-label={`Pilih ${sj.nomor}`}
+                      />
+                    </Td>
                     <Td>
                       <Link to={`/surat-jalan/${sj.id}`} className="font-mono text-xs text-primary hover:underline">
                         {sj.nomor}

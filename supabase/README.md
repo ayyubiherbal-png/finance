@@ -432,6 +432,31 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Cetak label massal untuk Surat Jalan (2026-09-07, murni frontend,
+tanpa migrasi).** User lihat daftar Surat Jalan lalu tanya: "gimana
+kalau ada 100 orderan sehari, masa harus print satu satu?" -- benar,
+alur sebelumnya cuma ada cetak per-dokumen (buka SJ, klik Cetak, kembali,
+ulangi 100x).
+
+Solusinya BUKAN dokumen baru, cuma cara menyajikan yang sudah ada:
+- Markup satu kartu label A6 dipindah dari `SuratJalanCetak.tsx` ke
+  komponen bersama `src/components/LabelSuratJalan.tsx`, supaya cetak
+  satuan dan cetak massal selalu identik tampilannya (tidak ada dua
+  versi yang bisa menyimpang).
+- Halaman baru `SuratJalanCetakMassal.tsx` (`/surat-jalan/cetak-massal?id=uuid1,uuid2,...`)
+  mengambil banyak SJ + itemnya sekaligus (`select ... in (ids)`, 2
+  query total, bukan N+1), lalu render tiap label berurutan dalam SATU
+  halaman React. `@page` di CSS print berlaku sama untuk setiap halaman
+  fisik dalam satu print job, dan setiap kartu dipisah `break-after:
+  page` (kecuali yang terakhir, supaya tidak ada halaman kosong nyasar
+  di ujung) -- hasilnya dialog print browser cuma muncul SEKALI dan
+  mencetak semua label berurutan dalam ukuran A6 yang sama.
+- Di `SuratJalan.tsx` (daftar), ditambah kolom checkbox + "pilih semua"
+  + tombol "Cetak N Label" yang membuka halaman cetak massal di tab
+  baru dengan id-id terpilih. Seleksi otomatis dikosongkan tiap kali
+  filter/pencarian berubah, supaya tidak ada id tercentang yang sudah
+  tidak kelihatan di layar.
+
 **Penjualan Cepat: baris yang lupa ditekan Tambah tetap ikut diproses +
 diskon nominal (0020 diperbarui, 2026-09-07).** User tes langsung dan
 lapor: mengisi 1 baris barang lengkap, tapi saat "Proses Penjualan"
