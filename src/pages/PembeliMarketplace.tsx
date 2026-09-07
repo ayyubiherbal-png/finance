@@ -173,6 +173,14 @@ export function PembeliMarketplace() {
       </div>
 
       {semua.length > 0 ? (
+        <p className="text-xs text-muted-foreground">
+          {tt(
+            'Catatan: 97% pembeli TikTok cuma belanja sekali (wajar untuk trafik iklan). Kalau ada "pesanan" berdekatan cuma 1-2 hari dari pembeli yang sama, itu kemungkinan besar SATU checkout yang dipecah platform jadi beberapa nomor pesanan -- bukan bukti kunjungan ulang yang asli.',
+          )}
+        </p>
+      ) : null}
+
+      {semua.length > 0 ? (
         <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {hitunganSegmen.map((s) => {
             const aktif = segmenAktif === s.kunci

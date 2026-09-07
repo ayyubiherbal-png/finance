@@ -432,6 +432,53 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Validasi ambang 60/120 hari di CRM -- KEPUTUSAN: tetap dipakai, sudah
+dicek ke data nyata (murni analisis, tidak ada kode berubah selain 1
+catatan UI, 2026-09-08).** User tanya jujur soal ambang 60/120
+hari & 2/3 transaksi di segmentasi RFM (0019): "dari mana perhitungan
+ini? apakah sudah riset atau cuma ditambahkan saja?" -- jawaban jujur:
+itu ASUMSI generik siklus belanja F&B ±1 bulan, BUKAN hasil analisis
+data Ayyubi sendiri (komentar di 0019 memang bilang "asumsi").
+
+Dicek ke data nyata lewat 2 query yang dijalankan user:
+
+1. **Pelanggan individu (canvassing, `not akun_agregat`)**: cuma **1
+   pelanggan** yang pernah punya transaksi berulang (3x, jarak 1-2
+   hari) -- sampel terlalu kecil (n=1) untuk kesimpulan statistik apa
+   pun, kemungkinan itu transaksi uji coba sistem, bukan pola beli
+   alami.
+
+2. **Pembeli marketplace** (kunci username, 783 pembeli unik dari
+   pesanan TikTok): **760/783 (97%) cuma belanja SEKALI seumur hidup**
+   -- wajar untuk trafik iklan/FYP TikTok (beda karakter dengan
+   pelanggan canvassing yang punya hubungan dagang berkelanjutan).
+   Dari 32 pasangan "beli ulang" yang ada, **SEMUANYA terjadi dalam
+   0-30 hari** (median 1 hari!), **NOL** yang di rentang 31-120 hari.
+
+**Kesimpulan:** angka "beli ulang dalam hitungan hari" di data
+marketplace itu kemungkinan besar BUKAN pelanggan kembali berbelanja,
+melainkan SATU checkout yang dipecah TikTok jadi beberapa nomor
+pesanan terpisah (lazim kalau barang dikirim dari gudang/kurir
+berbeda) -- bukan sinyal loyalitas asli. Karena itu:
+
+- Data marketplace TIDAK BISA dipakai menggantikan ambang 60/120 hari
+  CRM Pelanggan -- populasi pembelinya beda karakter sama sekali
+  (impulse-buy iklan vs hubungan dagang canvassing), dan distribusinya
+  sendiri kosong sama sekali di rentang 31-120 hari (tidak ada sinyal
+  buat dikalibrasi).
+- Data pelanggan individu (n=1) juga jelas tidak cukup untuk mengubah
+  apa pun.
+- **Keputusan: 60/120 hari & ambang 2/3 transaksi TETAP seperti semula**
+  di `v_pelanggan_crm` (0019) dan `segmenPembeli()` (Pembeli
+  Marketplace) -- bukan karena "sudah pasti benar", tapi karena belum
+  ada bukti data yang cukup kuat untuk menggantinya dengan angka lain
+  yang lebih baik. Revisit lagi setelah beberapa bulan transaksi
+  canvassing riil terkumpul.
+- Ditambah SATU catatan di UI (`PembeliMarketplace.tsx`) yang
+  menjelaskan temuan #2 di atas -- supaya user tidak salah baca "Juara"
+  di situ sebagai bukti loyalitas kalau ternyata cuma checkout
+  terpecah.
+
 **Pembeli Marketplace: pindah ke menu CRM + bug nama angka polos jadi
 kunci dedup (0026, 2026-09-08).** Dua hal sekaligus setelah segmentasi
 RFM ditambahkan:
