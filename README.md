@@ -13,80 +13,18 @@ memengaruhi bentuk form.
 
 ---
 
-## ⚠️ Migrasi baru yang perlu dijalankan sekarang
+## ✅ Status migrasi
 
-Anda sudah menjalankan 0001-0010 (Kas & Bank sudah aktif) dan 0011
-(field CRM + tabel wilayah, termasuk 3 import CSV wilayah). Setelah itu
-ada **dua migrasi lagi**, kecil, tidak perlu import CSV apa pun:
+Semua migrasi sampai **0018** sudah dijalankan di database live Anda
+(0001-0012, 0014-0018 -- nomor 0013 sengaja tidak ada, dibatalkan
+sebelum sempat dijalankan, bukan ada yang hilang). Termasuk 3 file CSV
+wilayah (`supabase/seed-data/`) yang sudah diimpor lewat Table Editor.
+Tidak ada migrasi yang tertunda saat ini.
 
-```
-supabase/migrations/0012_pelanggan_tipe_sumber.sql
-supabase/migrations/0014_pelanggan_ringkas_view.sql
-supabase/migrations/0015_pelanggan_akun_agregat.sql
-supabase/migrations/0016_supplier_wilayah.sql
-supabase/migrations/0017_sales_order_telepon_penerima.sql
-supabase/migrations/0018_surat_jalan_penerima.sql
-```
-
-0012 mengganti daftar Tipe Pelanggan (Customer/Mitra/Horeka/Perusahaan)
-dan menambah field Sumber. 0014 mengganti view `v_limit_kredit` (dipakai
-daftar Pelanggan) jadi `v_pelanggan_ringkas` -- isinya sekarang persis
-field yang ada di form Pelanggan (Tipe, Kontak, Sales, Telepon, WhatsApp,
-Email, Sumber, Tanggal lahir, Media sosial, Alamat gabungan), TANPA
-Piutang (itu data transaksi, sudah ada tempatnya sendiri di Laporan
-Piutang) dan tanpa Termin/Limit Kredit/Sisa Limit (sudah tidak
-informatif lagi sejak field itu dihapus dari form). 0015 menandai 4
-akun agregat marketplace (SHOPEE/TIKTOK/TOKPED/WA-UMUM) lewat kolom baru
-`akun_agregat`, lalu menyembunyikannya dari daftar Pelanggan (datanya
-tetap ada, masih dipakai alur pesanan online). 0016 menambah alamat
-berjenjang (Provinsi/Kab-Kota/Kecamatan/Kelurahan) ke Supplier, sama
-seperti Pelanggan. Semuanya aman dijalankan berkali-kali kalau perlu
-diulang. 0017 menambah kolom `telepon_penerima` di Sales Order supaya
-alamat & nomor HP terisi otomatis begitu Pelanggan dipilih. 0018
-menambah `nama_penerima`/`telepon_penerima` di Surat Jalan juga
-(di-carry otomatis dari SO sumbernya) -- hasil audit menyeluruh semua
-form transaksi supaya data master ikut terbawa sesuai kebutuhan
-masing-masing dokumen. (Nomor 0013 sempat dibuat lalu dibatalkan/
-dihapus lagi -- lompat dari 0012 ke 0014 memang disengaja, bukan ada
-yang hilang.)
-
-> Percobaan pertama migrasi ini menulis ~91.000 baris data wilayah
-> sebagai SQL langsung dan **gagal ditempel** di SQL Editor ("Failed to
-> rename snippet: request entity too large" -- itu batas ukuran bawaan
-> Supabase, bukan masalah di kode). Sudah diperbaiki: sekarang migrasinya
-> kecil, dan semua data besar lewat **Table Editor**, bukan SQL Editor.
-
-### Langkah A -- jalankan migrasi (kecil, ~6 KB, aman ditempel)
-
-```
-supabase/migrations/0011_pelanggan_crm.sql
-```
-
-Cuma bikin tabel + kolom baru + seed 38 provinsi (kecil). Aman
-dijalankan di database yang sudah ada datanya -- kolom baru di
-`pelanggan` semuanya opsional, tabel `wilayah_*` baru dan kosong
-sampai diisi lewat Langkah B.
-
-### Langkah B -- import 3 file CSV lewat Table Editor (WAJIB, urutan penting)
-
-Untuk **masing-masing** baris di bawah: Supabase Dashboard →
-**Table Editor** → pilih tabelnya → klik **Insert** → **Import data
-from CSV** → pilih file dari folder `supabase/seed-data/` di proyek.
-Mapping kolom harusnya otomatis cocok (header CSV sama persis dengan
-nama kolom tabel).
-
-**Urutan wajib dari atas ke bawah** (kolom `kode`-nya foreign key
-berjenjang -- tabel induk harus terisi dulu, kalau kebalik akan error):
-
-1. Tabel `wilayah_kabupaten_kota` ← `wilayah_kabupaten_kota.csv` (514 baris)
-2. Tabel `wilayah_kecamatan` ← `wilayah_kecamatan.csv` (7.285 baris)
-3. Tabel `wilayah_kelurahan` ← `wilayah_kelurahan.csv` (83.762 baris, paling lama -- beberapa menit)
-
-Tanpa langkah ini, dropdown wilayah di form Pelanggan cuma menampilkan
-Provinsi lalu berhenti (kosong di level berikutnya).
-
-Migrasi selanjutnya (kalau ada) akan bernomor `0012`, dst. -- selalu jalankan
-yang belum pernah Anda jalankan, urut sesuai nomor.
+Kalau ada migrasi baru ke depan, nomornya lanjut dari **0019** dan akan
+disebutkan secara eksplisit di sini setiap kali dibuat -- migrasi
+tidak pernah dijalankan otomatis, selalu manual lewat SQL Editor
+Supabase, dan setiap file aman dijalankan berkali-kali (idempotent).
 
 ---
 
@@ -232,7 +170,8 @@ src/components/Combobox.tsx  dropdown pencarian generik (produk/pelanggan/suppli
 src/components/Layout.tsx  sidebar, gating menu per peran
 src/pages/                 satu file per layar (lihat tabel Status di bawah)
 public/ayyubi-logo.jpeg    logo resmi -- favicon + sidebar + login
-supabase/migrations/       10 file migrasi (0001-0009 dijalankan, 0010 baru)
+supabase/migrations/       17 file migrasi, semua sudah dijalankan (lihat Status migrasi di atas)
+supabase/reset-sebelum-live.sql  script reset data uji coba -- BUKAN migrasi, jalankan manual sebelum go-live
 ```
 
 ## Status
@@ -244,8 +183,9 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Area | Layar | Status |
 |---|---|---|
 | Master | Produk, Supplier, Pelanggan, Gudang | Selesai, CRUD penuh -- Pelanggan sekarang termasuk alamat berjenjang (Provinsi/Kab-Kota/Kecamatan/Kelurahan) dan field persiapan CRM; Gudang baru (kode/nama/alamat/status utama) |
-| Kas & Bank | Akun Kas & Bank (saldo live), Kartu Kas & Bank (mutasi) | Selesai -- **butuh migrasi 0010**, lihat peringatan di atas |
-| Wilayah | Data resmi Kemendagri (38 provinsi -> 83.762 kelurahan) untuk dropdown alamat Pelanggan | Selesai -- **butuh migrasi 0011 + 3 import CSV**, lihat peringatan di atas |
+| Kas & Bank | Akun Kas & Bank (saldo live), Kartu Kas & Bank (mutasi) | Selesai |
+| Wilayah | Data resmi Kemendagri (38 provinsi -> 83.762 kelurahan) untuk dropdown alamat Pelanggan & Supplier | Selesai |
+| Cetak | Invoice (Faktur Penjualan, A4) dan label pengiriman (Surat Jalan, A6) | Selesai -- logo ekspedisi (JNE/dll.) masih teks, belum gambar logo asli (kirim file kalau mau diganti) |
 | Penjualan | Sales Order → Surat Jalan → Faktur → Penerimaan Kas → Retur | Selesai, ujung ke ujung |
 | Pembelian | Purchase Order → Penerimaan Barang → Faktur Pembelian → Pembayaran Supplier → Retur | Selesai, ujung ke ujung |
 | Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
@@ -256,6 +196,6 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Fase 3 | CRM (pipeline, kunjungan sales, loyalty) | Belum dirancang |
 | Fase 4 | Akuntansi penuh (jurnal, buku besar), pajak, HR | Belum dirancang |
 
-Setelah migrasi 0010 dijalankan, coba alur: buat/pilih akun Kas & Bank →
-Catat Pembayaran atau Bayar Supplier → cek saldo akunnya berubah di
-halaman Kas & Bank dan riwayatnya muncul di Kartu Kas & Bank.
+Alur yang bisa dicoba: buat/pilih akun Kas & Bank → Catat Pembayaran
+atau Bayar Supplier → cek saldo akunnya berubah di halaman Kas & Bank
+dan riwayatnya muncul di Kartu Kas & Bank.
