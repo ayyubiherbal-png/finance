@@ -34,7 +34,7 @@ export function Login() {
             type="button"
             onClick={() => setBahasa(b)}
             className={cn(
-              'rounded-full px-2.5 py-1 uppercase transition-colors',
+              'cursor-pointer rounded-full px-2.5 py-1 uppercase transition-colors',
               bahasa === b ? 'bg-primary text-primary-foreground' : 'text-foreground/60 hover:text-foreground',
             )}
           >

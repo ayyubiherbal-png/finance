@@ -80,7 +80,7 @@ export function LaporanLaba() {
             key={t}
             onClick={() => setTab(t)}
             className={cn(
-              'rounded px-3 py-1.5 text-sm font-medium capitalize transition-colors',
+              'cursor-pointer rounded px-3 py-1.5 text-sm font-medium capitalize transition-colors',
               tab === t ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >

@@ -203,7 +203,7 @@ function ToggleBahasa() {
           type="button"
           onClick={() => setBahasa(b)}
           className={cn(
-            'rounded-full px-2.5 py-1 uppercase transition-colors',
+            'cursor-pointer rounded-full px-2.5 py-1 uppercase transition-colors',
             bahasa === b ? 'bg-primary text-primary-foreground shadow-sm' : 'text-foreground/60 hover:text-foreground',
           )}
         >
@@ -314,7 +314,7 @@ function PencarianGlobal() {
                 key={`${h.tipe}-${h.value}`}
                 type="button"
                 onClick={() => pilih(h)}
-                className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-left text-sm hover:bg-accent"
+                className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-1.5 text-left text-sm hover:bg-accent"
               >
                 <span className="truncate">
                   {h.label}
@@ -379,7 +379,7 @@ function Lonceng() {
       <button
         type="button"
         onClick={() => setTerbuka((v) => !v)}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full bg-muted/70 text-foreground/70 transition-colors hover:bg-accent"
+        className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-muted/70 text-foreground/70 transition-colors hover:bg-accent"
         aria-label={t('topbar.notifikasi')}
       >
         <Bell className="h-4 w-4" />
@@ -455,7 +455,7 @@ function ProfilChip({ nama, peran, onKeluar }: { nama: string; peran: string; on
       <button
         type="button"
         onClick={() => setTerbuka((v) => !v)}
-        className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-1.5 transition-colors hover:bg-accent sm:pr-3"
+        className="flex cursor-pointer items-center gap-2.5 rounded-full py-1 pl-1 pr-1.5 transition-colors hover:bg-accent sm:pr-3"
       >
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
           {(nama || '?').slice(0, 1).toUpperCase()}
@@ -475,7 +475,7 @@ function ProfilChip({ nama, peran, onKeluar }: { nama: string; peran: string; on
           <button
             type="button"
             onClick={onKeluar}
-            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+            className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
           >
             <LogOut className="h-4 w-4" />
             {t('topbar.keluar')}

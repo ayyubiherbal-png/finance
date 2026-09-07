@@ -99,7 +99,7 @@ export function CrmPelanggan() {
                   title={s.jelas}
                   onClick={() => setSegmenAktif(aktif ? null : s.kunci)}
                   className={cn(
-                    'rounded-lg border p-3 text-left transition-colors',
+                    'cursor-pointer rounded-lg border p-3 text-left transition-colors',
                     aktif ? 'border-primary bg-primary/10' : 'border-border hover:bg-accent',
                   )}
                 >
@@ -124,7 +124,7 @@ export function CrmPelanggan() {
             <p className="text-sm text-muted-foreground">
               Menampilkan segmen <span className="font-medium text-foreground">{INFO_SEGMEN[segmenAktif].label}</span> --{' '}
               {INFO_SEGMEN[segmenAktif].jelas}.{' '}
-              <button type="button" className="text-primary underline" onClick={() => setSegmenAktif(null)}>
+              <button type="button" className="cursor-pointer text-primary underline" onClick={() => setSegmenAktif(null)}>
                 Tampilkan semua
               </button>
             </p>

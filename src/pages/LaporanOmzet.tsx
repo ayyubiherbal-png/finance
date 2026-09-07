@@ -114,7 +114,7 @@ export function LaporanOmzet() {
             key={m}
             onClick={() => setMode(m)}
             className={cn(
-              'rounded px-3 py-1.5 text-sm font-medium transition-colors',
+              'cursor-pointer rounded px-3 py-1.5 text-sm font-medium transition-colors',
               mode === m ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >

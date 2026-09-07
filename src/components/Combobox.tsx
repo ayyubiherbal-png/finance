@@ -78,7 +78,7 @@ export function Combobox({
         type="button"
         disabled={disabled}
         onClick={() => setTerbuka((v) => !v)}
-        className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-9 w-full cursor-pointer items-center justify-between rounded-md border border-input bg-background px-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span className={cn('truncate text-left', !terpilih && 'text-muted-foreground')}>
           {terpilih ? terpilih.label : (placeholder ?? 'Pilih...')}
@@ -114,7 +114,7 @@ export function Combobox({
                     setKueri('')
                   }}
                   className={cn(
-                    'flex w-full flex-col items-start px-3 py-1.5 text-left text-sm hover:bg-accent',
+                    'flex w-full cursor-pointer flex-col items-start px-3 py-1.5 text-left text-sm hover:bg-accent',
                     o.value === value && 'bg-accent',
                   )}
                 >

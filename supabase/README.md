@@ -432,6 +432,27 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Font sungguhan dimuat + cursor:pointer di semua elemen klik (2026-09-07,
+murni frontend).** User kirim crop sidebar referensi: "yang ini belum di
+saman dan cursornya juga... Typografinya belum di samakan." Ditemukan
+bug nyata sambil investigasi: `tailwind.config.js` MENDEKLARASIKAN
+`Inter` sebagai font, tapi **tidak pernah dimuat** di `index.html` --
+tidak ada `<link>` maupun `@font-face` -- jadi selama ini browser diam-
+diam jatuh ke font sistem (Segoe UI dst.), bukan Inter. Diganti ke
+**Plus Jakarta Sans** (dimuat via Google Fonts di `index.html`,
+weight 400-800) -- bentuk hurufnya yang geometris-membulat paling
+cocok dengan referensi. Diverifikasi via `document.fonts` di browser
+(bukan cuma dicek dari kode) -- weight yang benar-benar dipakai di
+halaman berstatus "loaded", bukan cuma "declared".
+
+Untuk cursor: elemen `<button>` custom (toggle bahasa, lonceng
+notifikasi, profil, hasil pencarian, tab Laporan Laba/Omzet, kartu
+segmen CRM) tidak otomatis dapat `cursor: pointer` dari browser --
+beda dari `<a>` yang otomatis dapat. Ditambah `cursor-pointer`
+eksplisit di semua tempat itu, plus ke `buttonVariants` (komponen
+`Button` bersama) supaya SEMUA tombol di seluruh aplikasi ikut
+konsisten, bukan cuma yang ditunjuk user.
+
 **Reskin tema (gaya "Donezo") + 3 kartu Dasbor baru + dwibahasa tahap 1
 (2026-09-07, murni frontend, tanpa migrasi).** User kirim gambar
 referensi dashboard SaaS (kartu bulat, gradasi hijau tua, grafik
