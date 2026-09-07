@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
@@ -48,7 +49,7 @@ export function AkunKasBank() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Kas & Bank</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Kas & Bank')}</h1>
           <p className="text-sm text-muted-foreground">
             Setiap Penerimaan Kas dan Pembayaran Supplier tertaut ke salah satu akun ini
           </p>

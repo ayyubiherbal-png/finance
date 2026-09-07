@@ -2,6 +2,27 @@ import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
+
+/* ------------------------------------------------------------ Dwibahasa */
+
+/**
+ * Menerjemahkan children yang berupa teks biasa. Dipakai di komponen
+ * bersama (Th, Label, Badge, Button, ...) supaya isi halaman ikut
+ * dwibahasa TANPA perlu menyentuh ~700 tempat pemakaian di 40+ file.
+ *
+ * `React.Children.map` (bukan `.map` biasa) supaya key tiap anak tetap
+ * ditangani React -- kalau pakai array.map, muncul peringatan key hilang.
+ *
+ * Yang BUKAN string (ikon, angka, elemen JSX) dibiarkan apa adanya. Td
+ * SENGAJA tidak ikut: isinya data milik user (nama pelanggan, catatan),
+ * bukan label aplikasi -- itu tidak boleh diterjemahkan.
+ */
+function useTeks() {
+  const { tt } = useI18n()
+  return (anak: React.ReactNode): React.ReactNode =>
+    React.Children.map(anak, (c) => (typeof c === 'string' ? tt(c) : c))
+}
 
 /* ---------------------------------------------------------------- Button */
 
@@ -39,9 +60,22 @@ export interface ButtonProps
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, children, ...props }, ref) => {
+    const teks = useTeks()
     const Comp = asChild ? Slot : 'button'
-    return <Comp ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props} />
+    // Dengan asChild, teksnya ada di DALAM elemen anak (biasanya <Link>),
+    // bukan di children Button langsung -- jadi elemennya di-clone dengan
+    // isi yang sudah diterjemahkan.
+    const anak = children as React.ReactElement | React.ReactNode
+    const isi =
+      asChild && React.isValidElement(anak)
+        ? React.cloneElement(anak, {}, teks(anak.props.children))
+        : teks(children)
+    return (
+      <Comp ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props}>
+        {isi}
+      </Comp>
+    )
   },
 )
 Button.displayName = 'Button'
@@ -49,16 +83,20 @@ Button.displayName = 'Button'
 /* ----------------------------------------------------------- Input, Label */
 
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-  ({ className, ...props }, ref) => (
-    <input
-      ref={ref}
-      className={cn(
-        'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
-        className,
-      )}
-      {...props}
-    />
-  ),
+  ({ className, placeholder, ...props }, ref) => {
+    const { tt } = useI18n()
+    return (
+      <input
+        ref={ref}
+        placeholder={placeholder ? tt(placeholder) : placeholder}
+        className={cn(
+          'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+          className,
+        )}
+        {...props}
+      />
+    )
+  },
 )
 Input.displayName = 'Input'
 
@@ -124,24 +162,36 @@ InputAngka.displayName = 'InputAngka'
 export const Select = React.forwardRef<
   HTMLSelectElement,
   React.SelectHTMLAttributes<HTMLSelectElement>
->(({ className, ...props }, ref) => (
-  <select
-    ref={ref}
-    className={cn(
-      'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
-      className,
-    )}
-    {...props}
-  />
-))
+>(({ className, children, ...props }, ref) => {
+  const teks = useTeks()
+  // Isi dropdown ada di elemen <option>, bukan di children Select langsung --
+  // jadi tiap option di-clone dengan label terjemahannya. React.Children.map
+  // ikut meratakan array hasil .map() di halaman, jadi option yang dibuat
+  // dari daftar (mis. daftar status) tetap kena.
+  const opsi = React.Children.map(children, (c) =>
+    React.isValidElement(c) && c.type === 'option' ? React.cloneElement(c, {}, teks(c.props.children)) : c,
+  )
+  return (
+    <select
+      ref={ref}
+      className={cn(
+        'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+        className,
+      )}
+      {...props}
+    >
+      {opsi}
+    </select>
+  )
+})
 Select.displayName = 'Select'
 
-export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
+export function Label({ className, children, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
+  const teks = useTeks()
   return (
-    <label
-      className={cn('text-sm font-medium leading-none text-foreground', className)}
-      {...props}
-    />
+    <label className={cn('text-sm font-medium leading-none text-foreground', className)} {...props}>
+      {teks(children)}
+    </label>
   )
 }
 
@@ -172,8 +222,13 @@ export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDiv
   return <div className={cn('flex flex-col gap-1 p-4 pb-2', className)} {...props} />
 }
 
-export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn('font-semibold leading-tight tracking-tight', className)} {...props} />
+export function CardTitle({ className, children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
+  const teks = useTeks()
+  return (
+    <h3 className={cn('font-semibold leading-tight tracking-tight', className)} {...props}>
+      {teks(children)}
+    </h3>
+  )
 }
 
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
@@ -205,9 +260,15 @@ const badgeVariants = cva(
 export function Badge({
   className,
   variant,
+  children,
   ...props
 }: React.HTMLAttributes<HTMLSpanElement> & VariantProps<typeof badgeVariants>) {
-  return <span className={cn(badgeVariants({ variant }), className)} {...props} />
+  const teks = useTeks()
+  return (
+    <span className={cn(badgeVariants({ variant }), className)} {...props}>
+      {teks(children)}
+    </span>
+  )
 }
 
 /* ----------------------------------------------------------------- Table */
@@ -238,7 +299,8 @@ export function Tr({ className, ...props }: React.HTMLAttributes<HTMLTableRowEle
   return <tr className={cn('border-b border-border hover:bg-muted/40', className)} {...props} />
 }
 
-export function Th({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
+export function Th({ className, children, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
+  const teks = useTeks()
   return (
     <th
       className={cn(
@@ -246,7 +308,9 @@ export function Th({ className, ...props }: React.ThHTMLAttributes<HTMLTableCell
         className,
       )}
       {...props}
-    />
+    >
+      {teks(children)}
+    </th>
   )
 }
 
@@ -270,7 +334,8 @@ export function Spinner({ className }: { className?: string }) {
 }
 
 export function KondisiKosong({ pesan = 'Belum ada data.' }: { pesan?: string }) {
-  return <div className="px-3 py-10 text-center text-sm text-muted-foreground">{pesan}</div>
+  const { tt } = useI18n()
+  return <div className="px-3 py-10 text-center text-sm text-muted-foreground">{tt(pesan)}</div>
 }
 
 export function PesanError({ error }: { error: unknown }) {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Printer, Search } from 'lucide-react'
@@ -83,7 +84,7 @@ export function SuratJalan() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Surat Jalan</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tt('Surat Jalan')}</h1>
         <p className="text-sm text-muted-foreground">
           Dibuat dari Sales Order yang sudah disetujui. Untuk membuat baru, buka SO-nya dan klik "Buat Surat Jalan".
           Centang beberapa baris untuk mencetak banyak label pengiriman sekaligus.

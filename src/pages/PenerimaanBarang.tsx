@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Search } from 'lucide-react'
@@ -57,7 +58,7 @@ export function PenerimaanBarang() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Penerimaan Barang</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tt('Penerimaan Barang')}</h1>
         <p className="text-sm text-muted-foreground">
           Dibuat dari Purchase Order yang sudah disetujui. Untuk membuat baru, buka PO-nya dan klik "Buat Penerimaan Barang".
         </p>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
@@ -70,8 +71,8 @@ export function PenerimaanKas() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Penerimaan Kas</h1>
-          <p className="text-sm text-muted-foreground">Pembayaran dari pelanggan, dialokasikan ke faktur</p>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Penerimaan Kas')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Pembayaran dari pelanggan, dialokasikan ke faktur')}</p>
         </div>
         <Button variant="pill" asChild>
           <Link to="/penerimaan-kas/baru">

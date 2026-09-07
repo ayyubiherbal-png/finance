@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
@@ -78,8 +79,8 @@ export function FakturPenjualan() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Faktur Penjualan</h1>
-          <p className="text-sm text-muted-foreground">Ditagihkan dari satu atau beberapa Surat Jalan</p>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Faktur Penjualan')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Ditagihkan dari satu atau beberapa Surat Jalan')}</p>
         </div>
         <Button variant="pill" asChild>
           <Link to="/faktur-penjualan/baru">

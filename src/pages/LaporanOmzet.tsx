@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -102,7 +103,7 @@ export function LaporanOmzet() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Laporan Omzet</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tt('Laporan Omzet')}</h1>
         <p className="text-sm text-muted-foreground">
           Omzet &amp; laba kotor dari seluruh Faktur Penjualan (di luar yang dibatalkan), dikelompokkan per periode
         </p>

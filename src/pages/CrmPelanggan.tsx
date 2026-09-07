@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { MessageCircle, Search } from 'lucide-react'
@@ -75,7 +76,7 @@ export function CrmPelanggan() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">CRM Pelanggan</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tt('CRM Pelanggan')}</h1>
         <p className="text-sm text-muted-foreground">
           Segmentasi otomatis dari riwayat belanja -- klik segmen untuk menyaring
         </p>

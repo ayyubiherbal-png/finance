@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Printer } from 'lucide-react'
@@ -215,7 +216,7 @@ function FormBaru() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">Faktur Penjualan Baru</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{tt('Faktur Penjualan Baru')}</h1>
       </div>
 
       <Card>

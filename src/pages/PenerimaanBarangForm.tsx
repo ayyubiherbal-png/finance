@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
@@ -221,7 +222,7 @@ function FormBaru({ poId }: { poId: string | null }) {
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Penerimaan Barang Baru</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Penerimaan Barang Baru')}</h1>
           <p className="text-sm text-muted-foreground">
             Dari PO <span className="font-mono">{po.nomor}</span> &middot; {po.supplier?.nama}
           </p>

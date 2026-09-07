@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Columns3, Plus, Search } from 'lucide-react'
@@ -158,8 +159,8 @@ export function Pelanggan() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Pelanggan</h1>
-          <p className="text-sm text-muted-foreground">Data master -- piutang berjalan ada di Laporan Piutang</p>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Pelanggan')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Data master -- piutang berjalan ada di Laporan Piutang')}</p>
         </div>
 
         <div className="flex flex-1 flex-wrap justify-end gap-2 sm:flex-none">

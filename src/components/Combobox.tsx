@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
 
 export interface OpsiCombobox {
   value: string
@@ -33,6 +34,7 @@ export function Combobox({
   disabled,
   className,
 }: ComboboxProps) {
+  const { tt } = useI18n()
   const [terbuka, setTerbuka] = useState(false)
   const [kueri, setKueri] = useState('')
   const [opsi, setOpsi] = useState<OpsiCombobox[]>([])
@@ -81,7 +83,7 @@ export function Combobox({
         className="flex h-9 w-full cursor-pointer items-center justify-between rounded-md border border-input bg-background px-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span className={cn('truncate text-left', !terpilih && 'text-muted-foreground')}>
-          {terpilih ? terpilih.label : (placeholder ?? 'Pilih...')}
+          {terpilih ? terpilih.label : tt(placeholder ?? 'Pilih...')}
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
@@ -94,15 +96,15 @@ export function Combobox({
               autoFocus
               value={kueri}
               onChange={(e) => setKueri(e.target.value)}
-              placeholder="Ketik untuk cari..."
+              placeholder={tt('Ketik untuk cari...')}
               className="h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
           <div className="max-h-56 overflow-y-auto py-1">
             {memuat ? (
-              <p className="px-3 py-2 text-xs text-muted-foreground">Mencari...</p>
+              <p className="px-3 py-2 text-xs text-muted-foreground">{tt('Mencari...')}</p>
             ) : opsi.length === 0 ? (
-              <p className="px-3 py-2 text-xs text-muted-foreground">Tidak ada hasil.</p>
+              <p className="px-3 py-2 text-xs text-muted-foreground">{tt('Tidak ada hasil.')}</p>
             ) : (
               opsi.map((o) => (
                 <button

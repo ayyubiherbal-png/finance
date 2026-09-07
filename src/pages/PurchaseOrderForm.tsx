@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
@@ -179,7 +180,7 @@ export function PurchaseOrderForm() {
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <h1 className="text-2xl font-bold tracking-tight">Purchase Order Baru</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Purchase Order Baru')}</h1>
         </div>
 
         <Card>

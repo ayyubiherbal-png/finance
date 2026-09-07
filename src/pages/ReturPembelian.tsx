@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
@@ -57,8 +58,8 @@ export function ReturPembelian() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Retur Pembelian</h1>
-          <p className="text-sm text-muted-foreground">Barang dikembalikan ke supplier</p>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Retur Pembelian')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Barang dikembalikan ke supplier')}</p>
         </div>
         <Button variant="pill" asChild>
           <Link to="/retur-pembelian/baru">

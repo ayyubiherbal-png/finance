@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Printer } from 'lucide-react'
@@ -230,7 +231,7 @@ function FormBaru({ soId }: { soId: string | null }) {
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Surat Jalan Baru</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Surat Jalan Baru')}</h1>
           <p className="text-sm text-muted-foreground">
             Dari SO <span className="font-mono">{so.nomor}</span> &middot; {so.pelanggan?.nama}
           </p>

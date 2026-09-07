@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Plus, Trash2, Zap } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -323,12 +324,9 @@ export function PenjualanCepat() {
         <div className="flex-1">
           <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
             <Zap className="h-5 w-5 text-primary" />
-            Penjualan Cepat
+            {tt('Penjualan Cepat')}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Barang langsung diserahkan &amp; dibayar. Sistem otomatis membuat Sales Order, Surat Jalan,
-            Faktur, dan Penerimaan Kas sekaligus.
-          </p>
+          <p className="text-sm text-muted-foreground">{tt('Barang langsung diserahkan & dibayar. Sistem otomatis membuat Sales Order, Surat Jalan, Faktur, dan Penerimaan Kas sekaligus.')}</p>
         </div>
       </div>
 

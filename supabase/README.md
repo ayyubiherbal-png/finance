@@ -432,6 +432,49 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Dwibahasa tahap 2: isi halaman ikut (2026-09-07, murni frontend).**
+Tahap 1 baru mencakup "chrome" (sidebar, topbar, login, Dasbor). Tahap
+ini menutup isi halaman: judul kolom tabel, label form, placeholder,
+pesan kosong, notifikasi, isi dropdown, tombol, dan badge status.
+
+Volumenya diukur DULU sebelum memilih cara: ~700 kemunculan teks, tapi
+hanya ~350 kalimat yang benar-benar unik (kolom "Nama"/"Tanggal"/"Total"
+berulang di belasan halaman). Itu yang menentukan dua keputusan berikut:
+
+1. **Kunci kamus = kalimat Indonesianya sendiri** (`tt('Jatuh tempo')`),
+   bukan kunci bernama seperti `t('faktur.kolom.jatuhTempo')`. Satu entri
+   otomatis menutup semua pengulangan, JSX tetap terbaca, konstanta yang
+   sudah ada tinggal dibungkus di tempat pakai (`tt(LABEL_STATUS[x])`),
+   dan kalimat yang belum diterjemahkan AMAN -- `tt()` mengembalikan teks
+   Indonesia aslinya, bukan kunci mentah atau string kosong.
+
+2. **Terjemahan dilakukan DI DALAM komponen bersama**, bukan di ~700
+   tempat pemakaian. `Th`, `Label`, `Badge`, `CardTitle`, `Button`,
+   `KondisiKosong`, placeholder `Input`, dan `<option>` di `Select`
+   menerjemahkan children/prop-nya sendiri, jadi 40+ file halaman TIDAK
+   perlu disentuh sama sekali untuk kategori-kategori itu.
+   - Pakai `React.Children.map` (bukan `.map` biasa) supaya key tiap anak
+     tetap ditangani React.
+   - `Button` dengan `asChild`: teksnya ada di dalam `<Link>`, jadi
+     elemennya di-clone dengan isi terjemahan.
+   - **`Td` SENGAJA tidak ikut** -- isinya data milik user (nama
+     pelanggan, catatan), bukan label aplikasi. Itu tidak boleh
+     diterjemahkan.
+   - Toast diterjemahkan saat DIRENDER di `Toaster`, bukan saat `toast()`
+     dipanggil -- `toast()` fungsi modul biasa, tidak bisa pakai hook.
+
+Yang tersisa dan tidak bisa lewat komponen bersama: judul `<h1>` dan
+subjudul `<p>` tiap halaman (elemen HTML biasa). Untuk itu `tt()` juga
+diekspor sebagai fungsi modul (tanpa hook) yang membaca bahasa aktif dari
+variabel modul -- aman di sini karena `I18nProvider` membungkus seluruh
+aplikasi sehingga subtree ikut render ulang saat bahasa diganti, dan
+sudah dicek tidak ada `React.memo` di codebase. Catatan itu ditulis di
+`lib/i18n.tsx` supaya kalau nanti ada komponen di-memo, orang tahu
+komponen itu harus ikut `useI18n()`.
+
+Halaman cetak tetap tidak terpengaruh: hanya memakai `Button`/`Spinner`
+untuk toolbar layar (yang `print:hidden`), bukan isi dokumennya.
+
 **Tema disebar ke SELURUH halaman (2026-09-07, murni frontend).** Setelah
 Dasbor di-review dan disetujui, tema disebar ke ~41 halaman lain. Sengaja
 dikerjakan lewat komponen bersama semaksimal mungkin, bukan tempel-tempel

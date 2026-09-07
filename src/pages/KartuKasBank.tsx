@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal, tanggalISO } from '@/lib/format'
@@ -71,8 +72,8 @@ export function KartuKasBank() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Kartu Kas & Bank</h1>
-        <p className="text-sm text-muted-foreground">Riwayat mutasi dan saldo berjalan per akun</p>
+        <h1 className="text-2xl font-bold tracking-tight">{tt('Kartu Kas & Bank')}</h1>
+        <p className="text-sm text-muted-foreground">{tt('Riwayat mutasi dan saldo berjalan per akun')}</p>
       </div>
 
       <Card>

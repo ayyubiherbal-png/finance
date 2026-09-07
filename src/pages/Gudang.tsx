@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
@@ -46,8 +47,8 @@ export function Gudang() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Gudang</h1>
-          <p className="text-sm text-muted-foreground">Lokasi penyimpanan stok</p>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Gudang')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Lokasi penyimpanan stok')}</p>
         </div>
         <div className="flex flex-1 justify-end gap-2 sm:flex-none">
           <div className="relative w-full sm:w-64">

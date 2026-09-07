@@ -204,7 +204,7 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Dasbor | Ringkasan 30 hari, tren omzet, produk perlu restock | Selesai |
 | Tampilan | Tema baru (kartu bulat + bayangan lembut, gradasi hijau, grafik kapsul/donut, sidebar & topbar jadi panel mengambang, font Plus Jakarta Sans) -- sudah diterapkan ke **seluruh halaman** lewat komponen bersama. Halaman cetak sengaja dikecualikan (tetap tajam & hemat tinta) | Selesai |
 | Navigasi | 9 menu (dari 25) -- halaman sealur jadi tab di dalam menunya, mis. "Penjualan" berisi tab Sales Order/Surat Jalan/Faktur/Penerimaan Kas/Retur. URL tiap halaman tidak berubah | Selesai |
-| Dwibahasa | Toggle ID/EN di topbar & login (tahap 1: chrome saja -- menu, tombol umum, halaman login). Isi halaman transaksi & dokumen cetak tetap Bahasa Indonesia | Tahap 1 selesai |
+| Dwibahasa | Toggle ID/EN di topbar & login. Mencakup menu, topbar, judul & subjudul halaman, judul kolom tabel, label form, placeholder, dropdown, tombol, badge status, pesan kosong, dan notifikasi. Isi data milik user (nama pelanggan, catatan) dan dokumen cetak sengaja TIDAK diterjemahkan | Selesai |
 | — | Transfer Gudang | Skema siap, UI sengaja belum dibuat — tidak berguna selama masih 1 gudang aktif |
 | CRM | Segmen Pelanggan (RFM otomatis), profil pelanggan 360°, tombol chat WhatsApp | Selesai |
 | Fase 3 lanjutan | Catatan kunjungan sales (canvassing), pipeline prospek, loyalty/poin | Belum dibangun |

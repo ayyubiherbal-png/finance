@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useGudangAktif, cariProduk } from '@/lib/queries'
@@ -80,8 +81,8 @@ export function KartuStok() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Kartu Stok</h1>
-        <p className="text-sm text-muted-foreground">Riwayat mutasi dan saldo berjalan per produk</p>
+        <h1 className="text-2xl font-bold tracking-tight">{tt('Kartu Stok')}</h1>
+        <p className="text-sm text-muted-foreground">{tt('Riwayat mutasi dan saldo berjalan per produk')}</p>
       </div>
 
       <Card>

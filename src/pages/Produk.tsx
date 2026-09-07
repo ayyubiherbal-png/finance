@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
@@ -51,7 +52,7 @@ export function Produk() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Produk</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Produk')}</h1>
           <p className="text-sm text-muted-foreground">
             Stok lintas gudang dan nilai persediaan berdasarkan HPP rata-rata
           </p>

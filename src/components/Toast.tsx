@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CheckCircle2, X, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
 
 interface ToastItem {
   id: number
@@ -33,6 +34,11 @@ export function toast(pesan: string, tipe: ToastItem['tipe'] = 'sukses') {
 
 export function Toaster() {
   const [list, setList] = useState<ToastItem[]>(daftar)
+  // Diterjemahkan saat DIRENDER, bukan saat toast() dipanggil -- toast()
+  // adalah fungsi modul biasa (bukan komponen) jadi tidak bisa pakai hook,
+  // dan cara ini juga membuat notifikasi yang sedang tampil ikut berganti
+  // bahasa kalau togglenya ditekan.
+  const { tt } = useI18n()
 
   useEffect(() => {
     pelanggan.add(setList)
@@ -56,7 +62,7 @@ export function Toaster() {
           )}
         >
           {t.tipe === 'sukses' ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <XCircle className="h-4 w-4 shrink-0" />}
-          <span>{t.pesan}</span>
+          <span>{tt(t.pesan)}</span>
           <button
             type="button"
             onClick={() => hapus(t.id)}

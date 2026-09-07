@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { rupiah, angka } from '@/lib/format'
@@ -64,8 +65,8 @@ export function LaporanLaba() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Laporan Laba Kotor</h1>
-        <p className="text-sm text-muted-foreground">Omzet dikurangi HPP, dari seluruh faktur penjualan</p>
+        <h1 className="text-2xl font-bold tracking-tight">{tt('Laporan Laba Kotor')}</h1>
+        <p className="text-sm text-muted-foreground">{tt('Omzet dikurangi HPP, dari seluruh faktur penjualan')}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">

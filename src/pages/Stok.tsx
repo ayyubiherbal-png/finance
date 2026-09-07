@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18n'
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -61,8 +62,8 @@ export function Stok() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Stok per Gudang</h1>
-        <p className="text-sm text-muted-foreground">Saldo persediaan berjalan, dari kartu stok</p>
+        <h1 className="text-2xl font-bold tracking-tight">{tt('Stok per Gudang')}</h1>
+        <p className="text-sm text-muted-foreground">{tt('Saldo persediaan berjalan, dari kartu stok')}</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
