@@ -176,12 +176,8 @@ export function PembeliMarketplace() {
                       <Td>
                         <Badge variant="netral">{LABEL_KANAL[p.kanal]}</Badge>
                       </Td>
-                      <Td className="min-w-[10rem]">
-                        {editing ? (
-                          <Input value={formEdit.nama} onChange={(e) => setFormEdit((f) => ({ ...f, nama: e.target.value }))} placeholder="Nama asli..." />
-                        ) : (
-                          <span className="font-medium">{p.nama || '-'}</span>
-                        )}
+                      <Td className={editing ? 'min-w-[10rem]' : 'max-w-[10rem] truncate font-medium'} title={editing ? undefined : (p.nama ?? undefined)}>
+                        {editing ? <Input value={formEdit.nama} onChange={(e) => setFormEdit((f) => ({ ...f, nama: e.target.value }))} placeholder="Nama asli..." /> : p.nama || '-'}
                       </Td>
                       <Td className="font-mono text-xs">
                         {tautan ? (
@@ -192,23 +188,21 @@ export function PembeliMarketplace() {
                           p.telepon || <span className="text-muted-foreground">-</span>
                         )}
                       </Td>
-                      <Td className="min-w-[12rem] max-w-xs">
+                      <Td className={editing ? 'min-w-[12rem]' : 'max-w-xs truncate text-muted-foreground'} title={editing ? undefined : (p.alamat ?? undefined)}>
                         {editing ? (
                           <Input value={formEdit.alamat} onChange={(e) => setFormEdit((f) => ({ ...f, alamat: e.target.value }))} placeholder="Alamat..." />
                         ) : (
-                          <span className="truncate text-muted-foreground" title={p.alamat ?? undefined}>
-                            {p.alamat || '-'}
-                          </span>
+                          p.alamat || '-'
                         )}
                       </Td>
                       <Td className="tabular text-right">{p.jumlah_pesanan}</Td>
                       <Td className="tabular text-right">{rupiah(p.total_belanja)}</Td>
                       <Td className="text-muted-foreground">{p.pesanan_terakhir ? fmtTanggal(p.pesanan_terakhir) : '-'}</Td>
-                      <Td className="min-w-[10rem]">
+                      <Td className={editing ? 'min-w-[10rem]' : 'max-w-[10rem] truncate text-muted-foreground'} title={editing ? undefined : (p.catatan ?? undefined)}>
                         {editing ? (
                           <Input value={formEdit.catatan} onChange={(e) => setFormEdit((f) => ({ ...f, catatan: e.target.value }))} placeholder="mis. sudah dihubungi..." />
                         ) : (
-                          <span className="text-muted-foreground">{p.catatan || '-'}</span>
+                          p.catatan || '-'
                         )}
                       </Td>
                       <Td>
