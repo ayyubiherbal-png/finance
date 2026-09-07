@@ -34,7 +34,7 @@ const SEGMEN: { kunci: SegmenPelanggan; label: string; varian: 'sukses' | 'defau
   { kunci: 'belum_pernah', label: 'Belum Pernah', varian: 'netral', jelas: 'Terdaftar tapi belum pernah belanja' },
 ]
 
-const INFO_SEGMEN = Object.fromEntries(SEGMEN.map((s) => [s.kunci, s])) as Record<
+export const INFO_SEGMEN = Object.fromEntries(SEGMEN.map((s) => [s.kunci, s])) as Record<
   SegmenPelanggan,
   (typeof SEGMEN)[number]
 >

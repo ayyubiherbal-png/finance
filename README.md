@@ -202,7 +202,8 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
 | Laporan | Omzet (per bulan/kuartal/tahun, grafik+tabel), Piutang (aging), Laba Kotor (per produk/pelanggan) | Selesai |
 | Dasbor | Ringkasan 30 hari, tren omzet, produk perlu restock | Selesai |
-| Tampilan | Logo & tema warna Ayyubi Food, glassmorphism di sidebar/login | Selesai |
+| Tampilan | Tema baru (kartu bulat, gradasi hijau, grafik kapsul/donut) + topbar (search global, notifikasi, profil) -- **baru diterapkan di Dasbor**, menunggu di-review sebelum disebar ke halaman lain | Dasbor selesai, sisanya belum |
+| Dwibahasa | Toggle ID/EN di topbar & login (tahap 1: chrome saja -- menu, tombol umum, halaman login). Isi halaman transaksi & dokumen cetak tetap Bahasa Indonesia | Tahap 1 selesai |
 | — | Transfer Gudang | Skema siap, UI sengaja belum dibuat — tidak berguna selama masih 1 gudang aktif |
 | CRM | Segmen Pelanggan (RFM otomatis), profil pelanggan 360°, tombol chat WhatsApp | Selesai |
 | Fase 3 lanjutan | Catatan kunjungan sales (canvassing), pipeline prospek, loyalty/poin | Belum dibangun |

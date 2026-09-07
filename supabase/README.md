@@ -432,6 +432,60 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Reskin tema (gaya "Donezo") + 3 kartu Dasbor baru + dwibahasa tahap 1
+(2026-09-07, murni frontend, tanpa migrasi).** User kirim gambar
+referensi dashboard SaaS (kartu bulat, gradasi hijau tua, grafik
+kapsul, donut gauge) dan minta disesuaikan. Dikerjakan bertahap dengan
+preview dulu sebelum menyebar ke semua halaman (lihat percakapan) --
+ringkasannya:
+
+- **Token tema global** (`index.css`, `tailwind.config.js`): latar jadi
+  abu-abu hangat (bukan putih polos), radius dasar naik (0.65rem →
+  0.85rem), token warna baru `primary-dark`/`primary-soft` -- SATU hue
+  yang sama dengan hijau logo (100), bukan warna baru yang lepas dari
+  brand.
+- **Shell aplikasi** (`Layout.tsx`): sidebar jadi putih bersih (bukan
+  glass), nav aktif jadi pill hijau solid. Ditambah **topbar** baru:
+  search global (BUKAN dekorasi -- mencari produk/pelanggan/supplier
+  sungguhan pakai `cari*` yang sudah ada, klik hasil langsung navigasi),
+  lonceng notifikasi (BUKAN ikon mati -- menghitung produk perlu
+  restock + piutang lewat jatuh tempo dari data yang sudah ada, bukan
+  sistem notifikasi baru), dan profil (avatar+nama+peran) dipindah dari
+  bawah sidebar ke pojok kanan atas dengan dropdown "Keluar". User
+  sempat tanya kenapa amplop/pesan di referensi tidak ada -- sengaja,
+  karena app ini tidak punya sistem pesan; ikon yang tidak berfungsi
+  apa-apa saat diklik dianggap lebih buruk daripada tidak ada.
+- **Grafik baru** (`Charts.tsx`, aditif -- tidak mengubah `GrafikArea`/
+  `GrafikBatang`/`Sparkline` yang sudah dipakai halaman lain):
+  `GrafikKapsul` (batang ujung membulat + motif diagonal untuk hari
+  kosong + tooltip permanen di batang puncak) dan `GrafikDonut` (ring
+  gauge tebal untuk metrik persentase).
+- **Dasbor** (`Dashboard.tsx`) dirombak total mengikuti bahasa visual
+  referensi, plus ditambah 3 kartu baru (dari 7 jadi 10 kotak, matching
+  jumlah di referensi) -- SEMUA data asli, bukan widget project-
+  management yang di-copy mentah:
+  - *Jatuh tempo terdekat* -- 5 faktur belum lunas, jatuh tempo
+    terdekat dulu, merah kalau sudah lewat.
+  - *Pelanggan teratas* -- 5 omzet tertinggi dari `v_pelanggan_crm`,
+    badge segmen RFM (reuse `INFO_SEGMEN`, baru di-export dari
+    `CrmPelanggan.tsx`).
+  - *Saldo Kas & Bank* -- kartu aksen gelap (padanan "Time Tracker" di
+    referensi), total + rincian per akun dari `v_saldo_kas_bank`.
+- **Dwibahasa TAHAP 1** (`src/lib/i18n.tsx`, context React polos --
+  belum pakai library, tidak ada di `package.json` sebelumnya). User
+  tanya bisa dwibahasa, ditanya balik cakupannya lewat AskUserQuestion:
+  disepakati **chrome dulu** (sidebar, topbar, login), BUKAN semua
+  halaman -- menerjemahkan tiap kolom tabel/judul form di ~50 halaman
+  transaksi butuh menyentuh tiap file, beda skala dari kerja tema. Toggle
+  ID/EN di topbar & halaman login, persist ke `localStorage`. **Dokumen
+  cetak (Invoice, Label) sengaja TIDAK ikut toggle** -- itu diserahkan
+  ke pembeli/kurir Indonesia, tetap Bahasa Indonesia berapa pun bahasa
+  UI staf yang sedang login.
+
+Belum diterapkan ke halaman lain (Sales Order, Stok, Laporan, dst.) --
+menunggu review Dasbor dari user sebelum disebar, sesuai kesepakatan di
+awal (preview dulu, bukan langsung semua).
+
 **Filter periode di daftar transaksi + Laporan Omzet per
 bulan/kuartal/tahun (2026-09-07, murni frontend, tanpa migrasi).**
 User: "di setiap menu pengiriman dan penjualan belum ada sortir

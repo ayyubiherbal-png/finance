@@ -15,6 +15,11 @@ const buttonVariants = cva(
         outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+        // Tombol pill penuh -- dipakai selektif untuk CTA utama di header
+        // halaman (mis. "SO Baru"), BUKAN untuk tombol aksi kompak di tabel
+        // supaya tidak terkesan aneh pada tombol kecil/ikon.
+        pill: 'rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90',
+        'pill-outline': 'rounded-full border border-input bg-card shadow-sm hover:bg-accent hover:text-accent-foreground',
       },
       size: {
         default: 'h-9 px-4 py-2',

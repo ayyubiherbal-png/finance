@@ -4,7 +4,9 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Abu-abu hangat lembut (bukan putih polos) -- kartu putih di atasnya
+       jadi lebih "melayang", mengikuti referensi tema baru (2026-09-07). */
+    --background: 90 20% 96%;
     --foreground: 24 10% 12%;
     --card: 0 0% 100%;
     --card-foreground: 24 10% 12%;
@@ -12,6 +14,14 @@
     /* Hijau dari logo Ayyubi Food (validasi CVD lewat skill dataviz). */
     --primary: 100 59% 31%;
     --primary-foreground: 0 0% 100%;
+
+    /* Varian gelap & terang dari primary yang SAMA huenya (100) -- dipakai
+       untuk kartu hero/aksen gelap dan highlight lembut, supaya tetap satu
+       keluarga warna dengan brand, bukan hijau lain yang tidak berhubungan. */
+    --primary-dark: 100 45% 15%;
+    --primary-dark-foreground: 0 0% 100%;
+    --primary-soft: 100 45% 88%;
+    --primary-soft-foreground: 100 55% 22%;
 
     --secondary: 100 25% 94%;
     --secondary-foreground: 24 10% 15%;
@@ -24,7 +34,7 @@
     --border: 90 15% 88%;
     --input: 90 15% 88%;
     --ring: 100 59% 31%;
-    --radius: 0.65rem;
+    --radius: 0.85rem;
 
     /* Aksen tambahan dari logo -- coklat wordmark "Food" & emas kilau bintang.
        Dipakai sesekali (aksen dekoratif, badge), bukan token utama shadcn. */
@@ -40,6 +50,11 @@
 
     --primary: 100 45% 52%;
     --primary-foreground: 24 40% 12%;
+
+    --primary-dark: 100 40% 12%;
+    --primary-dark-foreground: 0 0% 100%;
+    --primary-soft: 100 20% 22%;
+    --primary-soft-foreground: 100 45% 82%;
 
     --secondary: 100 12% 16%;
     --secondary-foreground: 60 9% 92%;

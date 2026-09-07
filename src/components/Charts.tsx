@@ -237,3 +237,123 @@ export function GrafikBatang({
     </div>
   )
 }
+
+/**
+ * Grafik batang kapsul (ujung membulat penuh) dengan tooltip permanen di
+ * batang puncak -- gaya "Project Analytics" pada referensi tema baru
+ * (2026-09-07). Beda dari GrafikBatang (dipakai Laporan Omzet, netral):
+ * ini dipakai di Dasbor untuk kesan lebih hidup, hari kosong (nilai 0)
+ * ditampilkan bermotif garis diagonal, bukan batang kosong polos.
+ */
+export function GrafikKapsul({ data, tinggi = 200 }: { data: TitikTren[]; tinggi?: number }) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null)
+  const patternId = useId()
+  const lebar = 600
+  const padAtas = 12
+  const padBawah = 4
+
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center text-sm text-muted-foreground" style={{ height: tinggi }}>
+        Belum ada data penjualan.
+      </div>
+    )
+  }
+
+  const nilaiMaks = Math.max(...data.map((d) => d.nilai), 1)
+  const idxPuncak = data.reduce((m, d, i, arr) => (d.nilai > arr[m]!.nilai ? i : m), 0)
+  const lebarSlot = lebar / data.length
+  const lebarBatang = Math.max(Math.min(lebarSlot * 0.55, 16), 3)
+  const tinggiArea = tinggi - padAtas - padBawah
+  const skalaTinggi = (v: number) => (v / nilaiMaks) * tinggiArea
+
+  const aktifIdx = hoverIdx ?? idxPuncak
+  const aktif = data[aktifIdx]!
+
+  return (
+    <div className="relative">
+      <svg viewBox={`0 0 ${lebar} ${tinggi}`} preserveAspectRatio="none" className="w-full" style={{ height: tinggi }}>
+        <defs>
+          <pattern id={patternId} width="5" height="5" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="0" y2="5" stroke="hsl(var(--border))" strokeWidth="2.5" />
+          </pattern>
+        </defs>
+        {data.map((d, i) => {
+          const tinggiBatang = Math.max(skalaTinggi(d.nilai), 3)
+          const x = i * lebarSlot + (lebarSlot - lebarBatang) / 2
+          const y = tinggi - padBawah - tinggiBatang
+          const disorot = i === aktifIdx
+          const kosong = d.nilai <= 0
+          return (
+            <g key={i} onMouseEnter={() => setHoverIdx(i)} onMouseLeave={() => setHoverIdx(null)} className="cursor-pointer">
+              <rect x={i * lebarSlot} y={0} width={lebarSlot} height={tinggi} fill="transparent" />
+              <rect
+                x={x}
+                y={y}
+                width={lebarBatang}
+                height={tinggiBatang}
+                rx={lebarBatang / 2}
+                fill={kosong ? `url(#${patternId})` : disorot ? 'hsl(var(--primary-soft))' : 'hsl(var(--primary-dark))'}
+              />
+            </g>
+          )
+        })}
+      </svg>
+
+      <div
+        className="pointer-events-none absolute top-1 rounded-lg bg-primary-dark px-2.5 py-1.5 text-[11px] shadow-md"
+        style={{
+          left: `${((aktifIdx + 0.5) / data.length) * 100}%`,
+          transform: `translateX(${aktifIdx < data.length / 2 ? '-10%' : '-90%'})`,
+        }}
+      >
+        <p className="text-primary-dark-foreground/70">{tanggal(aktif.tanggal)}</p>
+        <p className="tabular font-semibold text-primary-dark-foreground">{rupiah(aktif.nilai)}</p>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Donut/ring gauge tebal untuk satu metrik persentase -- gaya "Project
+ * Progress" pada referensi. Dipakai di Dasbor untuk margin laba kotor.
+ */
+export function GrafikDonut({
+  persen,
+  warna = 'hsl(var(--primary))',
+  ukuran = 160,
+  tebal = 16,
+}: {
+  persen: number
+  warna?: string
+  ukuran?: number
+  tebal?: number
+}) {
+  const jariJari = (ukuran - tebal) / 2
+  const keliling = 2 * Math.PI * jariJari
+  const persenAman = Math.max(0, Math.min(100, persen))
+  const offset = keliling * (1 - persenAman / 100)
+
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: ukuran, height: ukuran }}>
+      <svg width={ukuran} height={ukuran} viewBox={`0 0 ${ukuran} ${ukuran}`} className="-rotate-90">
+        <circle cx={ukuran / 2} cy={ukuran / 2} r={jariJari} fill="none" stroke="hsl(var(--muted))" strokeWidth={tebal} />
+        <circle
+          cx={ukuran / 2}
+          cy={ukuran / 2}
+          r={jariJari}
+          fill="none"
+          stroke={warna}
+          strokeWidth={tebal}
+          strokeDasharray={keliling}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center">
+        <span className="tabular text-2xl font-bold">{persenAman.toFixed(0)}%</span>
+      </div>
+    </div>
+  )
+}
