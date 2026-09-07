@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, FileSpreadsheet, Upload } from 'lucide-rea
 import { supabase } from '@/lib/supabase'
 import { tt } from '@/lib/i18n'
 import { useGudangAktif } from '@/lib/queries'
-import { rupiah, tanggal as fmtTanggal } from '@/lib/format'
+import { rupiah, tanggal as fmtTanggal, pesanKesalahan } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
 import {
@@ -245,7 +245,7 @@ export function ImporPesanan() {
         if (error) throw error
         berhasil++
       } catch (err) {
-        gagal.push({ nomor: p.nomorPesanan, pesan: err instanceof Error ? err.message : String(err) })
+        gagal.push({ nomor: p.nomorPesanan, pesan: pesanKesalahan(err) })
       }
     }
 

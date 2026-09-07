@@ -432,6 +432,34 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Bug lama, dampak luas: pesan error jadi "[object Object]" di ~47
+halaman (2026-09-07, murni frontend).** Ditemukan waktu debug fitur
+Impor Pesanan -- panel "gagal" menampilkan `585316933850793241:
+[object Object]` alih-alih pesan error yang sebenarnya. Diverifikasi
+langsung lewat browser (bukan tebak dari baca kode): error dari
+`supabase.rpc()`/query manapun bentuknya OBJEK BIASA `{code, message,
+details, hint}` (PostgrestError), **BUKAN instance `Error`** --
+`error instanceof Error` selalu `false`. Pola `error instanceof Error
+? error.message : String(error)` yang dipakai di komponen `PesanError`
+(dan disalin ke halaman Impor Pesanan) jatuh ke `String(objek biasa)`
+yang cuma mencetak "[object Object]" -- pesan aslinya yang berguna
+(mis. "invalid input syntax for type uuid...") selama ini terbuang di
+SETIAP halaman yang menampilkan error lewat `<PesanError>` (47 file).
+
+Diperbaiki SEKALI secara terpusat: `pesanKesalahan(err: unknown)` baru
+di `src/lib/format.ts` -- coba `instanceof Error` dulu, lalu cek
+properti `.message` di objek biasa (menutup kasus Postgrest), lalu
+string apa adanya, baru fallback `JSON.stringify`/`String`. `PesanError`
+di `ui.tsx` diubah pakai fungsi ini -- otomatis membetulkan SEMUA 47
+halaman sekaligus tanpa menyentuh satu pun filenya (pola yang sama
+seperti perbaikan tema/dwibahasa sebelumnya: perbaiki di komponen
+bersama, bukan di tiap tempat pakai).
+
+Diverifikasi lewat browser dengan error Supabase asli (RPC dengan uuid
+tidak valid): pesan aslinya sekarang tampil benar. Juga diuji kasus lain
+(Error biasa, string polos, objek tanpa `.message`, `null`) -- semua
+ditangani wajar, tidak ada yang balik ke "[object Object]".
+
 **Impor Pesanan Marketplace dari file export Shopee/TikTok (0021,
 2026-09-07).** User: "tidak mungkin saya input satu-satu orderan dari
 Shopee." Ditawarkan dua jalur -- impor file (bisa langsung dikerjakan)

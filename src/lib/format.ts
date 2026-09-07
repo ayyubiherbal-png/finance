@@ -39,3 +39,29 @@ export function tanggalISO(nilai: Date = new Date()): string {
   const offset = nilai.getTimezoneOffset() * 60_000
   return new Date(nilai.getTime() - offset).toISOString().slice(0, 10)
 }
+
+/**
+ * Mengambil pesan yang bisa dibaca dari error apa pun -- termasuk error
+ * dari Supabase/PostgREST, yang bentuknya OBJEK BIASA `{code, message,
+ * details, hint}`, BUKAN instance `Error` (diverifikasi lewat browser
+ * langsung: `error instanceof Error` selalu `false` untuk error dari
+ * `.rpc()`/query Supabase). Kalau ditulis `error instanceof Error ?
+ * error.message : String(error)` seperti yang sempat dipakai di
+ * `PesanError`, hasilnya jatuh ke `String(objek biasa)` yang cuma
+ * mencetak "[object Object]" -- pesan errornya yang sebenarnya berguna
+ * (mis. "invalid input syntax for type uuid...") jadi terbuang, dan user
+ * tidak pernah tahu APA yang sebenarnya gagal.
+ */
+export function pesanKesalahan(err: unknown): string {
+  if (err instanceof Error) return err.message
+  if (err && typeof err === 'object' && 'message' in err) {
+    const pesan = (err as { message?: unknown }).message
+    if (typeof pesan === 'string' && pesan.trim()) return pesan
+  }
+  if (typeof err === 'string') return err
+  try {
+    return JSON.stringify(err)
+  } catch {
+    return String(err)
+  }
+}

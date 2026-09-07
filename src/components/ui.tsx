@@ -3,6 +3,7 @@ import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
+import { pesanKesalahan } from '@/lib/format'
 
 /* ------------------------------------------------------------ Dwibahasa */
 
@@ -339,7 +340,7 @@ export function KondisiKosong({ pesan = 'Belum ada data.' }: { pesan?: string })
 }
 
 export function PesanError({ error }: { error: unknown }) {
-  const pesan = error instanceof Error ? error.message : String(error)
+  const pesan = pesanKesalahan(error)
   return (
     <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
       {pesan}
