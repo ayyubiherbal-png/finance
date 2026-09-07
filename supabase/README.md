@@ -433,7 +433,7 @@ Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
 **Impor Pesanan: ikut status ASLI marketplace, bukan istilah aplikasi
-sendiri (0021 lanjutan, 2026-09-07).** Setelah fitur "Selesai -> Lunas"
+sendiri (0022, 2026-09-07).** Setelah fitur "Selesai -> Lunas"
 di bawah selesai, user protes: "kenapa statusnya tidak mengikuti yang
 ada di marketplace saja, dari pada buat versi sendiri malah bingung.
 kalau ikut status yang di MP kita jadi tahu paket ini statusnya apa."
@@ -456,10 +456,17 @@ kosakata (punya platform), bukan dua yang bersaing.
 Supaya "kita jadi tahu paket ini statusnya apa" juga berlaku SETELAH
 diimpor (bukan cuma sekilas di layar pratinjau lalu hilang), kolom
 baru `status_platform text` ditambah ke `pesanan_marketplace_impor`
-(migrasi 0021 -- masih belum dijalankan saat ini ditulis, jadi aman
-diedit langsung, bukan migrasi baru terpisah) dan `penjualan_cepat`
-dapat parameter ke-14 `p_status_platform` yang mengisinya di transaksi
-yang sama saat faktur dibuat. Halaman Faktur Penjualan sekarang punya
+dan `penjualan_cepat` dapat parameter ke-14 `p_status_platform` yang
+mengisinya di transaksi yang sama saat faktur dibuat.
+
+**Catatan koreksi:** awalnya perubahan ini ditaruh langsung di 0021
+(dikira belum dijalankan). Ternyata 0021 SUDAH jalan di produksi --
+ketahuan dari error langsung di UI, "column
+pesanan_marketplace_impor_1.status_platform does not exist", begitu
+Faktur Penjualan dibuka. 0021 dikembalikan ke bentuk aslinya, kolom +
+parameter baru ini dipindah ke migrasi TERPISAH `0022_status_platform_
+impor.sql` -- supaya riwayat migrasi tetap sinkron dengan yang
+sungguhan sudah jalan di database. Halaman Faktur Penjualan sekarang punya
 kolom "Status Marketplace" yang menampilkan badge status asli ini
 (join ke `pesanan_marketplace_impor` lewat `faktur_id`) untuk faktur
 berkanal Shopee/TikTok -- jadi statusnya tetap bisa dilihat kapan pun,

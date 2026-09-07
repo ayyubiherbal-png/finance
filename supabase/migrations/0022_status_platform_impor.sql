@@ -1,74 +1,37 @@
 -- =====================================================================
--- 0021  Impor pesanan Shopee/TikTok dari file export Seller Centre
+-- 0022  pesanan_marketplace_impor: simpan status ASLI marketplace
 --
 --  Migrasi tambahan, aman dijalankan berkali-kali.
 --
---  User tidak mau lagi input pesanan marketplace satu-satu -- di halaman
---  Impor Pesanan (frontend), file export Excel/CSV dari Shopee/TikTok
---  Seller Centre diunggah, dikelompokkan per nomor pesanan, lalu tiap
---  pesanan dibuat lewat fungsi `penjualan_cepat` yang sudah ada (0020).
+--  0021 sudah dijalankan lebih dulu (tabel pesanan_marketplace_impor
+--  dan penjualan_cepat versi 13-parameter sudah ada) -- makanya ini
+--  migrasi TERPISAH, bukan mengedit 0021 lagi (0021 sudah jalan di
+--  produksi, mengedit migrasi yang sudah jalan tidak akan diapply ulang
+--  dan cuma bikin riwayat migrasi tidak sinkron dengan skema sungguhan).
 --
---  Dua hal baru di sini:
+--  Latar belakang: User protes soal fitur "Impor Pesanan" -- "kenapa
+--  statusnya tidak mengikuti yang ada di marketplace saja, dari pada
+--  buat versi sendiri malah bingung. kalau ikut status yang di MP kita
+--  jadi tahu paket ini statusnya apa." Jadi status ASLI dari kolom
+--  "Status Pesanan" di file export (mis. "Selesai", "Dikirim") perlu
+--  tersimpan permanen -- bukan cuma kelihatan sesaat di layar pratinjau
+--  impor lalu hilang -- supaya bisa dilihat lagi kapan saja dari
+--  Faktur-nya.
 --
---  1. Tabel `pesanan_marketplace_impor` -- cuma pencatat "nomor pesanan
---     X dari kanal Y sudah pernah diimpor jadi faktur Z", supaya file
---     yang sama tidak sengaja diunggah dua kali dan menggandakan
---     penjualan (stok akan terpotong dua kali kalau itu terjadi).
---     Unique constraint (kanal, nomor_pesanan_platform) adalah
---     penjaga SUNGGUHAN-nya; pengecekan di frontend sebelum submit
---     cuma untuk pengalaman pakai (supaya kelihatan sebelum diproses,
---     bukan baru gagal di tengah jalan).
+--  Dua perubahan:
 --
---  2. `penjualan_cepat` ditambah SATU parameter opsional
---     `p_nomor_pesanan_platform`. Kalau diisi, setelah faktur dibuat,
---     fungsi ini juga mencatatnya ke tabel di atas -- dalam TRANSAKSI
---     YANG SAMA dengan pembuatan SO/Surat Jalan/Faktur. Kalau nomor itu
---     ternyata sudah pernah dicatat (constraint unique kena), SELURUH
---     transaksi ikut batal (termasuk potongan stok) -- bukan cuma baris
---     pencatatnya. Ini kenapa fungsinya di-drop lalu dibuat ulang
---     (bukan cuma create-or-replace): menambah parameter mengubah
---     signature, dan create-or-replace TIDAK bisa mengubah signature
---     fungsi yang sudah ada -- hasilnya malah dua fungsi overload
---     nyangkut bareng kalau dipaksakan.
+--  1. Kolom baru `status_platform text` di `pesanan_marketplace_impor`.
+--  2. `penjualan_cepat` ditambah SATU parameter opsional lagi,
+--     `p_status_platform`, yang mengisi kolom itu di transaksi yang
+--     sama saat faktur dibuat. Fungsinya di-drop lalu dibuat ulang
+--     (bukan cuma create-or-replace) karena menambah parameter
+--     mengubah signature -- lihat catatan yang sama di 0021.
 -- =====================================================================
 
--- ---------- Pencatat dedup ----------
-create table if not exists pesanan_marketplace_impor (
-  id                      uuid primary key default gen_random_uuid(),
-  kanal                   kanal_penjualan not null,
-  nomor_pesanan_platform  text not null,
-  faktur_id               uuid references faktur_penjualan(id) on delete set null,
-  diimpor_oleh            uuid references profil(id) on delete set null,
-  diimpor_pada            timestamptz not null default now(),
-  unique (kanal, nomor_pesanan_platform)
-);
-create index if not exists idx_impor_faktur on pesanan_marketplace_impor(faktur_id);
+alter table pesanan_marketplace_impor add column if not exists status_platform text;
 
-alter table pesanan_marketplace_impor enable row level security;
-
-do $$
-begin
-  if not exists (
-    select 1 from pg_policies
-    where tablename = 'pesanan_marketplace_impor' and policyname = 'baca'
-  ) then
-    create policy baca on pesanan_marketplace_impor
-      for select to authenticated using (user_aktif());
-  end if;
-  if not exists (
-    select 1 from pg_policies
-    where tablename = 'pesanan_marketplace_impor' and policyname = 'tulis'
-  ) then
-    create policy tulis on pesanan_marketplace_impor
-      for insert to authenticated with check (boleh_sales());
-  end if;
-end $$;
-
-grant select, insert on pesanan_marketplace_impor to authenticated;
-
--- ---------- penjualan_cepat: tambah p_nomor_pesanan_platform ----------
 drop function if exists penjualan_cepat(
-  uuid, uuid, jsonb, date, kanal_penjualan, uuid, uuid, metode_bayar, text, text, text, text
+  uuid, uuid, jsonb, date, kanal_penjualan, uuid, uuid, metode_bayar, text, text, text, text, text
 );
 
 create or replace function penjualan_cepat(
@@ -84,7 +47,8 @@ create or replace function penjualan_cepat(
   p_telepon_penerima text   default null,
   p_alamat_kirim    text    default null,
   p_catatan         text    default null,
-  p_nomor_pesanan_platform text default null  -- diisi kalau ini hasil impor Shopee/TikTok -- lihat 0021
+  p_nomor_pesanan_platform text default null,  -- diisi kalau ini hasil impor Shopee/TikTok -- lihat 0021
+  p_status_platform text    default null       -- status ASLI dari file export platform, apa adanya -- lihat 0022
 )
 returns uuid                                 -- id faktur yang terbentuk
 language plpgsql
@@ -185,8 +149,8 @@ begin
   --    dicatat sebelumnya, unique constraint gagal di sini dan SELURUH
   --    transaksi di atas ikut batal (termasuk potongan stok barusan).
   if p_nomor_pesanan_platform is not null then
-    insert into pesanan_marketplace_impor (kanal, nomor_pesanan_platform, faktur_id, diimpor_oleh)
-    values (p_kanal, p_nomor_pesanan_platform, v_faktur, v_profil);
+    insert into pesanan_marketplace_impor (kanal, nomor_pesanan_platform, status_platform, faktur_id, diimpor_oleh)
+    values (p_kanal, p_nomor_pesanan_platform, p_status_platform, v_faktur, v_profil);
   end if;
 
   return v_faktur;
@@ -194,5 +158,5 @@ end;
 $$;
 
 grant execute on function penjualan_cepat(
-  uuid, uuid, jsonb, date, kanal_penjualan, uuid, uuid, metode_bayar, text, text, text, text, text
+  uuid, uuid, jsonb, date, kanal_penjualan, uuid, uuid, metode_bayar, text, text, text, text, text, text
 ) to authenticated;
