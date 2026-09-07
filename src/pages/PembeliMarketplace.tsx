@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal as fmtTanggal } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import { toast } from '@/components/Toast'
+import { cn } from '@/lib/utils'
 import {
   Badge,
   Button,
@@ -22,9 +23,37 @@ import {
   Thead,
   Tr,
 } from '@/components/ui'
-import type { PembeliMarketplace as BarisPembeli } from '@/types/db'
+import { INFO_SEGMEN } from '@/pages/CrmPelanggan'
+import type { PembeliMarketplace as BarisPembeli, SegmenPelanggan } from '@/types/db'
 
 const LABEL_KANAL: Record<BarisPembeli['kanal'], string> = { shopee: 'Shopee', tiktok: 'TikTok Shop' }
+
+/** Urutan sama seperti CrmPelanggan.tsx -- "belum_pernah" tidak dipakai
+ * di sini (setiap baris pasti punya minimal 1 pesanan, itu syarat
+ * masuk lewat sinkronisasi). */
+const SEGMEN_MP: SegmenPelanggan[] = ['juara', 'setia', 'baru', 'mulai_hilang', 'tidur']
+
+/**
+ * Logika RFM SAMA PERSIS seperti view `v_pelanggan_crm` (0019) --
+ * "hari_sejak_order > 120 -> tidur; > 60 -> mulai_hilang; >=3 transaksi
+ * -> juara; ..." -- cuma dihitung di frontend dari `jumlah_pesanan`/
+ * `pesanan_terakhir` yang sudah tersimpan di `pembeli_marketplace`,
+ * bukan lewat view database terpisah (datanya sudah di tangan lewat
+ * query yang sama, tidak perlu round-trip lagi).
+ */
+function segmenPembeli(p: BarisPembeli): SegmenPelanggan {
+  if (!p.pesanan_terakhir) return 'belum_pernah'
+  const [y, m, d] = p.pesanan_terakhir.split('-').map(Number)
+  const tanggal = Date.UTC(y!, m! - 1, d!)
+  const now = new Date()
+  const hariIni = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  const hari = Math.round((hariIni - tanggal) / 86_400_000)
+  if (hari > 120) return 'tidur'
+  if (hari > 60) return 'mulai_hilang'
+  if (p.jumlah_pesanan >= 3) return 'juara'
+  if (p.jumlah_pesanan === 2) return 'setia'
+  return 'baru'
+}
 
 function usePembeliMarketplace(cari: string) {
   return useQuery({
@@ -53,6 +82,11 @@ export function PembeliMarketplace() {
   const [cari, setCari] = useState('')
   const { data, isLoading, error, isFetching } = usePembeliMarketplace(cari)
   const queryClient = useQueryClient()
+  const [segmenAktif, setSegmenAktif] = useState<SegmenPelanggan | null>(null)
+
+  const semua = data ?? []
+  const hitunganSegmen = SEGMEN_MP.map((kunci) => ({ ...INFO_SEGMEN[kunci], jumlah: semua.filter((p) => segmenPembeli(p) === kunci).length }))
+  const tersaring = segmenAktif ? semua.filter((p) => segmenPembeli(p) === segmenAktif) : semua
 
   const [menyinkronkan, setMenyinkronkan] = useState(false)
   const [errorAksi, setErrorAksi] = useState<unknown>(null)
@@ -138,6 +172,39 @@ export function PembeliMarketplace() {
         </div>
       </div>
 
+      {semua.length > 0 ? (
+        <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          {hitunganSegmen.map((s) => {
+            const aktif = segmenAktif === s.kunci
+            return (
+              <button
+                key={s.kunci}
+                type="button"
+                title={s.jelas}
+                onClick={() => setSegmenAktif(aktif ? null : s.kunci)}
+                className={cn(
+                  'cursor-pointer rounded-lg border p-3 text-left transition-colors',
+                  aktif ? 'border-primary bg-primary/10' : 'border-border hover:bg-accent',
+                )}
+              >
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+                <p className="text-xl font-semibold">{s.jumlah}</p>
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
+
+      {segmenAktif ? (
+        <p className="text-sm text-muted-foreground">
+          {tt('Menampilkan segmen')} <span className="font-medium text-foreground">{INFO_SEGMEN[segmenAktif].label}</span> --{' '}
+          {INFO_SEGMEN[segmenAktif].jelas}.{' '}
+          <button type="button" className="cursor-pointer text-primary underline" onClick={() => setSegmenAktif(null)}>
+            {tt('Tampilkan semua')}
+          </button>
+        </p>
+      ) : null}
+
       {errorAksi ? <PesanError error={errorAksi} /> : null}
 
       <Card>
@@ -150,14 +217,17 @@ export function PembeliMarketplace() {
             <div className="p-4">
               <PesanError error={error} />
             </div>
-          ) : !data || data.length === 0 ? (
+          ) : semua.length === 0 ? (
             <KondisiKosong pesan='Belum ada data. Klik "Sinkronkan dari Pesanan" untuk menarik pembeli dari pesanan Shopee/TikTok yang sudah diimpor.' />
+          ) : tersaring.length === 0 ? (
+            <KondisiKosong pesan="Tidak ada pembeli yang cocok." />
           ) : (
             <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
               <Thead>
                 <Tr>
                   <Th>{tt('Kanal')}</Th>
                   <Th>{tt('Nama')}</Th>
+                  <Th>{tt('Segmen')}</Th>
                   <Th>{tt('Telepon')}</Th>
                   <Th>{tt('Alamat')}</Th>
                   <Th className="text-right">{tt('Jml. Pesanan')}</Th>
@@ -168,9 +238,10 @@ export function PembeliMarketplace() {
                 </Tr>
               </Thead>
               <Tbody>
-                {data.map((p) => {
+                {tersaring.map((p) => {
                   const editing = sedangEdit === p.id
                   const tautan = tautanWa(p.telepon)
+                  const segmen = INFO_SEGMEN[segmenPembeli(p)]
                   return (
                     <Tr key={p.id}>
                       <Td>
@@ -178,6 +249,9 @@ export function PembeliMarketplace() {
                       </Td>
                       <Td className={editing ? 'min-w-[10rem]' : 'max-w-[10rem] truncate font-medium'} title={editing ? undefined : (p.nama ?? undefined)}>
                         {editing ? <Input value={formEdit.nama} onChange={(e) => setFormEdit((f) => ({ ...f, nama: e.target.value }))} placeholder="Nama asli..." /> : p.nama || '-'}
+                      </Td>
+                      <Td title={segmen.jelas}>
+                        <Badge variant={segmen.varian}>{segmen.label}</Badge>
                       </Td>
                       <Td className="font-mono text-xs">
                         {tautan ? (

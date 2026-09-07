@@ -432,6 +432,26 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Pembeli Marketplace: segmentasi RFM juga (murni frontend, 2026-09-08).**
+User perhatikan CRM Pelanggan tidak menghitung transaksi marketplace
+sama sekali (kartu Juara/Setia/dst. semua 0 kecuali 1 pelanggan biasa)
+-- dijelaskan itu disengaja: `CrmPelanggan.tsx` sengaja filter
+`akun_agregat = false` ("akun agregat marketplace bukan orang, tidak
+bisa di-follow up"), karena kalau akun agregat ikut dihitung, dia jadi
+"Juara" tunggal yang mewakili ratusan pembeli berbeda sekaligus --
+menyesatkan. User setuju ditambahkan segmentasi serupa ke tab Pembeli
+Marketplace, dihitung PER PEMBELI INDIVIDU (bukan per akun agregat).
+
+`segmenPembeli()` baru di `PembeliMarketplace.tsx` -- logika RFM SAMA
+PERSIS seperti view `v_pelanggan_crm` (0019): >120 hari sejak pesanan
+terakhir -> tidur, >60 hari -> mulai_hilang, >=3 pesanan -> juara, =2 ->
+setia, selain itu -> baru. Dihitung di frontend dari `jumlah_pesanan`/
+`pesanan_terakhir` yang SUDAH tersimpan di `pembeli_marketplace` (dari
+sinkronisasi 0024/0025) -- tidak perlu view/migrasi database baru,
+datanya sudah di tangan. Label/warna badge di-reuse dari `INFO_SEGMEN`
+(`CrmPelanggan.tsx`) supaya konsisten visual dengan CRM Pelanggan biasa
+-- termasuk kartu ringkasan & klik-untuk-menyaring yang sama persis.
+
 **Pembeli Marketplace: kunci dedup pakai username kalau telepon kosong
 (0025, 2026-09-08).** User klik "Sinkronkan dari Pesanan" (fitur 0024
 di bawah) -- hasilnya 0 baris untuk 877 pesanan TikTok yang sudah
