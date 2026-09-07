@@ -41,6 +41,15 @@ const AKSEN = {
  * berubah sebelum di-review. */
 const GAYA_KARTU = 'rounded-2xl border-none shadow-[0_2px_24px_-8px_rgba(0,0,0,0.12)]'
 
+/**
+ * Kartu berisi daftar. Tingginya diratakan grid dengan kartu sebelahnya,
+ * jadi kalau datanya kosong isinya dipusatkan (`ISI_KOSONG`) supaya ruang
+ * sisanya terlihat disengaja -- bukan seperti kartu melar yang bolong.
+ */
+const KARTU_LIST = 'flex flex-col'
+const ISI_KOSONG = 'flex flex-1 items-center justify-center p-0'
+const ISI_LIST = 'p-0 pb-2'
+
 function useRingkasan() {
   return useQuery({
     queryKey: ['dasbor', 'ringkasan'],
@@ -213,15 +222,18 @@ export function Dashboard() {
         area kiri (3/4 lebar) -- sementara Perlu Restock jadi kartu TINGGI
         di kolom kanan (sejajar dengan kedua baris kiri sekaligus, seperti
         kartu "Project" di referensi), dengan Saldo Kas & Bank di
-        bawahnya (padanan "Time Tracker"). Grid terluar sengaja TETAP pakai
-        stretch (default) supaya kolom kanan otomatis setinggi kolom kiri --
-        tapi grid bagian dalam (4 kartu kiri) dikunci `items-start` supaya
-        kartu berisi sedikit (mis. "Jatuh tempo terdekat" waktu kosong)
-        TIDAK ikut melar mengikuti kartu di sebelahnya yang lebih tinggi
-        (chart/donut) dan menyisakan area putih kosong di dalamnya.
+        bawahnya (padanan "Time Tracker").
+
+        Semua grid SENGAJA pakai stretch (default) supaya kartu dalam satu
+        baris tingginya sama rata -- itu yang bikin komposisinya terlihat
+        rapi seperti referensi. Pernah dicoba `items-start` supaya kartu
+        sepi konten tidak melar, tapi hasilnya malah bergerigi/tidak
+        sejajar. Solusi yang benar: kartunya tetap sama tinggi, tapi
+        pesan "belum ada data" ditaruh di TENGAH kartu (lihat `kosongkan`
+        di bawah) supaya ruang kosongnya terlihat disengaja.
       */}
       <div className="grid gap-4 lg:grid-cols-4">
-        <div className="grid items-start gap-4 sm:grid-cols-3 lg:col-span-3">
+        <div className="grid gap-4 sm:grid-cols-3 lg:col-span-3">
           <Card className={cn(GAYA_KARTU, 'sm:col-span-2')}>
             <CardHeader>
               <CardTitle className="text-base">{t('dasbor.trenOmzetHarian')}</CardTitle>
@@ -231,14 +243,14 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className={GAYA_KARTU}>
+          <Card className={cn(GAYA_KARTU, KARTU_LIST)}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <CalendarClock className="h-4 w-4 text-muted-foreground" />
                 {t('dasbor.jatuhTempoTerdekat')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0 pb-2">
+            <CardContent className={data.jatuhTempo.length === 0 ? ISI_KOSONG : ISI_LIST}>
               {data.jatuhTempo.length === 0 ? (
                 <KondisiKosong pesan={t('dasbor.tidakAdaFakturBelumLunas')} />
               ) : (
@@ -270,14 +282,14 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className={cn(GAYA_KARTU, 'sm:col-span-2')}>
+          <Card className={cn(GAYA_KARTU, KARTU_LIST, 'sm:col-span-2')}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 {t('dasbor.pelangganTeratas')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0 pb-2">
+            <CardContent className={data.pelangganTeratas.length === 0 ? ISI_KOSONG : ISI_LIST}>
               {data.pelangganTeratas.length === 0 ? (
                 <KondisiKosong pesan={t('dasbor.belumAdaTransaksi')} />
               ) : (
@@ -336,7 +348,7 @@ export function Dashboard() {
                 {t('dasbor.perluRestock')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0 pb-2">
+            <CardContent className={data.perluRestock.length === 0 ? ISI_KOSONG : ISI_LIST}>
               {data.perluRestock.length === 0 ? (
                 <KondisiKosong pesan={t('dasbor.semuaProdukAmanStok')} />
               ) : (

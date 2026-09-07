@@ -114,8 +114,12 @@ export function Layout() {
     !item.peran || (profil?.peran ? item.peran.includes(profil.peran) : false)
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card md:flex">
+    // Sidebar & topbar sengaja jadi PANEL MENGAMBANG (kartu putih membulat
+    // dengan jarak di sekelilingnya), bukan menempel rata ke tepi layar --
+    // ini yang membedakan tampilan referensi: tiap area punya "wadah"
+    // sendiri di atas latar abu-abu, bukan bidang putih tanpa batas.
+    <div className="flex h-screen gap-4 overflow-hidden bg-background p-4">
+      <aside className="hidden w-64 shrink-0 flex-col overflow-hidden rounded-2xl bg-card shadow-[0_2px_24px_-8px_rgba(0,0,0,0.12)] md:flex">
         <div className="flex h-16 items-center gap-2.5 px-5">
           <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-9 w-9 shrink-0 rounded-xl object-cover ring-1 ring-border" />
           <span className="font-semibold">Ayyubi Finance</span>
@@ -158,11 +162,11 @@ export function Layout() {
         </nav>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-hidden">
         <TopBar nama={profil?.nama ?? '...'} peran={profil?.peran ?? ''} keluar={keluar} />
 
-        <main className="min-w-0 flex-1 overflow-y-auto bg-background">
-          <div className="mx-auto max-w-7xl p-4 md:p-6">
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>
         </main>
@@ -175,7 +179,7 @@ export function Layout() {
 
 function TopBar({ nama, peran, keluar }: { nama: string; peran: string; keluar: () => void }) {
   return (
-    <header className="flex h-16 shrink-0 items-center gap-3 px-4 md:px-6">
+    <header className="flex h-16 shrink-0 items-center gap-3 rounded-2xl bg-card px-4 shadow-[0_2px_24px_-8px_rgba(0,0,0,0.12)] md:px-5">
       <PencarianGlobal />
       <div className="ml-auto flex shrink-0 items-center gap-2">
         <ToggleBahasa />
