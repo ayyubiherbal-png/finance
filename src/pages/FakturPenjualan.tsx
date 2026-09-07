@@ -40,6 +40,7 @@ interface BarisFaktur {
   total: number
   sisa: number
   pelanggan: { nama: string } | null
+  so: { nama_penerima: string | null } | null
   pesanan_marketplace_impor: { status_platform: string | null }[]
 }
 
@@ -62,7 +63,7 @@ function useDaftarFaktur(cari: string, statusBayar: string, periode: RentangTang
       let q = supabase
         .from('faktur_penjualan')
         .select(
-          'id, nomor, tanggal, jatuh_tempo, kanal, status, status_bayar, total, sisa, pelanggan:pelanggan_id(nama), pesanan_marketplace_impor(status_platform)',
+          'id, nomor, tanggal, jatuh_tempo, kanal, status, status_bayar, total, sisa, pelanggan:pelanggan_id(nama), so:so_id(nama_penerima), pesanan_marketplace_impor(status_platform)',
         )
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (statusBayar) q = q.eq('status_bayar', statusBayar)
@@ -155,7 +156,16 @@ export function FakturPenjualan() {
                           </Link>
                         </Td>
                         <Td className="text-muted-foreground">{tanggal(f.tanggal)}</Td>
-                        <Td className="font-medium">{f.pelanggan?.nama ?? '-'}</Td>
+                        <Td>
+                          <p className="font-medium">{f.so?.nama_penerima || f.pelanggan?.nama || '-'}</p>
+                          {/* Lihat catatan sama di SalesOrder/SuratJalan.tsx: pesanan marketplace
+                              pakai satu akun agregat sebagai pelanggan -- nama pembeli asli
+                              disalin dari Sales Order (nama_penerima), faktur sendiri tidak
+                              punya kolom itu. */}
+                          {f.so?.nama_penerima && f.pelanggan?.nama && f.so.nama_penerima !== f.pelanggan.nama ? (
+                            <p className="text-xs text-muted-foreground">{f.pelanggan.nama}</p>
+                          ) : null}
+                        </Td>
                         <Td className="text-muted-foreground">{tanggal(f.jatuh_tempo)}</Td>
                         <Td className="tabular text-right font-medium">{rupiah(f.total)}</Td>
                         <Td className="tabular text-right">{f.sisa > 0 ? rupiah(f.sisa) : '-'}</Td>

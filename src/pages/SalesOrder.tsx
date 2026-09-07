@@ -32,6 +32,7 @@ interface BarisSO {
   status: StatusDokumen
   kanal: KanalPenjualan
   total: number
+  nama_penerima: string | null
   pelanggan: { nama: string } | null
 }
 
@@ -70,7 +71,7 @@ function useDaftarSO(cari: string, status: string, periode: RentangTanggal) {
     queryFn: async () => {
       let q = supabase
         .from('sales_order')
-        .select('id, nomor, tanggal, status, kanal, total, pelanggan:pelanggan_id(nama)')
+        .select('id, nomor, tanggal, status, kanal, total, nama_penerima, pelanggan:pelanggan_id(nama)')
 
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
@@ -161,7 +162,16 @@ export function SalesOrder() {
                         </Link>
                       </Td>
                       <Td className="text-muted-foreground">{tanggal(so.tanggal)}</Td>
-                      <Td className="font-medium">{so.pelanggan?.nama ?? '-'}</Td>
+                      <Td>
+                        <p className="font-medium">{so.nama_penerima || so.pelanggan?.nama || '-'}</p>
+                        {/* Pesanan marketplace pakai satu akun agregat ("Marketplace -- TikTok
+                            Shop" dst.) sebagai pelanggan -- nama pembeli sesungguhnya per
+                            pesanan ada di nama_penerima. Tanpa ini semua baris marketplace
+                            kelihatan seperti pelanggan yang sama persis. */}
+                        {so.nama_penerima && so.pelanggan?.nama && so.nama_penerima !== so.pelanggan.nama ? (
+                          <p className="text-xs text-muted-foreground">{so.pelanggan.nama}</p>
+                        ) : null}
+                      </Td>
                       <Td>
                         <Badge variant="netral">{LABEL_KANAL[so.kanal]}</Badge>
                       </Td>

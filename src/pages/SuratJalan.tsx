@@ -31,6 +31,7 @@ interface BarisSJ {
   nomor: string
   tanggal: string
   status: StatusDokumen
+  nama_penerima: string | null
   pelanggan: { nama: string } | null
   gudang: { nama: string } | null
 }
@@ -39,7 +40,9 @@ function useDaftarSJ(cari: string, status: string, periode: RentangTanggal) {
   return useQuery({
     queryKey: ['surat-jalan', cari, status, periode],
     queryFn: async () => {
-      let q = supabase.from('surat_jalan').select('id, nomor, tanggal, status, pelanggan:pelanggan_id(nama), gudang:gudang_id(nama)')
+      let q = supabase
+        .from('surat_jalan')
+        .select('id, nomor, tanggal, status, nama_penerima, pelanggan:pelanggan_id(nama), gudang:gudang_id(nama)')
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
       if (periode.dari) q = q.gte('tanggal', periode.dari)
@@ -169,7 +172,14 @@ export function SuratJalan() {
                       </Link>
                     </Td>
                     <Td className="text-muted-foreground">{tanggal(sj.tanggal)}</Td>
-                    <Td className="font-medium">{sj.pelanggan?.nama ?? '-'}</Td>
+                    <Td>
+                      <p className="font-medium">{sj.nama_penerima || sj.pelanggan?.nama || '-'}</p>
+                      {/* Lihat catatan sama di SalesOrder.tsx: pesanan marketplace pakai satu
+                          akun agregat sebagai pelanggan -- nama pembeli asli ada di nama_penerima. */}
+                      {sj.nama_penerima && sj.pelanggan?.nama && sj.nama_penerima !== sj.pelanggan.nama ? (
+                        <p className="text-xs text-muted-foreground">{sj.pelanggan.nama}</p>
+                      ) : null}
+                    </Td>
                     <Td className="text-muted-foreground">{sj.gudang?.nama ?? '-'}</Td>
                     <Td>
                       <Badge variant={VARIAN_STATUS[sj.status]}>{LABEL_STATUS[sj.status]}</Badge>
