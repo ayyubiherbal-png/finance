@@ -207,191 +207,201 @@ export function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className={cn(GAYA_KARTU, 'lg:col-span-2')}>
-          <CardHeader>
-            <CardTitle className="text-base">{t('dasbor.trenOmzetHarian')}</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <GrafikKapsul data={data.trenHarian} />
-          </CardContent>
-        </Card>
+      {/*
+        Komposisi mengikuti referensi: chart+"pengingat" sejajar di baris
+        atas, "daftar orang"+donut sejajar di baris bawah -- keduanya di
+        area kiri (3/4 lebar) -- sementara Perlu Restock jadi kartu TINGGI
+        di kolom kanan (sejajar dengan kedua baris kiri sekaligus, seperti
+        kartu "Project" di referensi), dengan Saldo Kas & Bank di
+        bawahnya (padanan "Time Tracker"). `items-stretch` (default grid)
+        yang membuat kolom kanan otomatis setinggi kolom kiri.
+      */}
+      <div className="grid gap-4 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-3 lg:col-span-3">
+          <Card className={cn(GAYA_KARTU, 'sm:col-span-2')}>
+            <CardHeader>
+              <CardTitle className="text-base">{t('dasbor.trenOmzetHarian')}</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <GrafikKapsul data={data.trenHarian} />
+            </CardContent>
+          </Card>
 
-        <Card className={GAYA_KARTU}>
-          <CardHeader>
-            <CardTitle className="text-base">{t('dasbor.marginLaba30Hari')}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-3 pt-0">
-            <GrafikDonut persen={margin} warna="hsl(var(--primary))" />
-            <div className="flex w-full justify-around text-center text-xs">
-              <div>
-                <p className="tabular font-semibold">{rupiah(data.laba30Hari)}</p>
-                <p className="text-muted-foreground">{t('dasbor.labaKotor')}</p>
-              </div>
-              <div>
-                <p className="tabular font-semibold">{rupiah(data.omzet30Hari)}</p>
-                <p className="text-muted-foreground">{t('dasbor.omzet')}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className={GAYA_KARTU}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                {t('dasbor.jatuhTempoTerdekat')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 pb-2">
+              {data.jatuhTempo.length === 0 ? (
+                <KondisiKosong pesan={t('dasbor.tidakAdaFakturBelumLunas')} />
+              ) : (
+                <div className="divide-y divide-border">
+                  {data.jatuhTempo.map((f) => {
+                    const lewat = f.jatuh_tempo < tanggalISO()
+                    return (
+                      <Link
+                        key={f.id}
+                        to={`/faktur-penjualan/${f.id}`}
+                        className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{f.pelanggan?.nama ?? '-'}</p>
+                          <p className="font-mono text-xs text-muted-foreground">{f.nomor}</p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="tabular text-sm font-medium">{rupiah(f.sisa)}</p>
+                          <p className={cn('text-xs', lewat ? 'font-medium text-destructive' : 'text-muted-foreground')}>
+                            {lewat ? `${t('dasbor.lewat')} ` : ''}
+                            {fmtTanggal(f.jatuh_tempo)}
+                          </p>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className={GAYA_KARTU}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CalendarClock className="h-4 w-4 text-muted-foreground" />
-              {t('dasbor.jatuhTempoTerdekat')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 pb-2">
-            {data.jatuhTempo.length === 0 ? (
-              <KondisiKosong pesan={t('dasbor.tidakAdaFakturBelumLunas')} />
-            ) : (
-              <div className="divide-y divide-border">
-                {data.jatuhTempo.map((f) => {
-                  const lewat = f.jatuh_tempo < tanggalISO()
-                  return (
+          <Card className={cn(GAYA_KARTU, 'sm:col-span-2')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                {t('dasbor.pelangganTeratas')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 pb-2">
+              {data.pelangganTeratas.length === 0 ? (
+                <KondisiKosong pesan={t('dasbor.belumAdaTransaksi')} />
+              ) : (
+                <div className="divide-y divide-border">
+                  {data.pelangganTeratas.map((p) => (
                     <Link
-                      key={f.id}
-                      to={`/faktur-penjualan/${f.id}`}
+                      key={p.pelanggan_id}
+                      to={`/crm/pelanggan/${p.pelanggan_id}`}
                       className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent"
                     >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{f.pelanggan?.nama ?? '-'}</p>
-                        <p className="font-mono text-xs text-muted-foreground">{f.nomor}</p>
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                        {p.nama.slice(0, 1).toUpperCase()}
                       </div>
-                      <div className="shrink-0 text-right">
-                        <p className="tabular text-sm font-medium">{rupiah(f.sisa)}</p>
-                        <p className={cn('text-xs', lewat ? 'font-medium text-destructive' : 'text-muted-foreground')}>
-                          {lewat ? `${t('dasbor.lewat')} ` : ''}
-                          {fmtTanggal(f.jatuh_tempo)}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{p.nama}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {bahasa === 'id' ? `${p.jumlah_transaksi}x transaksi` : `${p.jumlah_transaksi} transactions`}
                         </p>
                       </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <p className="tabular text-sm font-medium">{rupiah(p.total_belanja)}</p>
+                        <Badge variant={INFO_SEGMEN[p.segmen].varian}>{INFO_SEGMEN[p.segmen].label}</Badge>
+                      </div>
                     </Link>
-                  )
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        <Card className={GAYA_KARTU}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              {t('dasbor.pelangganTeratas')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 pb-2">
-            {data.pelangganTeratas.length === 0 ? (
-              <KondisiKosong pesan={t('dasbor.belumAdaTransaksi')} />
-            ) : (
-              <div className="divide-y divide-border">
-                {data.pelangganTeratas.map((p) => (
-                  <Link
-                    key={p.pelanggan_id}
-                    to={`/crm/pelanggan/${p.pelanggan_id}`}
-                    className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                      {p.nama.slice(0, 1).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{p.nama}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {bahasa === 'id' ? `${p.jumlah_transaksi}x transaksi` : `${p.jumlah_transaksi} transactions`}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1">
-                      <p className="tabular text-sm font-medium">{rupiah(p.total_belanja)}</p>
-                      <Badge variant={INFO_SEGMEN[p.segmen].varian}>{INFO_SEGMEN[p.segmen].label}</Badge>
-                    </div>
-                  </Link>
+          <Card className={GAYA_KARTU}>
+            <CardHeader>
+              <CardTitle className="text-base">{t('dasbor.marginLaba30Hari')}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-3 pt-0">
+              <GrafikDonut persen={margin} warna="hsl(var(--primary))" />
+              <div className="flex w-full justify-around text-center text-xs">
+                <div>
+                  <p className="tabular font-semibold">{rupiah(data.laba30Hari)}</p>
+                  <p className="text-muted-foreground">{t('dasbor.labaKotor')}</p>
+                </div>
+                <div>
+                  <p className="tabular font-semibold">{rupiah(data.omzet30Hari)}</p>
+                  <p className="text-muted-foreground">{t('dasbor.omzet')}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <Card className={cn(GAYA_KARTU, 'flex flex-1 flex-col')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                {t('dasbor.perluRestock')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 pb-2">
+              {data.perluRestock.length === 0 ? (
+                <KondisiKosong pesan={t('dasbor.semuaProdukAmanStok')} />
+              ) : (
+                <div className="divide-y divide-border">
+                  {data.perluRestock.map((p) => {
+                    const habis = Number(p.qty) <= 0
+                    return (
+                      <Link
+                        key={p.produk_id}
+                        to={`/produk/${p.produk_id}`}
+                        className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent"
+                      >
+                        <div
+                          className={cn(
+                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-full',
+                            habis ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-600',
+                          )}
+                        >
+                          <PackageSearch className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{p.nama}</p>
+                          <p className="font-mono text-xs text-muted-foreground">
+                            {angka(p.qty)} / min. {angka(p.stok_min)}
+                          </p>
+                        </div>
+                        <Badge variant={habis ? 'bahaya' : 'peringatan'} className="shrink-0">
+                          {habis ? t('dasbor.habis') : t('dasbor.menipis')}
+                        </Badge>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className={cn(GAYA_KARTU, 'border-none bg-gradient-to-br from-primary-dark to-[hsl(24_20%_9%)] text-primary-dark-foreground')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base text-primary-dark-foreground">
+                <Landmark className="h-4 w-4" />
+                {t('dasbor.saldoKasBank')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="tabular text-2xl font-bold">{rupiah(data.totalSaldoKas)}</p>
+              <p className="text-xs text-primary-dark-foreground/60">
+                {bahasa === 'id'
+                  ? `Total ${data.saldoKas.length} akun aktif`
+                  : `Total of ${data.saldoKas.length} active accounts`}
+              </p>
+              <div className="mt-3 space-y-1.5">
+                {data.saldoKas.slice(0, 4).map((a) => (
+                  <div key={a.akun_id} className="flex items-center justify-between text-xs">
+                    <span className="truncate text-primary-dark-foreground/80">{a.nama}</span>
+                    <span className="tabular shrink-0 pl-2 font-medium">{rupiah(a.saldo)}</span>
+                  </div>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className={cn(GAYA_KARTU, 'border-none bg-gradient-to-br from-primary-dark to-[hsl(24_20%_9%)] text-primary-dark-foreground')}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base text-primary-dark-foreground">
-              <Landmark className="h-4 w-4" />
-              {t('dasbor.saldoKasBank')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="tabular text-3xl font-bold">{rupiah(data.totalSaldoKas)}</p>
-            <p className="text-xs text-primary-dark-foreground/60">
-              {bahasa === 'id'
-                ? `Total ${data.saldoKas.length} akun aktif`
-                : `Total of ${data.saldoKas.length} active accounts`}
-            </p>
-            <div className="mt-3 space-y-1.5">
-              {data.saldoKas.slice(0, 4).map((a) => (
-                <div key={a.akun_id} className="flex items-center justify-between text-xs">
-                  <span className="truncate text-primary-dark-foreground/80">{a.nama}</span>
-                  <span className="tabular shrink-0 pl-2 font-medium">{rupiah(a.saldo)}</span>
-                </div>
-              ))}
-            </div>
-            <Link
-              to="/kas-bank"
-              className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition-colors hover:bg-white/25"
-            >
-              {t('dasbor.lihatSemuaAkun')}
-            </Link>
-          </CardContent>
-        </Card>
+              <Link
+                to="/kas-bank"
+                className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition-colors hover:bg-white/25"
+              >
+                {t('dasbor.lihatSemuaAkun')}
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      <Card className={GAYA_KARTU}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
-            {t('dasbor.perluRestock')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 pb-2">
-          {data.perluRestock.length === 0 ? (
-            <KondisiKosong pesan={t('dasbor.semuaProdukAmanStok')} />
-          ) : (
-            <div className="divide-y divide-border">
-              {data.perluRestock.map((p) => {
-                const habis = Number(p.qty) <= 0
-                return (
-                  <Link
-                    key={p.produk_id}
-                    to={`/produk/${p.produk_id}`}
-                    className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent"
-                  >
-                    <div
-                      className={cn(
-                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-full',
-                        habis ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-600',
-                      )}
-                    >
-                      <PackageSearch className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{p.nama}</p>
-                      <p className="font-mono text-xs text-muted-foreground">{p.kode}</p>
-                    </div>
-                    <div className="tabular shrink-0 text-right text-xs text-muted-foreground">
-                      {angka(p.qty)} / min. {angka(p.stok_min)}
-                    </div>
-                    <Badge variant={habis ? 'bahaya' : 'peringatan'} className="shrink-0">
-                      {habis ? t('dasbor.habis') : t('dasbor.menipis')}
-                    </Badge>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   )
 }
