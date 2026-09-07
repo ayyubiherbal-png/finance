@@ -432,6 +432,37 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Retur Penjualan: item dari Faktur asal ikut tertarik otomatis
+(2026-09-07, murni frontend, tanpa migrasi).** User lihat retur draf
+kosong (padahal Faktur asal sudah dipilih) dan tanya: "produk return
+kenapa gak otomatis terisi saat invoicenya di tarik?" -- pertanyaan yang
+sama semangatnya dengan audit 0018 dulu ("kalau datanya diambil ikut
+semua dong"), kali ini soal dokumen SUMBER (Faktur), bukan master data.
+
+Root cause: `retur_penjualan.faktur_id` cuma dipakai sebagai referensi
+tercatat, item fakturnya tidak pernah disalin -- user harus cari lagi
+tiap produk secara manual meski faktur aslinya sudah jelas.
+
+Ditambah `muatItemDariFaktur()` -- menyalin produk/satuan/qty dari
+`faktur_penjualan_item`, dengan `harga_satuan` dihitung BALIK dari
+`subtotal / qty` (bukan `harga_satuan` mentah), supaya diskon% dan
+diskon Rp yang sudah diberikan saat jual ikut kebawa ke nilai retur.
+Dipanggil di 2 tempat:
+- **Otomatis** begitu draf retur baru selesai disimpan dengan Faktur
+  asal terpilih (`FormBaru.simpan()`) -- ini yang menjawab "kenapa
+  gak otomatis" secara harfiah.
+- **Tombol manual** "Muat Item dari Faktur ..." di halaman edit --
+  untuk retur yang sudah kadung dibuat kosong sebelum perbaikan ini
+  (termasuk RJ/2026/09/00001 yang dilaporkan user), dan sebagai jalan
+  pintas kalau auto-load gagal (mis. sesi request kepotong). Dedup by
+  `produk_id` supaya diklik ulang tidak menduplikasi baris yang sudah
+  ada.
+
+Qty & item hasil salinan tetap bisa dihapus/disesuaikan selama status
+masih draf (pola sama seperti SJ→Faktur: full copy dulu, disunting
+manual sebelum diposting) -- retur sebagian tinggal hapus baris yang
+tidak diretur atau tambah manual dengan qty berbeda.
+
 **Cetak label massal untuk Surat Jalan (2026-09-07, murni frontend,
 tanpa migrasi).** User lihat daftar Surat Jalan lalu tanya: "gimana
 kalau ada 100 orderan sehari, masa harus print satu satu?" -- benar,

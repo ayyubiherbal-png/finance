@@ -37,6 +37,48 @@ interface FakturRingkas {
   tanggal: string
 }
 
+interface FakturItemUntukRetur {
+  produk_id: string
+  satuan_id: string
+  konversi: number
+  qty: number
+  subtotal: number
+}
+
+/**
+ * Menyalin item dari faktur asal ke retur -- produk, satuan, qty, dan
+ * harga (dihitung balik dari subtotal per baris: `subtotal / qty`, jadi
+ * ikut memperhitungkan diskon% dan diskon Rp yang sudah diberikan saat
+ * fakturnya dibuat, bukan harga_satuan mentah sebelum diskon).
+ *
+ * `hindariProdukId` = produk yang SUDAH ada di retur ini (biar dipanggil
+ * ulang tidak menduplikasi baris yang sudah ditambahkan/di-load).
+ * Mengembalikan jumlah baris yang berhasil disalin.
+ */
+async function muatItemDariFaktur(returId: string, fakturId: string, hindariProdukId: Set<string> = new Set()) {
+  const { data, error } = await supabase
+    .from('faktur_penjualan_item')
+    .select('produk_id, satuan_id, konversi, qty, subtotal')
+    .eq('faktur_id', fakturId)
+  if (error) throw error
+
+  const baris = ((data ?? []) as unknown as FakturItemUntukRetur[]).filter((b) => !hindariProdukId.has(b.produk_id))
+  if (baris.length === 0) return 0
+
+  const { error: errInsert } = await supabase.from('retur_penjualan_item').insert(
+    baris.map((b) => ({
+      retur_id: returId,
+      produk_id: b.produk_id,
+      satuan_id: b.satuan_id,
+      konversi: b.konversi,
+      qty: b.qty,
+      harga_satuan: b.qty > 0 ? Math.round((b.subtotal / b.qty) * 100) / 100 : 0,
+    })),
+  )
+  if (errInsert) throw errInsert
+  return baris.length
+}
+
 export function ReturPenjualanForm() {
   const { id } = useParams<{ id: string }>()
   const isBaru = !id || id === 'baru'
@@ -106,7 +148,23 @@ function FormBaru() {
         .select('id')
         .single()
       if (error) throw error
-      toast('Draf retur tersimpan.')
+
+      if (header.faktur_id) {
+        try {
+          const jumlah = await muatItemDariFaktur(data.id, header.faktur_id)
+          toast(
+            jumlah > 0
+              ? `Draf retur tersimpan, ${jumlah} item dari faktur ikut dimuat. Hapus/sesuaikan yang tidak diretur.`
+              : 'Draf retur tersimpan.',
+          )
+        } catch {
+          // Header retur sudah terlanjur tersimpan -- jangan blokir navigasi,
+          // cukup beri tahu supaya user muat manual lewat tombol di halaman berikutnya.
+          toast('Draf retur tersimpan, tapi item dari faktur gagal dimuat otomatis. Muat manual di halaman berikutnya.')
+        }
+      } else {
+        toast('Draf retur tersimpan.')
+      }
       navigate(`/retur-penjualan/${data.id}`, { replace: true })
     } catch (e) {
       setError(e)
@@ -217,12 +275,15 @@ interface ReturDetail {
   masuk_stok: boolean
   alasan: string | null
   total: number
+  faktur_id: string | null
   gudang: { nama: string } | null
   pelanggan: { nama: string } | null
+  faktur: { nomor: string } | null
 }
 
 interface ReturItem {
   id: string
+  produk_id: string
   qty: number
   harga_satuan: number
   subtotal: number
@@ -250,7 +311,9 @@ function FormEdit({ returId }: { returId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('retur_penjualan')
-        .select('id, nomor, tanggal, status, masuk_stok, alasan, total, gudang:gudang_id(nama), pelanggan:pelanggan_id(nama)')
+        .select(
+          'id, nomor, tanggal, status, masuk_stok, alasan, total, faktur_id, gudang:gudang_id(nama), pelanggan:pelanggan_id(nama), faktur:faktur_id(nomor)',
+        )
         .eq('id', returId)
         .single()
       if (error) throw error
@@ -263,7 +326,7 @@ function FormEdit({ returId }: { returId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('retur_penjualan_item')
-        .select('id, qty, harga_satuan, subtotal, produk:produk_id(nama, kode), satuan:satuan_id(kode)')
+        .select('id, produk_id, qty, harga_satuan, subtotal, produk:produk_id(nama, kode), satuan:satuan_id(kode)')
         .eq('retur_id', returId)
       if (error) throw error
       return (data ?? []) as unknown as ReturItem[]
@@ -275,6 +338,7 @@ function FormEdit({ returId }: { returId: string }) {
   const [menambah, setMenambah] = useState(false)
   const [errorTambah, setErrorTambah] = useState<unknown>(null)
   const [memprosesStatus, setMemprosesStatus] = useState(false)
+  const [memuatFaktur, setMemuatFaktur] = useState(false)
 
   const { data: satuanProduk } = useProdukSatuan(addRow.produk_id)
 
@@ -327,6 +391,22 @@ function FormEdit({ returId }: { returId: string }) {
     }
   }
 
+  async function muatDariFaktur() {
+    if (!retur?.faktur_id) return
+    setErrorTambah(null)
+    setMemuatFaktur(true)
+    try {
+      const sudahAda = new Set((items ?? []).map((it) => it.produk_id))
+      const jumlah = await muatItemDariFaktur(returId, retur.faktur_id, sudahAda)
+      toast(jumlah > 0 ? `${jumlah} item dari faktur dimuat.` : 'Semua item faktur sudah ada di retur ini.')
+      invalidateSemua()
+    } catch (e) {
+      setErrorTambah(e)
+    } finally {
+      setMemuatFaktur(false)
+    }
+  }
+
   async function hapusItem(itemId: string) {
     if (!window.confirm('Hapus baris ini?')) return
     const { error } = await supabase.from('retur_penjualan_item').delete().eq('id', itemId)
@@ -376,6 +456,7 @@ function FormEdit({ returId }: { returId: string }) {
           <h1 className="font-mono text-lg font-semibold">{retur.nomor}</h1>
           <p className="text-sm text-muted-foreground">
             {fmtTanggal(retur.tanggal)} &middot; {retur.pelanggan?.nama ?? '-'}
+            {retur.faktur ? ` · dari faktur ${retur.faktur.nomor}` : ''}
             {!retur.masuk_stok ? ' · barang tidak masuk stok' : ''}
           </p>
         </div>
@@ -383,8 +464,14 @@ function FormEdit({ returId }: { returId: string }) {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Item</CardTitle>
+          {bisaEdit && retur.faktur_id ? (
+            <Button variant="outline" size="sm" onClick={muatDariFaktur} disabled={memuatFaktur}>
+              {memuatFaktur ? <Spinner /> : null}
+              Muat Item dari Faktur {retur.faktur?.nomor}
+            </Button>
+          ) : null}
         </CardHeader>
         <CardContent className="p-0 pb-2">
           <Table>
