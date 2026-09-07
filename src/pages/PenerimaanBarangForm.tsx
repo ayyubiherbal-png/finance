@@ -335,6 +335,7 @@ interface PBDetail {
   tanggal: string
   status: StatusDokumen
   po_id: string | null
+  supplier_id: string
   surat_jalan_supplier: string | null
   biaya_tambahan: number
   catatan: string | null
@@ -364,7 +365,7 @@ function FormDetail({ pbId }: { pbId: string }) {
       const { data, error } = await supabase
         .from('penerimaan_barang')
         .select(
-          'id, nomor, tanggal, status, po_id, surat_jalan_supplier, biaya_tambahan, catatan, supplier:supplier_id(nama), gudang:gudang_id(nama), po:po_id(nomor)',
+          'id, nomor, tanggal, status, po_id, supplier_id, surat_jalan_supplier, biaya_tambahan, catatan, supplier:supplier_id(nama), gudang:gudang_id(nama), po:po_id(nomor)',
         )
         .eq('id', pbId)
         .single()
@@ -493,7 +494,11 @@ function FormDetail({ pbId }: { pbId: string }) {
               {memproses ? <Spinner /> : null}
               Tandai Diterima
             </Button>
-          ) : null}
+          ) : (
+            <Button asChild>
+              <Link to={`/faktur-pembelian/baru?supplier=${pb.supplier_id}`}>Lanjut ke Faktur Pembelian</Link>
+            </Button>
+          )}
         </div>
       ) : null}
     </div>
