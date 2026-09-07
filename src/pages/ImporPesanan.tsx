@@ -367,28 +367,35 @@ export function ImporPesanan() {
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               {DAFTAR_BIDANG.map((b) => (
-                <div key={b.bidang} className="space-y-1">
-                  <Label className="text-xs">
-                    {b.label}
-                    {b.wajib ? <span className="text-destructive"> *</span> : null}
-                  </Label>
-                  <Select
-                    value={peta[b.bidang] ?? ''}
-                    onChange={(e) => setPeta((p) => ({ ...p, [b.bidang]: e.target.value || undefined }))}
-                  >
-                    <option value="">{b.wajib ? tt('-- pilih kolom --') : tt('-- tidak dipakai --')}</option>
-                    {headerKolom.map((h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
-                    ))}
-                  </Select>
-                  {b.bidang === 'nama_pembeli' && namaPembeliTerlihatAngka ? (
-                    <p className="flex items-center gap-1 text-xs text-amber-600">
-                      <AlertTriangle className="h-3 w-3" />
-                      {tt('Kolom ini kebanyakan berisi angka, bukan nama/username -- kemungkinan salah pilih kolom.')}
+                <div key={b.bidang} className="contents">
+                  {b.bidang === 'alamat_detail' ? (
+                    <p className="col-span-full -mb-1 mt-1 text-xs font-medium text-muted-foreground">
+                      {tt('Alamat -- isi kolom "Alamat Lengkap" SAJA kalau file sudah satu kolom utuh, ATAU isi bagian-bagian di bawah ini kalau file memisahnya (mis. export TikTok Shop). Kosong yang tidak dipakai tidak apa-apa.')}
                     </p>
                   ) : null}
+                  <div className="space-y-1">
+                    <Label className="text-xs">
+                      {b.label}
+                      {b.wajib ? <span className="text-destructive"> *</span> : null}
+                    </Label>
+                    <Select
+                      value={peta[b.bidang] ?? ''}
+                      onChange={(e) => setPeta((p) => ({ ...p, [b.bidang]: e.target.value || undefined }))}
+                    >
+                      <option value="">{b.wajib ? tt('-- pilih kolom --') : tt('-- tidak dipakai --')}</option>
+                      {headerKolom.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </Select>
+                    {b.bidang === 'nama_pembeli' && namaPembeliTerlihatAngka ? (
+                      <p className="flex items-center gap-1 text-xs text-amber-600">
+                        <AlertTriangle className="h-3 w-3" />
+                        {tt('Kolom ini kebanyakan berisi angka, bukan nama/username -- kemungkinan salah pilih kolom.')}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
               ))}
             </div>

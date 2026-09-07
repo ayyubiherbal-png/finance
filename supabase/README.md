@@ -432,6 +432,34 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Impor Pesanan: alamat bisa dipetakan per bagian (murni frontend,
+2026-09-08).** User tunjukkan layar pemetaan kolom export TikTok Shop --
+alamatnya SUDAH dipecah platform jadi banyak kolom terpisah (Zipcode,
+Country, Province, Regency and City, Districts, Villages, Detail
+Address, Additional address information), bukan satu kolom "Alamat"
+utuh seperti asumsi awal. Sebelumnya cuma ada SATU bidang
+`alamat_kirim` -- kalau dipetakan ke salah satu kolom itu saja, bagian
+lainnya (kelurahan/kecamatan/kota/provinsi) hilang, tidak pernah masuk
+ke Sales Order/Surat Jalan.
+
+Ditambah 6 bidang opsional baru (`alamat_detail`, `alamat_kelurahan`,
+`alamat_kecamatan`, `alamat_kota`, `alamat_provinsi`, `alamat_kodepos`,
+`alamat_tambahan`) di `DAFTAR_BIDANG` (`importPesanan.ts`). Fungsi baru
+`gabungAlamat()` menggabungkan bagian-bagian itu jadi satu baris teks
+lengkap (format Indonesia baku: detail jalan -> kelurahan -> kecamatan
+-> kota -> provinsi -> kode pos), dipakai kalau ADA salah satu bagian
+yang dipetakan. Kolom "Alamat Lengkap" (`alamat_kirim`) lama tetap ada
+sebagai fallback -- dipakai apa adanya kalau file SUDAH satu kolom utuh
+(mis. export Shopee), supaya perilaku lama tidak berubah.
+
+Urutan field di `DAFTAR_BIDANG` SENGAJA taruh bagian-bagian spesifik
+SEBELUM "Alamat Lengkap" -- `tebakPemetaan()` jalan berurutan sesuai
+array ini, dan keyword generik `alamat` di "Alamat Lengkap" akan
+keburu mencomot header seperti "Alamat Detail" kalau ditaruh duluan.
+Diverifikasi lewat browser dengan sampel header TikTok Shop asli
+(Inggris) DAN Shopee (Indonesia, satu kolom) -- keduanya ketebak dan
+tergabung dengan benar.
+
 **Impor Pesanan: ikut status ASLI marketplace, bukan istilah aplikasi
 sendiri (0022, 2026-09-07).** Setelah fitur "Selesai -> Lunas"
 di bawah selesai, user protes: "kenapa statusnya tidak mengikuti yang

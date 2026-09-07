@@ -19,6 +19,13 @@ export type BidangKolom =
   | 'nama_pembeli'
   | 'telepon'
   | 'alamat_kirim'
+  | 'alamat_detail'
+  | 'alamat_kelurahan'
+  | 'alamat_kecamatan'
+  | 'alamat_kota'
+  | 'alamat_provinsi'
+  | 'alamat_kodepos'
+  | 'alamat_tambahan'
   | 'ekspedisi'
   | 'sku'
   | 'nama_produk'
@@ -39,7 +46,44 @@ export const DAFTAR_BIDANG: DefinisiBidang[] = [
   { bidang: 'status_pesanan', label: 'Status Pesanan', wajib: false, tebakan: ['status pesanan', 'order status', 'status'] },
   { bidang: 'nama_pembeli', label: 'Nama Pembeli/Penerima', wajib: false, tebakan: ['nama penerima', 'username', 'nama pembeli', 'recipient', 'buyer'] },
   { bidang: 'telepon', label: 'No. Telepon', wajib: false, tebakan: ['no. telepon', 'no telepon', 'nomor telepon', 'phone'] },
-  { bidang: 'alamat_kirim', label: 'Alamat Pengiriman', wajib: false, tebakan: ['alamat pengiriman', 'alamat penerima', 'shipping address', 'alamat'] },
+  // Bagian-bagian alamat di bawah ini SENGAJA ditebak SEBELUM "Alamat
+  // Lengkap" (lihat urutan array -- `tebakPemetaan` jalan sesuai urutan
+  // ini, field pertama yang cocok "menang" duluan atas satu header).
+  // Kalau urutannya kebalik, keyword generik 'alamat' di "Alamat Lengkap"
+  // akan keburu mencomot header seperti "Alamat Detail"/"Alamat Kecamatan"
+  // sebelum sempat dicek field yang lebih spesifik.
+  {
+    bidang: 'alamat_detail',
+    label: 'Detail Alamat (nama jalan, no. rumah, RT/RW)',
+    wajib: false,
+    tebakan: ['detail address', 'alamat detail', 'street address', 'nama jalan'],
+  },
+  { bidang: 'alamat_kelurahan', label: 'Kelurahan/Desa', wajib: false, tebakan: ['villages', 'village', 'kelurahan', 'desa'] },
+  { bidang: 'alamat_kecamatan', label: 'Kecamatan', wajib: false, tebakan: ['districts', 'district', 'kecamatan'] },
+  {
+    bidang: 'alamat_kota',
+    label: 'Kabupaten/Kota',
+    wajib: false,
+    tebakan: ['regency and city', 'regency', 'kabupaten/kota', 'kota/kabupaten', 'city'],
+  },
+  { bidang: 'alamat_provinsi', label: 'Provinsi', wajib: false, tebakan: ['province', 'provinsi'] },
+  { bidang: 'alamat_kodepos', label: 'Kode Pos', wajib: false, tebakan: ['zipcode', 'zip code', 'postal code', 'kode pos', 'kodepos'] },
+  {
+    bidang: 'alamat_tambahan',
+    label: 'Info Alamat Tambahan',
+    wajib: false,
+    tebakan: ['additional address', 'informasi tambahan alamat', 'catatan alamat'],
+  },
+  // "Alamat Lengkap" (satu kolom, dipakai kalau file TIDAK memisah per
+  // bagian seperti di atas) -- keyword bare 'alamat' sengaja paling luas,
+  // makanya ditaruh PALING BELAKANG supaya field spesifik di atas
+  // kebagian cek duluan.
+  {
+    bidang: 'alamat_kirim',
+    label: 'Alamat Lengkap (satu kolom -- kalau file TIDAK memisah per bagian)',
+    wajib: false,
+    tebakan: ['alamat pengiriman', 'alamat penerima', 'shipping address', 'full address', 'alamat lengkap', 'alamat'],
+  },
   { bidang: 'ekspedisi', label: 'Ekspedisi/Kurir', wajib: false, tebakan: ['opsi pengiriman', 'kurir', 'shipping provider', 'jasa kirim'] },
   { bidang: 'sku', label: 'SKU Produk', wajib: false, tebakan: ['nomor referensi sku', 'seller sku', 'sku'] },
   { bidang: 'nama_produk', label: 'Nama Produk', wajib: true, tebakan: ['nama produk', 'product name', 'nama barang'] },
@@ -148,7 +192,7 @@ export function kelompokkanPesanan(baris: BarisMentah[], peta: PemetaanKolom): P
         statusPesanan: peta.status_pesanan ? (b[peta.status_pesanan] ?? '') : '',
         namaPembeli: peta.nama_pembeli ? (b[peta.nama_pembeli] ?? '') : '',
         telepon: peta.telepon ? (b[peta.telepon] ?? '') : '',
-        alamatKirim: peta.alamat_kirim ? (b[peta.alamat_kirim] ?? '') : '',
+        alamatKirim: gabungAlamat(b, peta),
         ekspedisi: peta.ekspedisi ? (b[peta.ekspedisi] ?? '') : '',
         item: [],
         total: 0,
@@ -170,6 +214,39 @@ export function kelompokkanPesanan(baris: BarisMentah[], peta: PemetaanKolom): P
   }
 
   return urutan.map((n) => perNomor.get(n)!)
+}
+
+/**
+ * Menggabungkan alamat jadi satu baris teks lengkap.
+ *
+ * User: file export TikTok Shop-nya memecah alamat jadi banyak kolom
+ * terpisah (Detail Address, Villages, Districts, Regency and City,
+ * Province, Zipcode) -- bukan satu kolom "Alamat" utuh. Kalau cuma
+ * dipetakan ke satu bidang `alamat_kirim` seperti sebelumnya, bagian
+ * kelurahan/kecamatan/kota/provinsi-nya akan hilang (cuma satu kolom
+ * yang bisa dipilih).
+ *
+ * Solusinya: sediakan bidang terpisah per bagian alamat, lalu gabungkan
+ * di sini urut dari yang paling spesifik (detail jalan) ke paling umum
+ * (provinsi, kode pos) -- format alamat Indonesia baku. Kolom "Alamat
+ * Lengkap" (`alamat_kirim`) tetap ada buat file yang SUDAH satu kolom
+ * utuh (mis. export Shopee) -- dipakai kalau tidak ada satu pun bagian
+ * di atas yang dipetakan, supaya tidak mengubah perilaku lama.
+ */
+function gabungAlamat(b: BarisMentah, peta: PemetaanKolom): string {
+  const bagian = [peta.alamat_detail, peta.alamat_kelurahan, peta.alamat_kecamatan, peta.alamat_kota, peta.alamat_provinsi, peta.alamat_kodepos]
+  const adaBagianTerpisah = bagian.some((kolom) => kolom)
+
+  if (adaBagianTerpisah) {
+    const gabungan = bagian
+      .map((kolom) => (kolom ? (b[kolom] ?? '').trim() : ''))
+      .filter(Boolean)
+      .join(', ')
+    const tambahan = peta.alamat_tambahan ? (b[peta.alamat_tambahan] ?? '').trim() : ''
+    return [gabungan, tambahan].filter(Boolean).join(' -- ')
+  }
+
+  return peta.alamat_kirim ? (b[peta.alamat_kirim] ?? '') : ''
 }
 
 /** Menerima format tanggal umum ("07/09/2026", "2026-09-07 14:30", dll). Null kalau gagal parse. */
