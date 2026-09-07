@@ -66,6 +66,7 @@ interface BarisItem {
   qty_dasar: number
   harga_satuan: number
   diskon_persen: number
+  diskon_nilai: number
   subtotal: number
   produk: { nama: string; kode: string } | null
   satuan: { kode: string } | null
@@ -79,6 +80,7 @@ interface BarisTambah {
   qty: number
   harga_satuan: number
   diskon_persen: number
+  diskon_nilai: number
 }
 
 const BARIS_KOSONG: BarisTambah = {
@@ -89,6 +91,14 @@ const BARIS_KOSONG: BarisTambah = {
   qty: 1,
   harga_satuan: 0,
   diskon_persen: 0,
+  diskon_nilai: 0,
+}
+
+function teksDiskon(b: { diskon_persen: number; diskon_nilai: number }) {
+  const bagian: string[] = []
+  if (b.diskon_persen > 0) bagian.push(`${b.diskon_persen}%`)
+  if (b.diskon_nilai > 0) bagian.push(rupiah(b.diskon_nilai))
+  return bagian.length > 0 ? bagian.join(' + ') : '-'
 }
 
 export function PurchaseOrderForm() {
@@ -283,7 +293,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
       const { data, error } = await supabase
         .from('purchase_order_item')
         .select(
-          'id, produk_id, satuan_id, konversi, qty, qty_dasar, harga_satuan, diskon_persen, subtotal, produk:produk_id(nama, kode), satuan:satuan_id(kode)',
+          'id, produk_id, satuan_id, konversi, qty, qty_dasar, harga_satuan, diskon_persen, diskon_nilai, subtotal, produk:produk_id(nama, kode), satuan:satuan_id(kode)',
         )
         .eq('po_id', poId)
         .order('urutan')
@@ -339,6 +349,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
         qty: addRow.qty,
         harga_satuan: addRow.harga_satuan,
         diskon_persen: addRow.diskon_persen,
+        diskon_nilai: addRow.diskon_nilai,
         urutan: items?.length ?? 0,
       })
       if (error) throw error
@@ -433,6 +444,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
                 <Th>Satuan</Th>
                 <Th className="text-right">Qty</Th>
                 <Th className="text-right">Harga</Th>
+                <Th className="text-right">Diskon</Th>
                 <Th className="text-right">Subtotal</Th>
                 {bisaEdit ? <Th></Th> : null}
               </Tr>
@@ -447,6 +459,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
                   <Td className="text-xs text-muted-foreground">{it.satuan?.kode}</Td>
                   <Td className="tabular text-right">{it.qty}</Td>
                   <Td className="tabular text-right">{rupiah(it.harga_satuan)}</Td>
+                  <Td className="tabular text-right">{teksDiskon(it)}</Td>
                   <Td className="tabular text-right font-medium">{rupiah(it.subtotal)}</Td>
                   {bisaEdit ? (
                     <Td className="text-right">
@@ -459,7 +472,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
               ))}
               {(!items || items.length === 0) && (
                 <Tr>
-                  <Td colSpan={bisaEdit ? 6 : 5} className="py-6 text-center text-sm text-muted-foreground">
+                  <Td colSpan={bisaEdit ? 7 : 6} className="py-6 text-center text-sm text-muted-foreground">
                     Belum ada item.
                   </Td>
                 </Tr>
@@ -469,7 +482,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
 
           {bisaEdit ? (
             <div className="space-y-2 border-t border-border p-3">
-              <div className="grid gap-2 sm:grid-cols-[2fr_1fr_0.8fr_1fr_0.8fr_1fr_auto] sm:items-end">
+              <div className="grid gap-2 sm:grid-cols-[2fr_1fr_0.8fr_1fr] sm:items-end">
                 <div className="space-y-1">
                   <Label className="text-xs">Produk</Label>
                   <Combobox
@@ -506,6 +519,8 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
                   <Label className="text-xs">Harga beli / satuan</Label>
                   <InputAngka value={addRow.harga_satuan} onChange={(nilai) => setAddRow((r) => ({ ...r, harga_satuan: nilai }))} />
                 </div>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-[0.8fr_1fr_1fr_auto] sm:items-end">
                 <div className="space-y-1">
                   <Label className="text-xs">Diskon%</Label>
                   <Input
@@ -517,9 +532,19 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
                   />
                 </div>
                 <div className="space-y-1">
+                  <Label className="text-xs">Diskon (Rp)</Label>
+                  <InputAngka
+                    value={addRow.diskon_nilai}
+                    onChange={(nilai) => setAddRow((r) => ({ ...r, diskon_nilai: nilai }))}
+                  />
+                </div>
+                <div className="space-y-1">
                   <Label className="text-xs">Total</Label>
                   <div className="flex h-9 items-center justify-end rounded-md border border-input bg-muted px-3 text-sm tabular">
-                    {rupiah(addRow.qty * addRow.harga_satuan * (1 - addRow.diskon_persen / 100))}
+                    {rupiah(
+                      Math.round(addRow.qty * addRow.harga_satuan * (1 - addRow.diskon_persen / 100) * 100) / 100 -
+                        addRow.diskon_nilai,
+                    )}
                   </div>
                 </div>
                 <Button onClick={tambahItem} disabled={menambah}>

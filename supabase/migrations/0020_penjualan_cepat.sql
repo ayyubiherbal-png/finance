@@ -21,12 +21,19 @@
 --  Fungsi ini cuma jalan pintas untuk kasus paling umum, bukan
 --  pengganti. Semua dokumennya tetap tercatat lengkap seperti biasa,
 --  jadi stok, HPP, piutang, kas, dan semua laporan tetap benar.
+--
+--  Update: setiap item sekarang bisa membawa diskon_nilai (potongan
+--  Rupiah tetap per baris) selain diskon_persen, konsisten dengan kolom
+--  yang memang sudah ada di sales_order_item & faktur_penjualan_item
+--  sejak 0004 -- cuma belum pernah dipakai dari sisi form manapun.
+--  Aman dijalankan ulang: cuma "create or replace function" + "grant",
+--  tidak ada perubahan tabel.
 -- =====================================================================
 
 create or replace function penjualan_cepat(
   p_pelanggan_id    uuid,
   p_gudang_id       uuid,
-  p_items           jsonb,                  -- [{produk_id, satuan_id, konversi, qty, harga_satuan, diskon_persen}]
+  p_items           jsonb,                  -- [{produk_id, satuan_id, konversi, qty, harga_satuan, diskon_persen, diskon_nilai}]
   p_tanggal         date    default current_date,
   p_kanal           kanal_penjualan default 'canvassing',
   p_tier_harga_id   uuid    default null,
@@ -65,7 +72,7 @@ begin
   returning id into v_so;
 
   insert into sales_order_item (so_id, produk_id, satuan_id, konversi, qty,
-                                harga_satuan, diskon_persen, urutan)
+                                harga_satuan, diskon_persen, diskon_nilai, urutan)
   select v_so,
          (i->>'produk_id')::uuid,
          (i->>'satuan_id')::uuid,
@@ -73,6 +80,7 @@ begin
          (i->>'qty')::numeric,
          (i->>'harga_satuan')::numeric,
          coalesce((i->>'diskon_persen')::numeric, 0),
+         coalesce((i->>'diskon_nilai')::numeric, 0),
          (idx - 1)
   from jsonb_array_elements(p_items) with ordinality as t(i, idx);
 
@@ -106,9 +114,9 @@ begin
   insert into faktur_penjualan_sj (faktur_id, sj_id) values (v_faktur, v_sj);
 
   insert into faktur_penjualan_item (faktur_id, produk_id, satuan_id, konversi, qty,
-                                     harga_satuan, diskon_persen, urutan)
+                                     harga_satuan, diskon_persen, diskon_nilai, urutan)
   select v_faktur, sji.produk_id, sji.satuan_id, sji.konversi, sji.qty,
-         soi.harga_satuan, soi.diskon_persen, row_number() over (order by sji.id) - 1
+         soi.harga_satuan, soi.diskon_persen, soi.diskon_nilai, row_number() over (order by sji.id) - 1
   from surat_jalan_item sji
   left join sales_order_item soi on soi.id = sji.so_item_id
   where sji.sj_id = v_sj;

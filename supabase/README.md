@@ -432,6 +432,42 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Penjualan Cepat: baris yang lupa ditekan Tambah tetap ikut diproses +
+diskon nominal (0020 diperbarui, 2026-09-07).** User tes langsung dan
+lapor: mengisi 1 baris barang lengkap, tapi saat "Proses Penjualan"
+ditekan muncul error "Belum ada barang yang ditambahkan" padahal (dari
+sudut pandang dia) sudah ditambahkan.
+
+Root cause BUKAN bug logika -- validasinya benar. Yang terjadi: baris
+"tambah" itu punya state terpisah dari daftar `baris[]` yang sudah
+dikonfirmasi; isi form baris (produk/qty/harga) TIDAK otomatis masuk ke
+daftar sampai tombol **Tambah** ditekan. Preview "Total" yang muncul
+live di kotak kecil terlihat seperti konfirmasi sudah tersimpan,
+padahal cuma kalkulasi baris yang belum di-commit -- gampang membuat
+user mengira sudah selesai lalu langsung klik Proses.
+
+Diperbaiki dengan menghilangkan jebakannya, bukan menyalahkan user:
+kalau baris "tambah" sudah lengkap diisi (produk+satuan+qty>0) saat
+tombol **Proses Penjualan** ditekan, baris itu OTOMATIS ikut disertakan
+-- tidak pernah diam-diam hilang. Baris yang belum ditekan Tambah tetap
+ditampilkan di tabel dengan badge kuning "belum ditekan Tambah" + teks
+peringatan, supaya jelas kelihatan sebelum diproses, bukan cuma diam-diam
+bekerja di belakang layar.
+
+Sekalian: user juga minta dukungan **diskon nominal tetap (Rp)**, bukan
+cuma persen -- "saya juga kadang memberikan diskon harga tetap." Kolom
+`diskon_nilai` ternyata SUDAH ADA di `sales_order_item`,
+`purchase_order_item`, `faktur_penjualan_item` sejak migrasi 0004,
+cuma belum pernah dipakai dari form manapun (audit ulang: SalesOrderForm,
+PurchaseOrderForm, PenjualanCepat -- ketiganya cuma expose diskon%).
+Ditambah field "Diskon (Rp)" di ketiga form itu, jalan berdampingan
+dengan Diskon% (rumus subtotal persis kolom `generated` di DB:
+`round(qty * harga * (1 - persen/100), 2) - nilai`). RPC
+`penjualan_cepat` diperbarui supaya `diskon_nilai` per item ikut
+disalin ke `sales_order_item` dan `faktur_penjualan_item` -- aman
+dijalankan ulang (cuma `create or replace function`, tidak ada
+perubahan tabel).
+
 **Penjualan Cepat: 4 dokumen dari 1 layar (0020, 2026-09-07).** User:
 "apakah ada yang bisa disederhanakan atau dipersingkat dari proses
 ini?" Alur normal butuh 4 form berurutan (SO → Surat Jalan → Faktur →

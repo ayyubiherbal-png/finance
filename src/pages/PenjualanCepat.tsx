@@ -60,6 +60,7 @@ interface BarisCepat {
   qty: number
   harga_satuan: number
   diskon_persen: number
+  diskon_nilai: number
 }
 
 interface BarisTambah {
@@ -70,6 +71,7 @@ interface BarisTambah {
   qty: number
   harga_satuan: number
   diskon_persen: number
+  diskon_nilai: number
 }
 
 const BARIS_KOSONG: BarisTambah = {
@@ -80,6 +82,7 @@ const BARIS_KOSONG: BarisTambah = {
   qty: 1,
   harga_satuan: 0,
   diskon_persen: 0,
+  diskon_nilai: 0,
 }
 
 interface PelangganSingkat {
@@ -93,8 +96,17 @@ interface PelangganSingkat {
   provinsi: { nama: string } | null
 }
 
-function subtotalBaris(b: { qty: number; harga_satuan: number; diskon_persen: number }) {
-  return Math.round(b.qty * b.harga_satuan * (1 - b.diskon_persen / 100) * 100) / 100
+/** Sama persis dengan kolom `subtotal` generated di sales_order_item/faktur_penjualan_item. */
+function subtotalBaris(b: { qty: number; harga_satuan: number; diskon_persen: number; diskon_nilai: number }) {
+  const setelahPersen = Math.round(b.qty * b.harga_satuan * (1 - b.diskon_persen / 100) * 100) / 100
+  return setelahPersen - b.diskon_nilai
+}
+
+function teksDiskon(b: { diskon_persen: number; diskon_nilai: number }) {
+  const bagian: string[] = []
+  if (b.diskon_persen > 0) bagian.push(`${b.diskon_persen}%`)
+  if (b.diskon_nilai > 0) bagian.push(rupiah(b.diskon_nilai))
+  return bagian.length > 0 ? bagian.join(' + ') : '-'
 }
 
 export function PenjualanCepat() {
@@ -199,27 +211,32 @@ export function PenjualanCepat() {
     if (data.tier_harga_id) setTierHargaId(data.tier_harga_id)
   }
 
+  /** Baris tambah yang datanya sudah lengkap (siap dipakai), meski belum ditekan "Tambah". */
+  function barisSiapDitambah(): BarisCepat | null {
+    if (!addRow.produk_id || !addRow.produkLabel || !addRow.satuan_id || addRow.qty <= 0) return null
+    const kode = satuanProduk?.find((s) => s.satuan_id === addRow.satuan_id)?.satuan.kode ?? ''
+    return {
+      key: 'pending',
+      produk_id: addRow.produk_id,
+      produkLabel: addRow.produkLabel,
+      satuan_id: addRow.satuan_id,
+      satuanKode: kode,
+      konversi: addRow.konversi,
+      qty: addRow.qty,
+      harga_satuan: addRow.harga_satuan,
+      diskon_persen: addRow.diskon_persen,
+      diskon_nilai: addRow.diskon_nilai,
+    }
+  }
+
   function tambahBaris() {
-    if (!addRow.produk_id || !addRow.produkLabel || !addRow.satuan_id || addRow.qty <= 0) {
+    const siap = barisSiapDitambah()
+    if (!siap) {
       setError(new Error('Pilih produk, satuan, dan isi qty lebih dari 0.'))
       return
     }
     setError(null)
-    const kode = satuanProduk?.find((s) => s.satuan_id === addRow.satuan_id)?.satuan.kode ?? ''
-    setBaris((b) => [
-      ...b,
-      {
-        key: crypto.randomUUID(),
-        produk_id: addRow.produk_id!,
-        produkLabel: addRow.produkLabel!,
-        satuan_id: addRow.satuan_id!,
-        satuanKode: kode,
-        konversi: addRow.konversi,
-        qty: addRow.qty,
-        harga_satuan: addRow.harga_satuan,
-        diskon_persen: addRow.diskon_persen,
-      },
-    ])
+    setBaris((b) => [...b, { ...siap, key: crypto.randomUUID() }])
     setAddRow(BARIS_KOSONG)
   }
 
@@ -229,7 +246,12 @@ export function PenjualanCepat() {
     if (addRow.produk_id) void segarkanHarga(addRow.produk_id, satuanId, addRow.qty)
   }
 
-  const total = baris.reduce((s, b) => s + subtotalBaris(b), 0)
+  // Kalau baris tambah sudah lengkap diisi tapi belum ditekan "Tambah", tetap
+  // dianggap bagian dari transaksi -- supaya isian yang lupa di-klik-Tambah
+  // tidak diam-diam hilang saat "Proses Penjualan" ditekan.
+  const barisPending = barisSiapDitambah()
+  const semuaBaris = barisPending ? [...baris, barisPending] : baris
+  const total = semuaBaris.reduce((s, b) => s + subtotalBaris(b), 0)
 
   async function proses() {
     setError(null)
@@ -241,7 +263,7 @@ export function PenjualanCepat() {
       setError(new Error('Belum ada gudang aktif. Tambahkan gudang di master data dulu.'))
       return
     }
-    if (baris.length === 0) {
+    if (semuaBaris.length === 0) {
       setError(new Error('Belum ada barang yang ditambahkan.'))
       return
     }
@@ -255,13 +277,14 @@ export function PenjualanCepat() {
       const { data, error: err } = await supabase.rpc('penjualan_cepat', {
         p_pelanggan_id: pelangganId,
         p_gudang_id: gudangId,
-        p_items: baris.map((b) => ({
+        p_items: semuaBaris.map((b) => ({
           produk_id: b.produk_id,
           satuan_id: b.satuan_id,
           konversi: b.konversi,
           qty: b.qty,
           harga_satuan: b.harga_satuan,
           diskon_persen: b.diskon_persen,
+          diskon_nilai: b.diskon_nilai,
         })),
         p_tanggal: tanggal,
         p_kanal: kanal,
@@ -394,7 +417,7 @@ export function PenjualanCepat() {
                 <Th>Satuan</Th>
                 <Th className="text-right">Qty</Th>
                 <Th className="text-right">Harga</Th>
-                <Th className="text-right">Diskon%</Th>
+                <Th className="text-right">Diskon</Th>
                 <Th className="text-right">Subtotal</Th>
                 <Th></Th>
               </Tr>
@@ -409,7 +432,7 @@ export function PenjualanCepat() {
                   <Td className="text-xs text-muted-foreground">{b.satuanKode}</Td>
                   <Td className="tabular text-right">{b.qty}</Td>
                   <Td className="tabular text-right">{rupiah(b.harga_satuan)}</Td>
-                  <Td className="tabular text-right">{b.diskon_persen > 0 ? `${b.diskon_persen}%` : '-'}</Td>
+                  <Td className="tabular text-right">{teksDiskon(b)}</Td>
                   <Td className="tabular text-right font-medium">{rupiah(subtotalBaris(b))}</Td>
                   <Td className="text-right">
                     <Button
@@ -422,7 +445,26 @@ export function PenjualanCepat() {
                   </Td>
                 </Tr>
               ))}
-              {baris.length === 0 ? (
+              {barisPending ? (
+                <Tr className="border-dashed bg-muted/40 italic">
+                  <Td className="font-medium">
+                    {barisPending.produkLabel.label}
+                    <span className="ml-1 font-mono text-xs text-muted-foreground">
+                      {barisPending.produkLabel.sublabel}
+                    </span>
+                    <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold not-italic text-amber-800">
+                      belum ditekan Tambah
+                    </span>
+                  </Td>
+                  <Td className="text-xs text-muted-foreground">{barisPending.satuanKode}</Td>
+                  <Td className="tabular text-right">{barisPending.qty}</Td>
+                  <Td className="tabular text-right">{rupiah(barisPending.harga_satuan)}</Td>
+                  <Td className="tabular text-right">{teksDiskon(barisPending)}</Td>
+                  <Td className="tabular text-right font-medium">{rupiah(subtotalBaris(barisPending))}</Td>
+                  <Td></Td>
+                </Tr>
+              ) : null}
+              {baris.length === 0 && !barisPending ? (
                 <Tr>
                   <Td colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
                     Belum ada barang.
@@ -431,9 +473,15 @@ export function PenjualanCepat() {
               ) : null}
             </Tbody>
           </Table>
+          {barisPending ? (
+            <p className="px-3 pt-2 text-xs text-amber-700">
+              Baris di atas belum ditekan <strong>Tambah</strong> tapi tetap akan ikut diproses. Klik{' '}
+              <strong>Tambah</strong> untuk memastikan sebelum menambah barang lain.
+            </p>
+          ) : null}
 
           <div className="space-y-2 border-t border-border p-3">
-            <div className="grid gap-2 sm:grid-cols-[2fr_1fr_0.8fr_1fr_0.8fr_1fr_auto] sm:items-end">
+            <div className="grid gap-2 sm:grid-cols-[2fr_1fr_0.8fr_1fr] sm:items-end">
               <div className="space-y-1">
                 <Label className="text-xs">Produk</Label>
                 <Combobox
@@ -478,6 +526,8 @@ export function PenjualanCepat() {
                   onChange={(nilai) => setAddRow((r) => ({ ...r, harga_satuan: nilai }))}
                 />
               </div>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-[0.8fr_1fr_1fr_auto] sm:items-end">
               <div className="space-y-1">
                 <Label className="text-xs">Diskon%</Label>
                 <Input
@@ -486,6 +536,13 @@ export function PenjualanCepat() {
                   max={100}
                   value={addRow.diskon_persen}
                   onChange={(e) => setAddRow((r) => ({ ...r, diskon_persen: Number(e.target.value) }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Diskon (Rp)</Label>
+                <InputAngka
+                  value={addRow.diskon_nilai}
+                  onChange={(nilai) => setAddRow((r) => ({ ...r, diskon_nilai: nilai }))}
                 />
               </div>
               <div className="space-y-1">
