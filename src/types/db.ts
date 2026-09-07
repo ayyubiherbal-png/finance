@@ -324,6 +324,38 @@ export interface VPiutangAging {
   umur_90_plus: number | null
 }
 
+/** Segmen RFM pelanggan -- dihitung otomatis di view `v_pelanggan_crm` (0019). */
+export type SegmenPelanggan = 'juara' | 'setia' | 'baru' | 'mulai_hilang' | 'tidur' | 'belum_pernah'
+
+export interface VPelangganCrm {
+  pelanggan_id: string
+  kode: string
+  nama: string
+  tipe: TipePelanggan
+  telepon: string | null
+  whatsapp: string | null
+  sales_id: string | null
+  aktif: boolean
+  akun_agregat: boolean
+  jumlah_transaksi: number
+  total_belanja: number
+  rata_belanja: number
+  terakhir_order: string | null
+  pertama_order: string | null
+  hari_sejak_order: number | null
+  segmen: SegmenPelanggan
+}
+
+export interface VProdukFavoritPelanggan {
+  pelanggan_id: string
+  produk_id: string
+  kode_produk: string
+  nama_produk: string
+  total_qty_dasar: number
+  total_nilai: number
+  jumlah_faktur: number
+}
+
 export interface VPelangganRingkas {
   pelanggan_id: string
   kode: string

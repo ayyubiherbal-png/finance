@@ -13,6 +13,7 @@ import {
   Undo2,
   ClipboardEdit,
   Landmark,
+  HeartHandshake,
   LogOut,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -71,6 +72,10 @@ const MENU: Grup[] = [
       { ke: '/kartu-stok', label: 'Kartu Stok', ikon: BarChart3 },
       { ke: '/penyesuaian-stok', label: 'Penyesuaian Stok', ikon: ClipboardEdit },
     ],
+  },
+  {
+    judul: 'CRM',
+    item: [{ ke: '/crm', label: 'Segmen Pelanggan', ikon: HeartHandshake }],
   },
   {
     judul: 'Master',

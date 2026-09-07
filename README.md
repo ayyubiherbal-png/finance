@@ -13,18 +13,24 @@ memengaruhi bentuk form.
 
 ---
 
-## ✅ Status migrasi
+## ⚠️ Migrasi yang perlu dijalankan
 
-Semua migrasi sampai **0018** sudah dijalankan di database live Anda
-(0001-0012, 0014-0018 -- nomor 0013 sengaja tidak ada, dibatalkan
-sebelum sempat dijalankan, bukan ada yang hilang). Termasuk 3 file CSV
-wilayah (`supabase/seed-data/`) yang sudah diimpor lewat Table Editor.
-Tidak ada migrasi yang tertunda saat ini.
+```
+supabase/migrations/0019_crm_segmentasi_pelanggan.sql
+```
 
-Kalau ada migrasi baru ke depan, nomornya lanjut dari **0019** dan akan
-disebutkan secara eksplisit di sini setiap kali dibuat -- migrasi
-tidak pernah dijalankan otomatis, selalu manual lewat SQL Editor
-Supabase, dan setiap file aman dijalankan berkali-kali (idempotent).
+Menambah 2 view untuk fitur CRM (segmentasi RFM pelanggan & produk
+favorit). **Tidak menyentuh tabel/data yang ada sama sekali** -- murni
+menambah view, jadi aman dan bisa dijalankan berkali-kali.
+
+Migrasi sebelumnya (0001-0012, 0014-0018) sudah dijalankan semua di
+database live Anda, termasuk 3 file CSV wilayah (`supabase/seed-data/`)
+lewat Table Editor. (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum
+sempat dijalankan, bukan ada yang hilang.)
+
+Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
+Editor Supabase, dan setiap file aman dijalankan berkali-kali
+(idempotent).
 
 ---
 
@@ -61,6 +67,7 @@ supabase/migrations/0015_pelanggan_akun_agregat.sql
 supabase/migrations/0016_supplier_wilayah.sql
 supabase/migrations/0017_sales_order_telepon_penerima.sql
 supabase/migrations/0018_surat_jalan_penerima.sql
+supabase/migrations/0019_crm_segmentasi_pelanggan.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan
@@ -170,7 +177,7 @@ src/components/Combobox.tsx  dropdown pencarian generik (produk/pelanggan/suppli
 src/components/Layout.tsx  sidebar, gating menu per peran
 src/pages/                 satu file per layar (lihat tabel Status di bawah)
 public/ayyubi-logo.jpeg    logo resmi -- favicon + sidebar + login
-supabase/migrations/       17 file migrasi, semua sudah dijalankan (lihat Status migrasi di atas)
+supabase/migrations/       18 file migrasi (0019 belum dijalankan -- lihat bagian atas)
 supabase/reset-sebelum-live.sql  script reset data uji coba -- BUKAN migrasi, jalankan manual sebelum go-live
 ```
 
@@ -193,7 +200,8 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Dasbor | Ringkasan 30 hari, tren omzet, produk perlu restock | Selesai |
 | Tampilan | Logo & tema warna Ayyubi Food, glassmorphism di sidebar/login | Selesai |
 | — | Transfer Gudang | Skema siap, UI sengaja belum dibuat — tidak berguna selama masih 1 gudang aktif |
-| Fase 3 | CRM (pipeline, kunjungan sales, loyalty) | Belum dirancang |
+| CRM | Segmen Pelanggan (RFM otomatis), profil pelanggan 360°, tombol chat WhatsApp | Selesai -- **butuh migrasi 0019** |
+| Fase 3 lanjutan | Catatan kunjungan sales (canvassing), pipeline prospek, loyalty/poin | Belum dibangun |
 | Fase 4 | Akuntansi penuh (jurnal, buku besar), pajak, HR | Belum dirancang |
 
 Alur yang bisa dicoba: buat/pilih akun Kas & Bank → Catat Pembayaran

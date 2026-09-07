@@ -432,6 +432,37 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**CRM tahap 1: segmentasi RFM + profil pelanggan 360° (0019,
+2026-09-07).** Sebelum membangun, diriset dulu CRM yang ada di pasar
+(HubSpot/Pipedrive/Zoho/Odoo global; Mekari Qontak/Barantum/Qiscus
+lokal) dan pola CRM khusus distribusi/FMCG. Temuan kunci: untuk bisnis
+dagang/distribusi, inti CRM BUKAN "pipeline penjualan" (itu pola bisnis
+proyek/B2B besar) tapi **RFM** -- Recency/Frequency/Monetary. Semua
+bahannya sudah ada di `faktur_penjualan`, jadi 0019 murni menambah 2
+VIEW, tanpa tabel baru dan tanpa menambah beban input user:
+
+- `v_pelanggan_crm` -- RFM per pelanggan + kolom `segmen` hasil CASE:
+  `juara` (3+ transaksi, aktif), `setia` (2, aktif), `baru` (1, aktif),
+  `mulai_hilang` (>60 hari), `tidur` (>120 hari), `belum_pernah`.
+  Ambang 60/120 hari diasumsikan dari siklus belanja makanan ±1 bulan;
+  kalau pola riil beda, cukup ubah 2 angka di CASE lalu jalankan ulang.
+- `v_produk_favorit_pelanggan` -- agregasi produk per pelanggan, dipakai
+  di halaman profil. Diagregasi di DB (bukan di browser) supaya tidak
+  perlu menarik seluruh baris faktur item ke sisi klien.
+
+UI: `/crm` (kartu hitungan per segmen yang bisa diklik untuk menyaring
++ tabel) dan `/crm/pelanggan/:id` (profil 360: ringkasan RFM, kontak,
+produk favorit, riwayat faktur). Akun agregat marketplace & pelanggan
+nonaktif DISARING dari daftar CRM -- akun agregat bukan orang, tidak
+bisa di-follow up.
+
+Tombol **Chat WA** pakai tautan `wa.me` biasa (`src/lib/whatsapp.ts`,
+normalisasi 08xx -> 628xx) -- gratis, tanpa WhatsApp Business API.
+**WA blast massal SENGAJA tidak dibangun**: itu wajib lewat penyedia
+API resmi (Qontak/Qiscus), tidak bisa dibuat sendiri tanpa risiko
+nomor diblokir. Kalau nanti perlu, berlangganan penyedia, jangan
+bikin sendiri.
+
 **Label pengiriman dirombak jadi format label kurir profesional
 (2026-09-07, murni frontend).** User minta shipping card dibuat lebih
 profesional: logo perusahaan jelas, logo ekspedisi jelas, nama & alamat
