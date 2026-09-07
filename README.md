@@ -20,9 +20,11 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0020_penjualan_cepat.sql`** — dibutuhkan
-> supaya menu **Penjualan Cepat** berfungsi. Sebelum file ini
-> dijalankan, tombol "Proses Penjualan" akan gagal karena fungsinya
+> ⏳ **Belum dijalankan: `0020_penjualan_cepat.sql`** dan
+> `0021_impor_pesanan_marketplace.sql`** — dibutuhkan supaya menu
+> **Penjualan Cepat** dan **Impor Pesanan** berfungsi. Sebelum
+> keduanya dijalankan (berurutan, 0020 dulu baru 0021), tombol
+> "Proses Penjualan" dan "Impor Pesanan" akan gagal karena fungsinya
 > belum ada di database.
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
@@ -66,6 +68,7 @@ supabase/migrations/0017_sales_order_telepon_penerima.sql
 supabase/migrations/0018_surat_jalan_penerima.sql
 supabase/migrations/0019_crm_segmentasi_pelanggan.sql
 supabase/migrations/0020_penjualan_cepat.sql
+supabase/migrations/0021_impor_pesanan_marketplace.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan
@@ -198,6 +201,7 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Cetak | Invoice (Faktur Penjualan, A4) dan label pengiriman (Surat Jalan, A6) | Selesai -- logo ekspedisi asli JNE/J&T/Paxel sudah terpasang; ekspedisi lain tampil sebagai teks sampai logonya dikirim. Label bisa dicentang banyak sekaligus di daftar Surat Jalan lalu dicetak dalam satu print job ("Cetak N Label") |
 | Penjualan | Sales Order → Surat Jalan → Faktur → Penerimaan Kas → Retur | Selesai, ujung ke ujung |
 | Penjualan Cepat | Satu layar: isi pembeli + barang + pembayaran sekali, keempat dokumen dibuat otomatis dalam satu transaksi database | Selesai -- **butuh migrasi 0020** |
+| Impor Pesanan | Unggah file export Shopee/TikTok Seller Centre -> ratusan pesanan sekaligus jadi SO/Surat Jalan/Faktur. Pemetaan kolom & pencocokan produk dikonfirmasi manual, bukan ditebak diam-diam. Sinkronisasi API real-time belum -- butuh Anda daftar & disetujui sebagai developer di Shopee Open Platform/TikTok Shop Partner Center dulu | Selesai -- **butuh migrasi 0020 dan 0021** |
 | Pembelian | Purchase Order → Penerimaan Barang → Faktur Pembelian → Pembayaran Supplier → Retur | Selesai, ujung ke ujung |
 | Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
 | Laporan | Omzet (per bulan/kuartal/tahun, grafik+tabel), Piutang (aging), Laba Kotor (per produk/pelanggan) | Selesai |

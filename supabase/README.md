@@ -432,6 +432,82 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Impor Pesanan Marketplace dari file export Shopee/TikTok (0021,
+2026-09-07).** User: "tidak mungkin saya input satu-satu orderan dari
+Shopee." Ditawarkan dua jalur -- impor file (bisa langsung dikerjakan)
+vs sambungan API resmi Shopee/TikTok (butuh Anda daftar developer &
+approval di pihak platform dulu, di luar kendali saya, plus perlu server
+backend baru buat menyimpan API secret dengan aman). User pilih impor
+file dulu.
+
+**Kenapa TIDAK hardcode nama kolom Shopee/TikTok**: saya tidak punya
+sampel file export TERBARU dari kedua platform buat dipastikan formatnya,
+dan format begitu memang berubah dari waktu ke waktu. Solusinya: baca
+file APA ADANYA, tebak pemetaan kolom lewat daftar kata kunci umum
+(`tebakanPemetaan` di `src/lib/importPesanan.ts`), user WAJIB
+konfirmasi/perbaiki pemetaannya di layar sebelum apa pun diproses. Kalau
+formatnya berubah nanti, tebakannya meleset -- user pilih manual, bukan
+aplikasi salah baca diam-diam.
+
+Alur 4 langkah di halaman baru `/impor-pesanan`:
+1. **Unggah** -- pilih kanal (Shopee/TikTok) + file `.xlsx`/`.xls`/`.csv`.
+2. **Cocokkan Kolom** -- user konfirmasi pemetaan (Nomor Pesanan, Qty,
+   Subtotal Baris, dst. wajib; sisanya opsional).
+3. **Cocokkan Produk** -- tiap produk unik dari file (dikunci SKU, atau
+   nama kalau SKU kosong) dicocokkan ke `produk` (exact match kode dulu,
+   fallback ilike nama). Yang tidak cocok/ambigu WAJIB dipilih manual
+   lewat Combobox yang sama dipakai form lain -- tidak pernah menebak
+   produk secara diam-diam (salah pilih produk = salah motong stok).
+4. **Pratinjau & Proses** -- tabel semua pesanan dengan status: siap /
+   sudah pernah diimpor / ada produk belum cocok / status platform
+   asing (mis. "Dibatalkan", "Menunggu Pembayaran" -- default TIDAK
+   tercentang). Baru diproses setelah user tekan tombol, satu per satu
+   lewat RPC `penjualan_cepat` yang sudah ada.
+
+Keputusan desain lain:
+- **Harga per satuan dihitung dari `subtotal baris / qty`**, bukan minta
+  user memetakan "harga satuan" -- soalnya ambigu apakah kolom itu sudah
+  bersih diskon seller atau belum. Subtotal per baris jauh lebih jarang
+  ambigu di export marketplace manapun.
+- **Filter status pakai ALLOWLIST** (`statusAmanDiimpor`), bukan
+  blocklist -- status platform yang tidak dikenali (bisa jadi istilah
+  baru dari platform) default TIDAK dicentang, bukan lolos diam-diam.
+  User tetap bisa centang manual kalau yakin.
+- **Faktur hasil impor SENGAJA dibiarkan piutang** (`p_akun_id = null`)
+  -- Shopee/TikTok mencairkan dana secara batch belakangan, bukan
+  langsung per pesanan, jadi tidak bisa langsung dianggap "lunas".
+  Direkonsiliasi lewat Penerimaan Kas seperti biasa saat pencairan masuk.
+- **Dedup 2 lapis**: dicek dari sisi klien dulu (supaya kelihatan di
+  pratinjau, bukan baru gagal di tengah proses), TAPI penjaga
+  sesungguhnya ada di database -- constraint unique di tabel baru
+  `pesanan_marketplace_impor` (kanal + nomor_pesanan_platform), dicek
+  DI DALAM transaksi yang sama dengan pembuatan SO/Surat
+  Jalan/Faktur (lihat detail di 0021). Kalau constraint kena, SELURUH
+  transaksi ikut batal termasuk potongan stok -- tidak mungkin nyangkut
+  setengah jadi.
+- `penjualan_cepat` (0020) di-drop lalu dibuat ulang (bukan cuma
+  create-or-replace) karena menambah parameter mengubah signature-nya --
+  create-or-replace tidak bisa mengubah signature fungsi yang sudah ada.
+
+**Keamanan dependensi**: paket `xlsx` versi npm registry punya 2 celah
+keamanan level TINGGI tanpa perbaikan (`No fix available` di npm audit)
+-- ini kebijakan SheetJS sendiri (menolak update tag npm karena
+sengketa dengan kebijakan unpublish npm), BUKAN kelalaian mereka;
+versi yang sudah diperbaiki cuma dirilis lewat CDN mereka sendiri.
+Dipasang dari `https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`
+(cara resmi yang didokumentasikan SheetJS), bukan `npm install xlsx`
+biasa -- `npm audit` sekarang 0 masalah untuk paket ini. Library-nya
+juga dimuat lewat **dynamic import di dalam `bacaFile()`**, bukan
+di-import statis di atas file -- ~400KB itu jadi bundle terpisah yang
+cuma diunduh kalau halaman ini benar-benar dibuka, tidak ikut
+membengkakkan bundle awal yang dimuat tiap kali aplikasi dibuka.
+
+Diverifikasi langsung di browser (bukan cuma dites lewat kode): file
+CSV & XLSX asli sama-sama terbaca benar, pengelompokan multi-item per
+nomor pesanan bekerja, harga efektif terhitung benar dari subtotal,
+parsing tanggal DD/MM/YYYY tepat, dan status "Dibatalkan" otomatis
+tidak lolos filter aman.
+
 **Dwibahasa tahap 2: isi halaman ikut (2026-09-07, murni frontend).**
 Tahap 1 baru mencakup "chrome" (sidebar, topbar, login, Dasbor). Tahap
 ini menutup isi halaman: judul kolom tabel, label form, placeholder,

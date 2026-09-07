@@ -10,6 +10,7 @@ import {
   Landmark,
   HeartHandshake,
   Zap,
+  FileSpreadsheet,
   LogOut,
   Search,
   Bell,
@@ -63,6 +64,7 @@ const MENU: Grup[] = [
     item: [
       { label: 'menu.dasbor', ikon: LayoutDashboard, tab: [{ ke: '/', label: 'menu.dasbor' }] },
       { label: 'menu.penjualanCepat', ikon: Zap, tab: [{ ke: '/penjualan-cepat', label: 'menu.penjualanCepat' }] },
+      { label: 'menu.imporPesanan', ikon: FileSpreadsheet, tab: [{ ke: '/impor-pesanan', label: 'menu.imporPesanan' }] },
       {
         label: 'grup.penjualan',
         ikon: ShoppingCart,
