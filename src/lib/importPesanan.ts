@@ -232,6 +232,24 @@ export function statusAmanDiimpor(statusPesanan: string): boolean {
   return KATA_STATUS_AMAN.includes(s)
 }
 
+/**
+ * Subset dari `KATA_STATUS_AMAN` yang berarti pesanan sudah BENAR-BENAR
+ * final -- lewat masa komplain/retur di platform, dananya praktis pasti
+ * cair. User: "yang memang produknya sudah terkonfirmasi selesai dari
+ * tiktok atau shopeenya, maka statusnya langsung paid."
+ *
+ * SENGAJA BUKAN seluruh `KATA_STATUS_AMAN` -- "Dikirim"/"Shipped" cuma
+ * berarti barang sudah keluar gudang (makanya boleh diimpor & memotong
+ * stok), TAPI paket masih dalam perjalanan/dalam masa retur, jadi
+ * belum tentu dananya sudah aman cair. Cuma "Selesai"/"Completed" yang
+ * berarti masa itu sudah lewat.
+ */
+export const KATA_STATUS_SELESAI = ['selesai', 'completed']
+
+export function statusSudahFinal(statusPesanan: string): boolean {
+  return KATA_STATUS_SELESAI.includes(statusPesanan.trim().toLowerCase())
+}
+
 export const KANAL_IMPOR: { kunci: Extract<KanalPenjualan, 'shopee' | 'tiktok'>; label: string; kodeAgregat: string }[] = [
   { kunci: 'shopee', label: 'Shopee', kodeAgregat: 'SHOPEE' },
   { kunci: 'tiktok', label: 'TikTok Shop', kodeAgregat: 'TIKTOK' },

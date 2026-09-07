@@ -465,6 +465,12 @@ const TEKS: Record<string, string> = {
   'Status tidak diizinkan': 'Status not allowed',
   'Status di File': 'Status in file',
   'Lolos cek': 'Checks passed',
+  '-> Lunas': '-> Paid',
+  'Yang statusnya persis "Selesai"/"Completed" (sudah lewat masa retur) otomatis ditandai Lunas. Selain itu tetap jadi piutang, dilunaskan manual lewat Penerimaan Kas saat dana marketplace cair.':
+    'Orders with status exactly "Selesai"/"Completed" (past the return window) are auto-marked as Paid. Everything else stays as receivables, settled manually via Cash Receipt once the marketplace payout lands.',
+  'Dana Selesai masuk ke akun': 'Completed-order funds go into account',
+  'pesanan berstatus Selesai/Completed akan langsung ditandai Lunas ke akun ini.':
+    'orders with Selesai/Completed status will be marked Paid into this account right away.',
   'Otomatis tercentang kalau kolom "Status di File" sama persis dengan:':
     'Auto-checked when the "Status in file" column exactly matches:',
   'Selain itu (mis. "Ready to Ship"/masih diproses/dikemas) sengaja TIDAK tercentang -- barangnya belum tentu keluar gudang. Centang manual kalau Anda yakin.':

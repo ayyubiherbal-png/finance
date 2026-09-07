@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, CheckCircle2, FileSpreadsheet, Upload } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tt } from '@/lib/i18n'
-import { useGudangAktif } from '@/lib/queries'
+import { useGudangAktif, useAkunKasBankAktif } from '@/lib/queries'
 import { rupiah, tanggal as fmtTanggal, pesanKesalahan } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
@@ -33,6 +33,7 @@ import {
   bacaFile,
   kelompokkanPesanan,
   statusAmanDiimpor,
+  statusSudahFinal,
   tebakPemetaan,
   type BarisMentah,
   type PemetaanKolom,
@@ -62,9 +63,11 @@ function kunciProduk(sku: string, namaProduk: string): string {
 export function ImporPesanan() {
   const navigate = useNavigate()
   const { data: gudangAktif } = useGudangAktif()
+  const { data: akunKas } = useAkunKasBankAktif()
 
   const [kanal, setKanal] = useState<(typeof KANAL_IMPOR)[number]['kunci']>('shopee')
   const [gudangId, setGudangId] = useState<string | null>(null)
+  const [akunId, setAkunId] = useState<string | null>(null)
 
   const [namaFile, setNamaFile] = useState('')
   const [headerKolom, setHeaderKolom] = useState<string[]>([])
@@ -86,9 +89,20 @@ export function ImporPesanan() {
   const gudangTunggal = (gudangAktif?.length ?? 0) <= 1
   if (gudangTunggal && !gudangId && gudangAktif?.[0]) setGudangId(gudangAktif[0].id)
 
+  const akunTunggal = (akunKas?.length ?? 0) <= 1
+  if (akunTunggal && !akunId && akunKas?.[0]) setAkunId(akunKas[0].id)
+
   const bidangBelumLengkap = DAFTAR_BIDANG.filter((b) => b.wajib && !peta[b.bidang])
 
   const pesanan = useMemo(() => kelompokkanPesanan(barisMentah, peta), [barisMentah, peta])
+
+  // Dari pesanan yang DICENTANG saja -- kalau tidak ada satu pun yang
+  // statusnya "Selesai"/"Completed", tidak perlu tanya akun tujuan sama
+  // sekali (semuanya tetap jadi piutang seperti biasa).
+  const jumlahAkanLunas = useMemo(
+    () => pesanan.filter((p) => dicentang.has(p.nomorPesanan) && statusSudahFinal(p.statusPesanan)).length,
+    [pesanan, dicentang],
+  )
 
   const produkSumber = useMemo<ProdukSumber[]>(() => {
     const peta2 = new Map<string, ProdukSumber>()
@@ -199,6 +213,10 @@ export function ImporPesanan() {
 
   async function prosesImpor() {
     if (!gudangId) return
+    if (jumlahAkanLunas > 0 && !akunId) {
+      setErrorFile(new Error('Ada pesanan berstatus Selesai/Completed yang akan ditandai Lunas -- pilih akun kas/bank tujuannya dulu.'))
+      return
+    }
     setMemproses(true)
     setHasilProses(null)
 
@@ -230,12 +248,18 @@ export function ImporPesanan() {
             harga_satuan: it.hargaSatuan,
           }
         })
+        // Cuma status FINAL ("Selesai"/"Completed") yang ditandai Lunas --
+        // "Dikirim"/"Shipped" cs. boleh diimpor (barang sudah keluar
+        // gudang) tapi masih dalam masa retur, jadi tetap jadi piutang.
+        const sudahFinal = statusSudahFinal(p.statusPesanan)
         const { error } = await supabase.rpc('penjualan_cepat', {
           p_pelanggan_id: agregat.id,
           p_gudang_id: gudangId,
           p_items: items,
           p_tanggal: p.tanggal ?? undefined,
           p_kanal: kanal as KanalPenjualan,
+          p_akun_id: sudahFinal ? akunId : null,
+          p_metode: 'transfer',
           p_nama_penerima: p.namaPembeli || null,
           p_telepon_penerima: p.telepon || null,
           p_alamat_kirim: p.alamatKirim || null,
@@ -443,7 +467,30 @@ export function ImporPesanan() {
               <span className="font-medium text-foreground">{KATA_STATUS_AMAN.join(', ')}</span>.{' '}
               {tt('Selain itu (mis. "Ready to Ship"/masih diproses/dikemas) sengaja TIDAK tercentang -- barangnya belum tentu keluar gudang. Centang manual kalau Anda yakin.')}
             </p>
+            <p className="text-xs text-muted-foreground">
+              {tt('Yang statusnya persis "Selesai"/"Completed" (sudah lewat masa retur) otomatis ditandai Lunas. Selain itu tetap jadi piutang, dilunaskan manual lewat Penerimaan Kas saat dana marketplace cair.')}
+            </p>
           </CardHeader>
+          {jumlahAkanLunas > 0 ? (
+            <CardContent className="flex flex-wrap items-end gap-3 border-b border-border pb-4 pt-0">
+              <div className="space-y-1.5">
+                <Label className="text-xs">{tt('Dana Selesai masuk ke akun')}</Label>
+                <Select value={akunId ?? ''} onChange={(e) => setAkunId(e.target.value)} className="w-56">
+                  <option value="" disabled>
+                    Pilih akun...
+                  </option>
+                  {(akunKas ?? []).map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.nama}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {jumlahAkanLunas} {tt('pesanan berstatus Selesai/Completed akan langsung ditandai Lunas ke akun ini.')}
+              </p>
+            </CardContent>
+          ) : null}
           <CardContent className="p-0 pb-2">
             {pesanan.length === 0 ? (
               <KondisiKosong pesan="Tidak ada pesanan yang bisa diproses." />
@@ -485,15 +532,20 @@ export function ImporPesanan() {
                             aplikasi di kolom sebelah (lihat catatan `KATA_STATUS_AMAN`). */}
                         <Td className="text-muted-foreground">{p.statusPesanan || '-'}</Td>
                         <Td>
-                          {duplikat ? (
-                            <Badge variant="netral">{tt('Sudah pernah diimpor')}</Badge>
-                          ) : !siap ? (
-                            <Badge variant="bahaya">{tt('Ada produk belum cocok')}</Badge>
-                          ) : !statusAman ? (
-                            <Badge variant="peringatan">{tt('Status tidak diizinkan')}</Badge>
-                          ) : (
-                            <Badge variant="sukses">{tt('Lolos cek')}</Badge>
-                          )}
+                          <div className="flex flex-wrap items-center gap-1">
+                            {duplikat ? (
+                              <Badge variant="netral">{tt('Sudah pernah diimpor')}</Badge>
+                            ) : !siap ? (
+                              <Badge variant="bahaya">{tt('Ada produk belum cocok')}</Badge>
+                            ) : !statusAman ? (
+                              <Badge variant="peringatan">{tt('Status tidak diizinkan')}</Badge>
+                            ) : (
+                              <Badge variant="sukses">{tt('Lolos cek')}</Badge>
+                            )}
+                            {statusAman && statusSudahFinal(p.statusPesanan) ? (
+                              <Badge variant="default">{tt('-> Lunas')}</Badge>
+                            ) : null}
+                          </div>
                         </Td>
                       </Tr>
                     )

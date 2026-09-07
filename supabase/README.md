@@ -432,6 +432,30 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Impor Pesanan: status "Selesai" langsung ditandai Lunas (2026-09-07,
+murni frontend).** User tanya kenapa faktur hasil impor semuanya
+"Unpaid" -- dijelaskan itu memang sengaja (marketplace mencairkan dana
+belakangan, jadi belum tentu lunas), tapi user minta pengecualian:
+"yang memang produknya sudah terkonfirmasi selesai dari tiktok atau
+shopeenya, maka statusnya langsung paid."
+
+Masuk akal: "Selesai"/"Completed" di Shopee/TikTok berarti sudah lewat
+masa komplain/retur -- dananya praktis pasti cair, beda dengan
+"Dikirim"/"Shipped" yang cuma berarti barang sudah keluar gudang tapi
+paket masih bisa diretur pembeli.
+
+`KATA_STATUS_SELESAI` baru (subset dari `KATA_STATUS_AMAN` yang sudah
+ada) -- cuma `['selesai', 'completed']`, BUKAN seluruh status yang aman
+diimpor. Diverifikasi lewat browser: Selesai/Completed -> aman diimpor
+DAN ditandai lunas; Dikirim/Shipped/Sudah Dikirim -> aman diimpor tapi
+TETAP piutang; Perlu Dikirim/Dibatalkan -> tidak diimpor sama sekali.
+
+Kalau ada pesanan berstatus final dalam batch, muncul pemilih "akun kas/
+bank tujuan" (dipakai `penjualan_cepat`'s `p_akun_id` yang sudah ada
+sejak 0020/0021 -- tidak perlu migrasi baru). Tiap baris di tabel
+pratinjau dapat badge tambahan "-> Lunas" supaya kelihatan jelas SEBELUM
+diproses, bukan kejutan sesudahnya.
+
 **Bug lama, dampak luas: pesan error jadi "[object Object]" di ~47
 halaman (2026-09-07, murni frontend).** Ditemukan waktu debug fitur
 Impor Pesanan -- panel "gagal" menampilkan `585316933850793241:
