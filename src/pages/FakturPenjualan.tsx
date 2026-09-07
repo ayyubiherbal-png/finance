@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal } from '@/lib/format'
+import { rupiah, tanggal, terlihatSepertiNama } from '@/lib/format'
 import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
 import {
   Badge,
@@ -157,12 +157,14 @@ export function FakturPenjualan() {
                         </Td>
                         <Td className="text-muted-foreground">{tanggal(f.tanggal)}</Td>
                         <Td>
-                          <p className="font-medium">{f.so?.nama_penerima || f.pelanggan?.nama || '-'}</p>
                           {/* Lihat catatan sama di SalesOrder/SuratJalan.tsx: pesanan marketplace
                               pakai satu akun agregat sebagai pelanggan -- nama pembeli asli
                               disalin dari Sales Order (nama_penerima), faktur sendiri tidak
-                              punya kolom itu. */}
-                          {f.so?.nama_penerima && f.pelanggan?.nama && f.so.nama_penerima !== f.pelanggan.nama ? (
+                              punya kolom itu. Dijaga `terlihatSepertiNama` kalau isinya angka polos. */}
+                          <p className="font-medium">
+                            {(f.so?.nama_penerima && terlihatSepertiNama(f.so.nama_penerima) ? f.so.nama_penerima : null) || f.pelanggan?.nama || '-'}
+                          </p>
+                          {f.so?.nama_penerima && terlihatSepertiNama(f.so.nama_penerima) && f.pelanggan?.nama && f.so.nama_penerima !== f.pelanggan.nama ? (
                             <p className="text-xs text-muted-foreground">{f.pelanggan.nama}</p>
                           ) : null}
                         </Td>

@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, FileSpreadsheet, Upload } from 'lucide-rea
 import { supabase } from '@/lib/supabase'
 import { tt } from '@/lib/i18n'
 import { useGudangAktif, useAkunKasBankAktif } from '@/lib/queries'
-import { rupiah, tanggal as fmtTanggal, pesanKesalahan } from '@/lib/format'
+import { rupiah, tanggal as fmtTanggal, pesanKesalahan, terlihatSepertiNama } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
 import {
@@ -96,6 +96,19 @@ export function ImporPesanan() {
   const bidangBelumLengkap = DAFTAR_BIDANG.filter((b) => b.wajib && !peta[b.bidang])
 
   const pesanan = useMemo(() => kelompokkanPesanan(barisMentah, peta), [barisMentah, peta])
+
+  // Peringatan dini: kolom yang dipetakan ke "Nama Pembeli/Penerima"
+  // ternyata isinya angka polos, bukan nama/username. Kejadian nyata:
+  // satu batch impor lama salah kena kolom berat/ongkir, hasilnya nama
+  // pembeli di Faktur/Surat Jalan jadi "100"/"1400" dst. Dicek di sini
+  // (bukan cuma diam-diam disaring saat ditampilkan nanti) supaya user
+  // langsung tahu SAAT memetakan, bisa ganti pilihan kolomnya.
+  const namaPembeliTerlihatAngka = useMemo(() => {
+    if (!peta.nama_pembeli) return false
+    const terisi = pesanan.filter((p) => p.namaPembeli.trim())
+    if (terisi.length === 0) return false
+    return terisi.filter((p) => !terlihatSepertiNama(p.namaPembeli)).length / terisi.length > 0.7
+  }, [pesanan, peta.nama_pembeli])
 
   // Dari pesanan yang DICENTANG saja -- kalau tidak ada satu pun yang
   // statusnya "Selesai"/"Completed", tidak perlu tanya akun tujuan sama
@@ -370,6 +383,12 @@ export function ImporPesanan() {
                       </option>
                     ))}
                   </Select>
+                  {b.bidang === 'nama_pembeli' && namaPembeliTerlihatAngka ? (
+                    <p className="flex items-center gap-1 text-xs text-amber-600">
+                      <AlertTriangle className="h-3 w-3" />
+                      {tt('Kolom ini kebanyakan berisi angka, bukan nama/username -- kemungkinan salah pilih kolom.')}
+                    </p>
+                  ) : null}
                 </div>
               ))}
             </div>

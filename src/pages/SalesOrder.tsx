@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal } from '@/lib/format'
+import { rupiah, tanggal, terlihatSepertiNama } from '@/lib/format'
 import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
 import {
   Badge,
@@ -163,12 +163,16 @@ export function SalesOrder() {
                       </Td>
                       <Td className="text-muted-foreground">{tanggal(so.tanggal)}</Td>
                       <Td>
-                        <p className="font-medium">{so.nama_penerima || so.pelanggan?.nama || '-'}</p>
                         {/* Pesanan marketplace pakai satu akun agregat ("Marketplace -- TikTok
                             Shop" dst.) sebagai pelanggan -- nama pembeli sesungguhnya per
                             pesanan ada di nama_penerima. Tanpa ini semua baris marketplace
-                            kelihatan seperti pelanggan yang sama persis. */}
-                        {so.nama_penerima && so.pelanggan?.nama && so.nama_penerima !== so.pelanggan.nama ? (
+                            kelihatan seperti pelanggan yang sama persis. `terlihatSepertiNama`
+                            jaga-jaga kalau nama_penerima kebetulan angka polos (pernah kejadian
+                            nyata: kolom mapping impor salah kena kolom berat/ongkir). */}
+                        <p className="font-medium">
+                          {(so.nama_penerima && terlihatSepertiNama(so.nama_penerima) ? so.nama_penerima : null) || so.pelanggan?.nama || '-'}
+                        </p>
+                        {so.nama_penerima && terlihatSepertiNama(so.nama_penerima) && so.pelanggan?.nama && so.nama_penerima !== so.pelanggan.nama ? (
                           <p className="text-xs text-muted-foreground">{so.pelanggan.nama}</p>
                         ) : null}
                       </Td>

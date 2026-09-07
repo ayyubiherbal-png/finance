@@ -41,6 +41,25 @@ export function tanggalISO(nilai: Date = new Date()): string {
 }
 
 /**
+ * Cek kasar: teks ini masuk akal sebagai NAMA orang, bukan angka polos.
+ *
+ * Dipakai buat `nama_penerima` di daftar Sales Order/Surat Jalan/Faktur
+ * -- ditemukan kasus nyata: satu batch impor TikTok lama nampilin "100",
+ * "100", "1400" dst. sebagai "nama pembeli", karena pemetaan kolom "Nama
+ * Pembeli/Penerima" di layar Impor Pesanan waktu itu ternyata kena
+ * kolom angka (mis. berat/ongkir), bukan kolom nama/username -- salah
+ * pencet manual, bukan bug di logika impornya. Data lamanya tidak
+ * diubah (bisa saja itu memang isi filenya), tapi TIDAK ditampilkan
+ * sebagai "nama" kalau isinya cuma angka -- jatuh balik ke nama akun
+ * pelanggan biasa, daripada nampilin angka yang jelas bukan nama.
+ */
+export function terlihatSepertiNama(teks: string | null | undefined): boolean {
+  const t = (teks ?? '').trim()
+  if (!t) return false
+  return !/^[\d.,\s]+$/.test(t)
+}
+
+/**
  * Mengambil pesan yang bisa dibaca dari error apa pun -- termasuk error
  * dari Supabase/PostgREST, yang bentuknya OBJEK BIASA `{code, message,
  * details, hint}`, BUKAN instance `Error` (diverifikasi lewat browser
