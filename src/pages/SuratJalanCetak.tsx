@@ -113,67 +113,72 @@ export function SuratJalanCetak() {
         </Button>
       </div>
 
-      <div className="mx-auto w-[105mm] space-y-2 border border-border p-3 text-xs print:border-0 print:p-0">
-        <div className="flex items-start justify-between border-b border-black pb-2">
-          <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-8 w-8 rounded object-cover" />
-          <div className="text-right">
-            <p className="font-mono text-sm font-bold">{sj.nomor}</p>
-            {logoEkspedisi ? (
-              <img src={logoEkspedisi} alt={sj.ekspedisi ?? 'Ekspedisi'} className="ml-auto h-6 max-w-[70mm] object-contain" />
-            ) : (
-              <p className="font-semibold uppercase tracking-wide">{sj.ekspedisi || 'Ekspedisi'}</p>
-            )}
-            <p className="text-[10px] text-gray-600">{fmtTanggal(sj.tanggal)}</p>
-          </div>
+      {/* Susunan mengikuti konvensi label kurir/marketplace: PENERIMA paling
+          menonjol (itu yang dibaca kurir saat mengantar), pengirim ringkas,
+          isi paket di bawah. Kontras tinggi (hitam-putih, tanpa abu-abu di
+          data penting) supaya tetap terbaca walau dicetak seadanya. */}
+      <div className="mx-auto flex min-h-[140mm] w-[105mm] flex-col border-2 border-black text-black">
+        <div className="flex items-center justify-between gap-2 border-b-2 border-black px-3 py-2">
+          <img src="/ayyubi-logo.jpeg" alt={NAMA_TOKO} className="h-[15mm] w-[15mm] shrink-0 rounded object-cover" />
+          {logoEkspedisi ? (
+            <img src={logoEkspedisi} alt={sj.ekspedisi ?? 'Ekspedisi'} className="h-[15mm] max-w-[42mm] object-contain" />
+          ) : (
+            <p className="text-[16px] font-bold uppercase tracking-wide">{sj.ekspedisi || 'Ekspedisi'}</p>
+          )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <p className="mb-0.5 text-[10px] font-semibold uppercase text-gray-500">Pengirim</p>
-            <p className="font-semibold">{NAMA_TOKO}</p>
-            <p>No. WA: {NOMOR_WA_TOKO}</p>
-          </div>
-          <div>
-            <p className="mb-0.5 text-[10px] font-semibold uppercase text-gray-500">Penerima</p>
-            <p className="font-semibold">{sj.nama_penerima || sj.pelanggan?.nama || '-'}</p>
-            {sj.alamat_kirim ? <p className="whitespace-pre-line">{sj.alamat_kirim}</p> : null}
-            {sj.telepon_penerima ?? kontak ? <p>No. WA: {sj.telepon_penerima ?? kontak}</p> : null}
-          </div>
+        <div className="flex items-center justify-between bg-black px-3 py-1 text-white">
+          <span className="font-mono text-[12px] font-bold tracking-wide">{sj.nomor}</span>
+          <span className="text-[11px]">{fmtTanggal(sj.tanggal)}</span>
         </div>
 
-        {sj.nomor_kendaraan ?? sj.nama_sopir ? (
-          <p className="text-[10px] text-gray-600">
-            {sj.nomor_kendaraan ? `No. kendaraan: ${sj.nomor_kendaraan}` : null}
-            {sj.nomor_kendaraan && sj.nama_sopir ? ' · ' : null}
-            {sj.nama_sopir ? `Sopir: ${sj.nama_sopir}` : null}
-          </p>
-        ) : null}
+        <div className="border-b-2 border-black px-3 py-2">
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.15em] text-gray-500">Penerima</p>
+          <p className="text-[18px] font-bold leading-tight">{sj.nama_penerima || sj.pelanggan?.nama || '-'}</p>
+          {sj.telepon_penerima ?? kontak ? (
+            <p className="mt-0.5 text-[14px] font-bold">{sj.telepon_penerima ?? kontak}</p>
+          ) : null}
+          {sj.alamat_kirim ? (
+            <p className="mt-1 whitespace-pre-line text-[12px] font-medium leading-snug">{sj.alamat_kirim}</p>
+          ) : null}
+        </div>
 
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b-2 border-black text-left">
-              <th className="py-0.5 pr-1">Produk</th>
-              <th className="py-0.5 pr-1 text-right">Qty</th>
-              <th className="py-0.5">Satuan</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(items ?? []).map((it) => (
-              <tr key={it.id} className="border-b border-gray-300">
-                <td className="py-0.5 pr-1">{it.produk?.nama}</td>
-                <td className="py-0.5 pr-1 text-right">{it.qty}</td>
-                <td className="py-0.5">{it.satuan?.kode}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {sj.catatan ? (
-          <p>
-            <span className="font-semibold">Catatan: </span>
-            {sj.catatan}
+        <div className="border-b-2 border-black px-3 py-1.5">
+          <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-gray-500">Pengirim</p>
+          <p className="text-[12px] leading-snug">
+            <span className="font-bold">{NAMA_TOKO}</span> &middot; {NOMOR_WA_TOKO}
           </p>
-        ) : null}
+          {sj.nomor_kendaraan ?? sj.nama_sopir ? (
+            <p className="text-[11px] text-gray-600">
+              {sj.nomor_kendaraan ? `Kendaraan: ${sj.nomor_kendaraan}` : null}
+              {sj.nomor_kendaraan && sj.nama_sopir ? ' · ' : null}
+              {sj.nama_sopir ? `Sopir: ${sj.nama_sopir}` : null}
+            </p>
+          ) : null}
+        </div>
+
+        {/* flex-1 supaya bingkai label mengisi penuh kertas A6, tidak berhenti
+            di tengah halaman waktu itemnya sedikit. */}
+        <div className="flex-1 px-3 py-2">
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.15em] text-gray-500">Isi Paket</p>
+          <table className="w-full border-collapse text-[12px]">
+            <tbody>
+              {(items ?? []).map((it) => (
+                <tr key={it.id} className="border-b border-gray-300">
+                  <td className="py-1 pr-2">{it.produk?.nama}</td>
+                  <td className="whitespace-nowrap py-1 text-right font-bold">
+                    {it.qty} {it.satuan?.kode}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {sj.catatan ? <p className="mt-2 text-[11px]">Catatan: {sj.catatan}</p> : null}
+        </div>
+
+        <div className="border-t border-gray-300 px-3 py-1 text-center text-[9px] text-gray-500">
+          Terima kasih telah berbelanja di {NAMA_TOKO}
+        </div>
       </div>
     </div>
   )

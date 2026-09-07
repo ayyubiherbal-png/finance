@@ -432,6 +432,30 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Label pengiriman dirombak jadi format label kurir profesional
+(2026-09-07, murni frontend).** User minta shipping card dibuat lebih
+profesional: logo perusahaan jelas, logo ekspedisi jelas, nama & alamat
+penerima/pengirim jelas -- "cari dari banyak referensi, pilih 1 yang
+paling cocok". Referensi yang dipilih: **konvensi label thermal
+kurir/marketplace Indonesia (Shopee/Tokopedia/JNE-style)**, karena (1)
+kurir di sini sudah terbiasa membaca format itu, (2) hierarki
+"penerima paling dominan" menekan risiko salah antar, (3) pas untuk
+A6 yang memang ukuran label thermal standar.
+
+Susunannya: header 2 logo besar (perusahaan kiri 15mm, ekspedisi kanan
+15mm) -> bar hitam berisi nomor SJ + tanggal -> blok PENERIMA (nama
+18px bold, telepon 14px bold, alamat 12px medium) -> blok PENGIRIM
+ringkas 1 baris -> ISI PAKET (`flex-1` supaya bingkai label mengisi
+penuh A6 walau itemnya sedikit) -> footer tipis. Kontras tinggi
+(hitam-putih, abu-abu hanya untuk label section, tidak untuk data)
+supaya tetap terbaca walau dicetak seadanya.
+
+Verifikasi visual dilakukan lewat **mock HTML statis** yang disajikan
+sementara dari `public/` lalu di-screenshot di browser -- karena
+halaman cetak aslinya ada di balik login dan sesi kerja ini tidak
+punya kredensial. Mock-nya dihapus lagi setelah desainnya cocok
+(jangan biarkan tertinggal di `public/`).
+
 **Logo ekspedisi asli (JNE/J&T/Paxel) dipasang di label SJ (2026-09-07,
 murni frontend, tanpa migrasi).** User kirim 3 file logo dari
 Downloads (`Logo JNE.jpg`, `Logo JNT.png`, `Logo Paxel.svg`) --
