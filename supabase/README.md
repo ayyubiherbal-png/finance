@@ -432,6 +432,36 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Impor Pesanan: status yang berubah bisa diperbarui, bukan cuma
+ditolak dobel (0023, 2026-09-08).** User tanya: "kalau misalkan ada
+orderan yang statusnya berubah, apakah akan terupdate otomatis?" --
+jawabannya waktu itu TIDAK. Upload ulang file dengan status yang sudah
+berubah (mis. "Dikirim" jadi "Selesai") SELALU ditolak seluruhnya oleh
+pengunci dedup (unique constraint) -- status yang tersimpan tetap yang
+lama, tidak pernah ikut diperbarui. Ini gap nyata: paket yang tadinya
+"Dikirim" (piutang) lalu "Selesai" di TikTok tidak akan pernah otomatis
+ditandai Lunas tanpa campur tangan manual.
+
+Ditambah fungsi baru `perbarui_status_impor_marketplace()` (0023) --
+BUKAN membuat SO/Surat Jalan/Faktur baru (itu cuma boleh sekali, lewat
+`penjualan_cepat`), cuma: (1) memperbarui `status_platform` yang
+tersimpan di `pesanan_marketplace_impor` ke nilai baru dari file, dan
+(2) kalau status barunya "Selesai"/"Completed" dan faktur terkait belum
+lunas serta akun kas/bank tujuan diisi, faktur ditandai Lunas dengan
+cara yang sama seperti saat impor pertama (Penerimaan Kas sejumlah
+SISA tagihan -- bukan asal total, jaga-jaga kalau sudah dibayar
+sebagian). Butuh policy UPDATE baru di `pesanan_marketplace_impor`
+(sebelumnya di 0021 cuma ada select & insert).
+
+Di frontend (`ImporPesanan.tsx`): `sudahDiimpor` diubah dari `Set` jadi
+`Map<nomor, status_platform_tersimpan>` supaya bisa dibandingkan
+dengan status di file yang baru diunggah. Pesanan yang statusnya
+berbeda dari yang tersimpan (`pesananStatusBerubah`) muncul di Card
+terpisah "Perbarui Status Pesanan yang Sudah Diimpor" -- checkbox per
+baris, tombol "Perbarui X Status" sendiri, TIDAK tercampur dengan alur
+impor pesanan baru di atasnya (beda RPC, beda efek: yang ini cuma
+update, bukan bikin dokumen baru).
+
 **Bug nyata: pengecekan dedup impor diam-diam bisa kosong untuk batch
 besar (murni frontend, 2026-09-08).** User impor 877 pesanan TikTok --
 820 berhasil, 57 gagal dengan pesan Postgres mentah "duplicate key

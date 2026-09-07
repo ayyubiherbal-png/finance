@@ -97,12 +97,28 @@ export function ImporPesanan() {
   const [langkah, setLangkah] = useState<'unggah' | 'petakan' | 'cocokkan' | 'pratinjau'>('unggah')
 
   const [petaProduk, setPetaProduk] = useState<Map<string, HasilCocok | null>>(new Map())
-  const [sudahDiimpor, setSudahDiimpor] = useState<Set<string>>(new Set())
+  // nomor pesanan -> status_platform yang TERSIMPAN di database (dari
+  // impor sebelumnya). Bukan cuma Set -- perlu tahu status LAMA-nya
+  // untuk dibandingkan dengan status di file yang baru diunggah (lihat
+  // `pesananStatusBerubah`).
+  const [sudahDiimpor, setSudahDiimpor] = useState<Map<string, string | null>>(new Map())
   const [memuatCocok, setMemuatCocok] = useState(false)
 
   const [dicentang, setDicentang] = useState<Set<string>>(new Set())
   const [memproses, setMemproses] = useState(false)
   const [hasilProses, setHasilProses] = useState<{ berhasil: number; dilewati: number; gagal: { nomor: string; pesan: string }[] } | null>(null)
+
+  // Pesanan yang SUDAH pernah diimpor tapi statusnya di file BERUBAH
+  // dari yang tersimpan (mis. "Dikirim" -> "Selesai"). User: "kalau
+  // misalkan ada orderan yang statusnya berubah, apakah akan terupdate
+  // otomatis?" -- sebelumnya TIDAK, cuma ditolak dobel tanpa memperbarui
+  // apa pun. Ini alur TERPISAH dari impor pesanan baru di atas -- tidak
+  // membuat SO/Surat Jalan/Faktur baru, cuma memperbarui status (dan
+  // menandai Lunas kalau statusnya jadi final) lewat
+  // `perbarui_status_impor_marketplace` (lihat 0023).
+  const [dicentangUpdate, setDicentangUpdate] = useState<Set<string>>(new Set())
+  const [memprosesUpdate, setMemprosesUpdate] = useState(false)
+  const [hasilUpdate, setHasilUpdate] = useState<{ berhasil: number; gagal: { nomor: string; pesan: string }[] } | null>(null)
 
   const gudangTunggal = (gudangAktif?.length ?? 0) <= 1
   if (gudangTunggal && !gudangId && gudangAktif?.[0]) setGudangId(gudangAktif[0].id)
@@ -134,6 +150,27 @@ export function ImporPesanan() {
     () => pesanan.filter((p) => dicentang.has(p.nomorPesanan) && statusSudahFinal(p.statusPesanan)).length,
     [pesanan, dicentang],
   )
+
+  // Pesanan yang sudah pernah diimpor SEBELUMNYA (ada di `sudahDiimpor`)
+  // tapi status di file yang baru diunggah ini BERBEDA dari status yang
+  // tersimpan -- kandidat untuk diPERBARUI (bukan diimpor ulang).
+  const pesananStatusBerubah = useMemo(
+    () =>
+      pesanan.filter((p) => {
+        if (!sudahDiimpor.has(p.nomorPesanan)) return false
+        const lama = (sudahDiimpor.get(p.nomorPesanan) ?? '').trim()
+        const baru = p.statusPesanan.trim()
+        return baru !== '' && lama !== baru
+      }),
+    [pesanan, sudahDiimpor],
+  )
+
+  const jumlahAkanLunasUpdate = useMemo(
+    () => pesananStatusBerubah.filter((p) => dicentangUpdate.has(p.nomorPesanan) && statusSudahFinal(p.statusPesanan)).length,
+    [pesananStatusBerubah, dicentangUpdate],
+  )
+
+  const nomorStatusBerubah = useMemo(() => new Set(pesananStatusBerubah.map((p) => p.nomorPesanan)), [pesananStatusBerubah])
 
   const produkSumber = useMemo<ProdukSumber[]>(() => {
     const peta2 = new Map<string, ProdukSumber>()
@@ -219,16 +256,16 @@ export function ImporPesanan() {
       //    seperti seharusnya. Sekarang errornya DICEK dan query dipecah
       //    supaya lebih tahan untuk batch besar.
       const nomorSemua = pesanan.map((p) => p.nomorPesanan)
-      const sudahDiimporBaru = new Set<string>()
+      const sudahDiimporBaru = new Map<string, string | null>()
       for (let i = 0; i < nomorSemua.length; i += 200) {
         const potongan = nomorSemua.slice(i, i + 200)
         const { data: dup, error: errDup } = await supabase
           .from('pesanan_marketplace_impor')
-          .select('nomor_pesanan_platform')
+          .select('nomor_pesanan_platform, status_platform')
           .eq('kanal', kanal)
           .in('nomor_pesanan_platform', potongan)
         if (errDup) throw errDup
-        for (const d of dup ?? []) sudahDiimporBaru.add(d.nomor_pesanan_platform)
+        for (const d of dup ?? []) sudahDiimporBaru.set(d.nomor_pesanan_platform, d.status_platform)
       }
       setSudahDiimpor(sudahDiimporBaru)
 
@@ -247,11 +284,22 @@ export function ImporPesanan() {
 
   function lanjutKePratinjau() {
     setDicentang(new Set(pesanan.filter((p) => pesananSiap(p) && statusAmanDiimpor(p.statusPesanan)).map((p) => p.nomorPesanan)))
+    setDicentangUpdate(new Set(pesananStatusBerubah.map((p) => p.nomorPesanan)))
+    setHasilUpdate(null)
     setLangkah('pratinjau')
   }
 
   function toggleCentang(nomor: string) {
     setDicentang((s) => {
+      const n = new Set(s)
+      if (n.has(nomor)) n.delete(nomor)
+      else n.add(nomor)
+      return n
+    })
+  }
+
+  function toggleCentangUpdate(nomor: string) {
+    setDicentangUpdate((s) => {
       const n = new Set(s)
       if (n.has(nomor)) n.delete(nomor)
       else n.add(nomor)
@@ -325,6 +373,49 @@ export function ImporPesanan() {
     setHasilProses({ berhasil, dilewati: pesanan.length - dipilih.length, gagal })
     setMemproses(false)
     if (berhasil > 0) toast(`${berhasil} pesanan berhasil diimpor.`)
+  }
+
+  /**
+   * Memperbarui status pesanan yang SUDAH pernah diimpor -- BUKAN
+   * membuat SO/Surat Jalan/Faktur baru (itu cuma boleh sekali). Cuma
+   * memperbarui `status_platform` yang tersimpan, dan kalau status
+   * barunya "Selesai"/"Completed", menandai faktur terkait Lunas
+   * (lewat `perbarui_status_impor_marketplace`, 0023) -- sama seperti
+   * yang terjadi otomatis kalau pesanan itu BARU pertama kali diimpor
+   * dengan status yang sama.
+   */
+  async function perbaruiStatus() {
+    if (jumlahAkanLunasUpdate > 0 && !akunId) {
+      setErrorFile(new Error('Ada pesanan yang statusnya berubah jadi Selesai/Completed dan akan ditandai Lunas -- pilih akun kas/bank tujuannya dulu.'))
+      return
+    }
+    setMemprosesUpdate(true)
+    setHasilUpdate(null)
+
+    let berhasil = 0
+    const gagal: { nomor: string; pesan: string }[] = []
+    const dipilih = pesananStatusBerubah.filter((p) => dicentangUpdate.has(p.nomorPesanan))
+
+    for (const p of dipilih) {
+      try {
+        const sudahFinal = statusSudahFinal(p.statusPesanan)
+        const { error } = await supabase.rpc('perbarui_status_impor_marketplace', {
+          p_kanal: kanal as KanalPenjualan,
+          p_nomor_pesanan_platform: p.nomorPesanan,
+          p_status_baru: p.statusPesanan || null,
+          p_akun_id: sudahFinal ? akunId : null,
+          p_metode: 'transfer',
+        })
+        if (error) throw error
+        berhasil++
+      } catch (err) {
+        gagal.push({ nomor: p.nomorPesanan, pesan: pesanKesalahan(err) })
+      }
+    }
+
+    setHasilUpdate({ berhasil, gagal })
+    setMemprosesUpdate(false)
+    if (berhasil > 0) toast(`${berhasil} status pesanan berhasil diperbarui.`)
   }
 
   return (
@@ -533,7 +624,7 @@ export function ImporPesanan() {
               {tt('Yang statusnya persis "Selesai"/"Completed" (sudah lewat masa retur) otomatis ditandai Lunas. Selain itu tetap jadi piutang, dilunaskan manual lewat Penerimaan Kas saat dana marketplace cair. Status ini ikut tersimpan dan bisa dilihat lagi nanti di Faktur-nya.')}
             </p>
           </CardHeader>
-          {jumlahAkanLunas > 0 ? (
+          {jumlahAkanLunas + jumlahAkanLunasUpdate > 0 ? (
             <CardContent className="flex flex-wrap items-end gap-3 border-b border-border pb-4 pt-0">
               <div className="space-y-1.5">
                 <Label className="text-xs">{tt('Dana Selesai masuk ke akun')}</Label>
@@ -549,7 +640,13 @@ export function ImporPesanan() {
                 </Select>
               </div>
               <p className="text-xs text-muted-foreground">
-                {jumlahAkanLunas} {tt('pesanan berstatus Selesai/Completed akan langsung ditandai Lunas ke akun ini.')}
+                {jumlahAkanLunas > 0
+                  ? `${jumlahAkanLunas} ${tt('pesanan berstatus Selesai/Completed akan langsung ditandai Lunas ke akun ini.')}`
+                  : null}
+                {jumlahAkanLunas > 0 && jumlahAkanLunasUpdate > 0 ? ' ' : null}
+                {jumlahAkanLunasUpdate > 0
+                  ? `${jumlahAkanLunasUpdate} ${tt('pesanan yang statusnya diperbarui jadi Selesai/Completed juga akan ditandai Lunas ke akun ini.')}`
+                  : null}
               </p>
             </CardContent>
           ) : null}
@@ -572,6 +669,7 @@ export function ImporPesanan() {
                 <Tbody>
                   {pesanan.map((p) => {
                     const duplikat = sudahDiimpor.has(p.nomorPesanan)
+                    const statusBerubah = nomorStatusBerubah.has(p.nomorPesanan)
                     const siap = pesananSiap(p)
                     const statusAman = statusAmanDiimpor(p.statusPesanan)
                     return (
@@ -602,7 +700,9 @@ export function ImporPesanan() {
                         </Td>
                         <Td className="text-xs text-muted-foreground">
                           {duplikat
-                            ? tt('Sudah pernah diimpor, dilewati')
+                            ? statusBerubah
+                              ? tt('Sudah pernah diimpor, statusnya berubah -- lihat bagian "Perbarui Status" di bawah')
+                              : tt('Sudah pernah diimpor, dilewati')
                             : !siap
                               ? tt('Ada produk belum cocok, dilewati')
                               : !statusAman
@@ -655,6 +755,85 @@ export function ImporPesanan() {
               <Button onClick={prosesImpor} disabled={memproses || dicentang.size === 0}>
                 {memproses ? <Spinner /> : null}
                 {tt('Impor')} {dicentang.size} {tt('Pesanan')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {langkah === 'pratinjau' && pesananStatusBerubah.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              {tt('Perbarui Status Pesanan yang Sudah Diimpor')} ({dicentangUpdate.size}/{pesananStatusBerubah.length} {tt('dipilih')})
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {tt('Nomor-nomor ini SUDAH pernah diimpor sebelumnya, tapi statusnya di file ini berbeda dari yang tersimpan -- kemungkinan sudah berubah di marketplace (mis. "Dikirim" jadi "Selesai"). Ini TIDAK membuat Faktur baru, cuma memperbarui status yang tersimpan (dan menandai Lunas kalau status barunya jadi Selesai/Completed).')}
+            </p>
+          </CardHeader>
+          <CardContent className="p-0 pb-2">
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th className="w-8"></Th>
+                  <Th>{tt('Nomor Pesanan')}</Th>
+                  <Th>{tt('Status Tersimpan')}</Th>
+                  <Th>{tt('Status Baru di File')}</Th>
+                  <Th>{tt('Keterangan')}</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {pesananStatusBerubah.map((p) => {
+                  const statusLama = sudahDiimpor.get(p.nomorPesanan) ?? ''
+                  const jadiFinal = statusSudahFinal(p.statusPesanan)
+                  return (
+                    <Tr key={p.nomorPesanan}>
+                      <Td>
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 cursor-pointer"
+                          checked={dicentangUpdate.has(p.nomorPesanan)}
+                          onChange={() => toggleCentangUpdate(p.nomorPesanan)}
+                        />
+                      </Td>
+                      <Td className="font-mono text-xs">{p.nomorPesanan}</Td>
+                      <Td>{statusLama ? <Badge variant={variantStatusPlatform(statusLama)}>{statusLama}</Badge> : <span className="text-muted-foreground">-</span>}</Td>
+                      <Td>
+                        <Badge variant={variantStatusPlatform(p.statusPesanan)}>{p.statusPesanan}</Badge>
+                      </Td>
+                      <Td className="text-xs text-muted-foreground">{jadiFinal ? tt('Status diperbarui & ditandai Lunas') : tt('Status diperbarui, tetap piutang')}</Td>
+                    </Tr>
+                  )
+                })}
+              </Tbody>
+            </Table>
+
+            {hasilUpdate ? (
+              <div className="m-3 space-y-1 rounded-lg border border-border p-3 text-sm">
+                <p className="flex items-center gap-1.5 font-medium text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4" /> {hasilUpdate.berhasil} {tt('status berhasil diperbarui')}
+                </p>
+                {hasilUpdate.gagal.length > 0 ? (
+                  <div className="text-destructive">
+                    <p className="font-medium">
+                      {hasilUpdate.gagal.length} {tt('gagal')}:
+                    </p>
+                    <ul className="ml-4 list-disc">
+                      {hasilUpdate.gagal.map((g) => (
+                        <li key={g.nomor}>
+                          {g.nomor}: {g.pesan}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div className="flex justify-end p-3">
+              <Button onClick={perbaruiStatus} disabled={memprosesUpdate || dicentangUpdate.size === 0}>
+                {memprosesUpdate ? <Spinner /> : null}
+                {tt('Perbarui')} {dicentangUpdate.size} {tt('Status')}
               </Button>
             </div>
           </CardContent>

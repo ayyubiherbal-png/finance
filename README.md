@@ -20,11 +20,13 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0022_status_platform_impor.sql`** — dibutuhkan
-> supaya kolom "Status Marketplace" di Faktur Penjualan berfungsi.
-> (0020 dan 0021 sudah dijalankan sebelumnya.) Sebelum dijalankan,
-> halaman Faktur Penjualan akan error "column
-> pesanan_marketplace_impor_1.status_platform does not exist".
+> ⏳ **Belum dijalankan: `0023_perbarui_status_impor.sql`** — dibutuhkan
+> supaya tombol "Perbarui Status" di halaman Impor Pesanan berfungsi
+> (fitur: upload ulang file yang statusnya berubah, mis. "Dikirim" jadi
+> "Selesai", akan MEMPERBARUI status yang tersimpan & menandai Lunas,
+> bukan cuma ditolak dobel). (0020, 0021, 0022 sudah dijalankan
+> sebelumnya.) Sebelum dijalankan, tombol itu akan error "function
+> perbarui_status_impor_marketplace... tidak ditemukan".
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
 Editor Supabase, dan setiap file aman dijalankan berkali-kali
@@ -69,6 +71,7 @@ supabase/migrations/0019_crm_segmentasi_pelanggan.sql
 supabase/migrations/0020_penjualan_cepat.sql
 supabase/migrations/0021_impor_pesanan_marketplace.sql
 supabase/migrations/0022_status_platform_impor.sql
+supabase/migrations/0023_perbarui_status_impor.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan
