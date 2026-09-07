@@ -15,6 +15,11 @@ export type Bahasa = 'id' | 'en'
  */
 const KAMUS = {
   // ---------- Sidebar: grup menu ----------
+  // 'grup.*' dipakai dua peran sekaligus sejak menu digabung (2026-09-07):
+  // sebagai judul grup di sidebar DAN sebagai nama menu gabungannya
+  // (mis. "Penjualan" = menu yang berisi tab Sales Order, Surat Jalan, dst).
+  'grup.menu': { id: 'Menu', en: 'Menu' },
+  'grup.lainnya': { id: 'Lainnya', en: 'General' },
   'grup.ringkasan': { id: 'Ringkasan', en: 'Overview' },
   'grup.penjualan': { id: 'Penjualan', en: 'Sales' },
   'grup.pembelian': { id: 'Pembelian', en: 'Purchasing' },

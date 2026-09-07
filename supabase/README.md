@@ -432,6 +432,46 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Menu 25 -> 9: halaman sealur digabung jadi tab (2026-09-07, murni
+frontend).** User: "sebelum deploy ada solusi buat ini agar tidak scroll
+terlalu panjang?" -- sidebar punya 25 menu dalam 8 grup, butuh ~1.100px
+tinggi sementara layar laptop cuma menyediakan ~750px. Diberikan 4 opsi
+(grup dilipat / ciut jadi ikon / rapatkan saja / kurangi jumlah menu),
+user memilih yang paling besar: **kurangi jumlah menu**.
+
+Sekarang jadi 9 menu: Dasbor, Penjualan Cepat, Penjualan, Pembelian,
+Inventori, Kas & Bank, CRM, Master, Laporan. Halaman yang sealur jadi
+TAB di dalamnya (mis. menu "Penjualan" berisi tab Sales Order / Surat
+Jalan / Faktur / Penerimaan Kas / Retur).
+
+Keputusan teknis penting: **URL tiap halaman TIDAK diubah sama sekali.**
+Alternatifnya adalah menyarangkan rute (mis. `/penjualan/sales-order`),
+tapi itu berarti membongkar ~40 file -- setiap tautan internal, tombol
+"Kembali" di form, tautan dari kartu Dasbor & dropdown notifikasi, dan
+halaman cetak. Terlalu berisiko untuk keuntungan yang murni tampilan.
+Yang dilakukan: tab bar dirender di `Layout.tsx` berdasarkan rute yang
+sedang aktif, jadi **22 file halaman tidak disentuh sama sekali** dan
+tiap halaman tetap punya alamatnya sendiri (bisa di-bookmark, tombol
+back browser tetap wajar).
+
+Detail lain:
+- Tab cuma muncul di halaman DAFTAR (rute persis sama), bukan di halaman
+  detail/form seperti `/sales-order/123` -- di sana sudah ada tombol
+  Kembali dan judul dokumennya sendiri.
+- Menu aktif dicocokkan ke SEMUA tab di dalamnya (termasuk halaman
+  detailnya), jadi buka `/surat-jalan/123` tetap menyorot menu
+  "Penjualan".
+- Tujuan klik menu = tab pertama yang boleh dilihat perannya. Sales yang
+  tidak boleh lihat Omzet mendarat langsung di Piutang saat klik
+  "Laporan", bukan ke halaman kosong.
+- Ikon tiap menu sekarang unik. Sebelumnya banyak yang kembar (4 menu
+  pakai ikon grafik, 3 pakai ikon gudang, 2 pakai dompet) -- tidak
+  masalah waktu ada tulisannya, tapi jadi masalah kalau nanti mau
+  dibuat mode ikon saja.
+
+Terukur di browser: menu tidak perlu discroll lagi, bahkan di viewport
+pendek 660px sekalipun.
+
 **Font sungguhan dimuat + cursor:pointer di semua elemen klik (2026-09-07,
 murni frontend).** User kirim crop sidebar referensi: "yang ini belum di
 saman dan cursornya juga... Typografinya belum di samakan." Ditemukan

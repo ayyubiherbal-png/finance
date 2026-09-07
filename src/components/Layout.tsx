@@ -1,19 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   LayoutDashboard,
-  Package,
-  Users,
-  Truck,
   ShoppingCart,
-  Receipt,
-  Wallet,
   Warehouse,
   BarChart3,
   Building2,
-  Undo2,
-  ClipboardEdit,
   Landmark,
   HeartHandshake,
   Zap,
@@ -21,6 +14,7 @@ import {
   Search,
   Bell,
   Boxes,
+  Wallet,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -30,11 +24,21 @@ import type { OpsiCombobox } from '@/components/Combobox'
 import { cn } from '@/lib/utils'
 import type { PeranPengguna } from '@/types/db'
 
-interface MenuItem {
+/** Satu halaman. Kalau satu menu punya >1 tab, tab-nya muncul di atas isi halaman. */
+interface Tab {
   ke: string
   label: KunciTerjemahan
-  ikon: typeof Package
   peran?: PeranPengguna[]
+}
+
+interface MenuItem {
+  label: KunciTerjemahan
+  ikon: typeof Boxes
+  /**
+   * Halaman-halaman yang tergabung dalam menu ini. Yang PERTAMA (yang boleh
+   * dilihat perannya) jadi tujuan saat menunya diklik.
+   */
+  tab: Tab[]
 }
 
 interface Grup {
@@ -42,76 +46,112 @@ interface Grup {
   item: MenuItem[]
 }
 
+/**
+ * Menu digabung dari 25 entri jadi 9 (2026-09-07). Sebelumnya tiap halaman
+ * punya barisnya sendiri di sidebar -- total butuh ~1.100px tinggi, sementara
+ * layar laptop cuma menyediakan ~750px, jadi harus discroll panjang.
+ *
+ * Sekarang halaman yang sealur digabung jadi TAB di dalam satu menu (mis.
+ * Sales Order / Surat Jalan / Faktur / Penerimaan Kas / Retur ada di bawah
+ * menu "Penjualan"). URL tiap halaman SENGAJA tidak diubah sama sekali --
+ * semua tautan internal, tombol "Kembali", dan halaman cetak tetap jalan;
+ * tab-nya dirender di Layout berdasarkan rute yang sedang aktif.
+ */
 const MENU: Grup[] = [
   {
-    judul: 'grup.ringkasan',
-    item: [{ ke: '/', label: 'menu.dasbor', ikon: LayoutDashboard }],
-  },
-  {
-    judul: 'grup.penjualan',
+    judul: 'grup.menu',
     item: [
-      { ke: '/penjualan-cepat', label: 'menu.penjualanCepat', ikon: Zap },
-      { ke: '/sales-order', label: 'menu.salesOrder', ikon: ShoppingCart },
-      { ke: '/surat-jalan', label: 'menu.suratJalan', ikon: Truck },
-      { ke: '/faktur-penjualan', label: 'menu.fakturPenjualan', ikon: Receipt },
-      { ke: '/penerimaan-kas', label: 'menu.penerimaanKas', ikon: Wallet },
-      { ke: '/retur-penjualan', label: 'menu.returPenjualan', ikon: Undo2 },
+      { label: 'menu.dasbor', ikon: LayoutDashboard, tab: [{ ke: '/', label: 'menu.dasbor' }] },
+      { label: 'menu.penjualanCepat', ikon: Zap, tab: [{ ke: '/penjualan-cepat', label: 'menu.penjualanCepat' }] },
+      {
+        label: 'grup.penjualan',
+        ikon: ShoppingCart,
+        tab: [
+          { ke: '/sales-order', label: 'menu.salesOrder' },
+          { ke: '/surat-jalan', label: 'menu.suratJalan' },
+          { ke: '/faktur-penjualan', label: 'menu.fakturPenjualan' },
+          { ke: '/penerimaan-kas', label: 'menu.penerimaanKas' },
+          { ke: '/retur-penjualan', label: 'menu.returPenjualan' },
+        ],
+      },
+      {
+        label: 'grup.pembelian',
+        ikon: Building2,
+        tab: [
+          { ke: '/purchase-order', label: 'menu.purchaseOrder' },
+          { ke: '/penerimaan-barang', label: 'menu.penerimaanBarang' },
+          { ke: '/faktur-pembelian', label: 'menu.fakturPembelian' },
+          { ke: '/pembayaran-supplier', label: 'menu.pembayaranSupplier' },
+          { ke: '/retur-pembelian', label: 'menu.returPembelian' },
+        ],
+      },
+      {
+        label: 'grup.inventori',
+        ikon: Warehouse,
+        tab: [
+          { ke: '/stok', label: 'menu.stok' },
+          { ke: '/kartu-stok', label: 'menu.kartuStok' },
+          { ke: '/penyesuaian-stok', label: 'menu.penyesuaianStok' },
+        ],
+      },
+      {
+        label: 'grup.kasBank',
+        ikon: Landmark,
+        tab: [
+          { ke: '/kas-bank', label: 'menu.akunKasBank' },
+          { ke: '/kartu-kas-bank', label: 'menu.kartuKasBank' },
+        ],
+      },
     ],
   },
   {
-    judul: 'grup.pembelian',
+    judul: 'grup.lainnya',
     item: [
-      { ke: '/purchase-order', label: 'menu.purchaseOrder', ikon: ShoppingCart },
-      { ke: '/penerimaan-barang', label: 'menu.penerimaanBarang', ikon: Warehouse },
-      { ke: '/faktur-pembelian', label: 'menu.fakturPembelian', ikon: Receipt },
-      { ke: '/pembayaran-supplier', label: 'menu.pembayaranSupplier', ikon: Wallet },
-      { ke: '/retur-pembelian', label: 'menu.returPembelian', ikon: Undo2 },
-    ],
-  },
-  {
-    judul: 'grup.kasBank',
-    item: [
-      { ke: '/kas-bank', label: 'menu.akunKasBank', ikon: Landmark },
-      { ke: '/kartu-kas-bank', label: 'menu.kartuKasBank', ikon: BarChart3 },
-    ],
-  },
-  {
-    judul: 'grup.inventori',
-    item: [
-      { ke: '/stok', label: 'menu.stok', ikon: Warehouse },
-      { ke: '/kartu-stok', label: 'menu.kartuStok', ikon: BarChart3 },
-      { ke: '/penyesuaian-stok', label: 'menu.penyesuaianStok', ikon: ClipboardEdit },
-    ],
-  },
-  {
-    judul: 'grup.crm',
-    item: [{ ke: '/crm', label: 'menu.segmenPelanggan', ikon: HeartHandshake }],
-  },
-  {
-    judul: 'grup.master',
-    item: [
-      { ke: '/produk', label: 'menu.produk', ikon: Package },
-      { ke: '/pelanggan', label: 'menu.pelanggan', ikon: Users },
-      { ke: '/supplier', label: 'menu.supplier', ikon: Building2, peran: ['owner', 'admin'] },
-      { ke: '/gudang', label: 'menu.gudang', ikon: Warehouse, peran: ['owner', 'admin'] },
-    ],
-  },
-  {
-    judul: 'grup.laporan',
-    item: [
-      { ke: '/laporan/omzet', label: 'menu.omzet', ikon: BarChart3, peran: ['owner', 'admin'] },
-      { ke: '/laporan/piutang', label: 'menu.piutang', ikon: BarChart3 },
-      { ke: '/laporan/laba', label: 'menu.labaKotor', ikon: BarChart3, peran: ['owner', 'admin'] },
+      { label: 'grup.crm', ikon: HeartHandshake, tab: [{ ke: '/crm', label: 'menu.segmenPelanggan' }] },
+      {
+        label: 'grup.master',
+        ikon: Boxes,
+        tab: [
+          { ke: '/produk', label: 'menu.produk' },
+          { ke: '/pelanggan', label: 'menu.pelanggan' },
+          { ke: '/supplier', label: 'menu.supplier', peran: ['owner', 'admin'] },
+          { ke: '/gudang', label: 'menu.gudang', peran: ['owner', 'admin'] },
+        ],
+      },
+      {
+        label: 'grup.laporan',
+        ikon: BarChart3,
+        tab: [
+          { ke: '/laporan/omzet', label: 'menu.omzet', peran: ['owner', 'admin'] },
+          { ke: '/laporan/piutang', label: 'menu.piutang' },
+          { ke: '/laporan/laba', label: 'menu.labaKotor', peran: ['owner', 'admin'] },
+        ],
+      },
     ],
   },
 ]
 
+/** Rute ini termasuk menu tsb? Dicocokkan juga ke halaman detailnya (mis. /sales-order/123). */
+function didalamTab(pathname: string, t: Tab) {
+  return t.ke === '/' ? pathname === '/' : pathname === t.ke || pathname.startsWith(`${t.ke}/`)
+}
+
 export function Layout() {
   const { profil, keluar } = useAuth()
   const { t } = useI18n()
+  const { pathname } = useLocation()
 
-  const bolehLihat = (item: MenuItem) =>
-    !item.peran || (profil?.peran ? item.peran.includes(profil.peran) : false)
+  const bolehLihat = (x: { peran?: PeranPengguna[] }) =>
+    !x.peran || (profil?.peran ? x.peran.includes(profil.peran) : false)
+
+  /** Tab yang boleh dilihat peran ini -- menu tanpa tab tersisa disembunyikan. */
+  const tabTampil = (m: MenuItem) => m.tab.filter(bolehLihat)
+
+  // Tab bar cuma muncul di halaman DAFTAR (rute persis sama), bukan di halaman
+  // detail/form seperti /sales-order/123 -- di sana sudah ada tombol Kembali
+  // dan judul dokumennya sendiri, tab malah bikin ramai.
+  const seksiAktif = MENU.flatMap((g) => g.item).find((m) => m.tab.some((x) => x.ke === pathname))
+  const tabAktif = seksiAktif ? tabTampil(seksiAktif) : []
 
   return (
     // Sidebar & topbar sengaja jadi PANEL MENGAMBANG (kartu putih membulat
@@ -127,7 +167,7 @@ export function Layout() {
 
         <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-3">
           {MENU.map((grup) => {
-            const item = grup.item.filter(bolehLihat)
+            const item = grup.item.filter((m) => tabTampil(m).length > 0)
             if (item.length === 0) return null
 
             return (
@@ -136,25 +176,29 @@ export function Layout() {
                   {t(grup.judul)}
                 </p>
                 <ul className="space-y-0.5">
-                  {item.map((m) => (
-                    <li key={m.ke}>
-                      <NavLink
-                        to={m.ke}
-                        end={m.ke === '/'}
-                        className={({ isActive }) =>
-                          cn(
+                  {item.map((m) => {
+                    const tab = tabTampil(m)
+                    // Tujuan klik = tab pertama yang boleh dilihat perannya
+                    // (mis. sales yang tidak boleh lihat Omzet langsung mendarat di Piutang).
+                    const tujuan = tab[0]!.ke
+                    const aktif = m.tab.some((x) => didalamTab(pathname, x))
+                    return (
+                      <li key={m.label}>
+                        <NavLink
+                          to={tujuan}
+                          className={cn(
                             'flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors',
-                            isActive
+                            aktif
                               ? 'bg-primary font-medium text-primary-foreground shadow-sm'
                               : 'text-foreground/70 hover:bg-accent',
-                          )
-                        }
-                      >
-                        <m.ikon className="h-4 w-4 shrink-0" />
-                        {t(m.label)}
-                      </NavLink>
-                    </li>
-                  ))}
+                          )}
+                        >
+                          <m.ikon className="h-4 w-4 shrink-0" />
+                          {t(m.label)}
+                        </NavLink>
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
             )
@@ -166,10 +210,43 @@ export function Layout() {
         <TopBar nama={profil?.nama ?? '...'} peran={profil?.peran ?? ''} keluar={keluar} />
 
         <main className="min-w-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-7xl space-y-4">
+            {tabAktif.length > 1 ? <TabSeksi tab={tabAktif} pathname={pathname} /> : null}
             <Outlet />
           </div>
         </main>
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------ Tab seksi */
+
+/**
+ * Tab penukar halaman dalam satu menu (mis. Sales Order <-> Surat Jalan <->
+ * Faktur). Sengaja NavLink biasa ke URL yang sudah ada, bukan state internal,
+ * supaya tiap halaman tetap punya alamatnya sendiri (bisa di-bookmark, tombol
+ * back browser tetap wajar, dan tautan dari Dasbor/notifikasi tetap valid).
+ */
+function TabSeksi({ tab, pathname }: { tab: Tab[]; pathname: string }) {
+  const { t } = useI18n()
+  return (
+    <div className="-mx-1 overflow-x-auto px-1 pb-0.5">
+      <div className="inline-flex gap-1 rounded-full bg-card p-1 shadow-[0_2px_24px_-8px_rgba(0,0,0,0.12)]">
+        {tab.map((x) => (
+          <NavLink
+            key={x.ke}
+            to={x.ke}
+            className={cn(
+              'whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm transition-colors',
+              pathname === x.ke
+                ? 'bg-primary font-medium text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {t(x.label)}
+          </NavLink>
+        ))}
       </div>
     </div>
   )
