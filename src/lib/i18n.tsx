@@ -465,8 +465,8 @@ const TEKS: Record<string, string> = {
   'Status tidak diizinkan': 'Status not allowed',
   'Status di File': 'Status in file',
   'Lolos cek': 'Checks passed',
-  'Otomatis tercentang kalau kolom "Status di File" mengandung kata:':
-    'Auto-checked when the "Status in file" column contains the word:',
+  'Otomatis tercentang kalau kolom "Status di File" sama persis dengan:':
+    'Auto-checked when the "Status in file" column exactly matches:',
   'Selain itu (mis. "Ready to Ship"/masih diproses/dikemas) sengaja TIDAK tercentang -- barangnya belum tentu keluar gudang. Centang manual kalau Anda yakin.':
     'Anything else (e.g. "Ready to Ship"/still processing/packing) is deliberately left unchecked -- the goods may not have left the warehouse yet. Check it manually if you\'re sure.',
   'pesanan berhasil diimpor': 'orders imported successfully',

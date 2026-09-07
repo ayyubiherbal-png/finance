@@ -439,7 +439,7 @@ export function ImporPesanan() {
               4. {tt('Pratinjau & Proses')} ({dicentang.size}/{pesanan.length} {tt('dipilih')})
             </CardTitle>
             <p className="text-xs text-muted-foreground">
-              {tt('Otomatis tercentang kalau kolom "Status di File" mengandung kata:')}{' '}
+              {tt('Otomatis tercentang kalau kolom "Status di File" sama persis dengan:')}{' '}
               <span className="font-medium text-foreground">{KATA_STATUS_AMAN.join(', ')}</span>.{' '}
               {tt('Selain itu (mis. "Ready to Ship"/masih diproses/dikemas) sengaja TIDAK tercentang -- barangnya belum tentu keluar gudang. Centang manual kalau Anda yakin.')}
             </p>

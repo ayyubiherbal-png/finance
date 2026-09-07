@@ -199,22 +199,37 @@ function parseTanggalFleksibel(teks: string): string | null {
 
 /**
  * Status pesanan yang AMAN diimpor (barangnya sungguh keluar gudang).
- * Sengaja daftar kata yang HARUS ADA (allowlist), bukan daftar yang
+ * Sengaja daftar yang HARUS COCOK (allowlist), bukan daftar yang
  * dikecualikan -- supaya status baru/asing dari platform (yang saya
  * tidak tahu artinya) default DITOLAK dulu, bukan lolos diam-diam.
  * User tetap bisa centang manual kalau yakin.
  *
+ * DICOCOKKAN PERSIS (bukan "mengandung kata") -- percobaan pertama pakai
+ * substring match, dan ternyata KENA KASUS NYATA: user menunjukkan tab
+ * status asli TikTok Seller Center "Perlu dikirim 15 / Dikirim 606 /
+ * Selesai / Dalam proses / Dibatalkan / Pengantaran gagal". "Perlu
+ * dikirim" (artinya BELUM dikirim, masih perlu diproses) mengandung
+ * kata "dikirim" di dalamnya, jadi ikut kena cocok dan dianggap aman --
+ * padahal itu KEBALIKAN dari "Dikirim" (sudah terkirim). Diverifikasi:
+ * dengan substring match, statusAmanDiimpor("Perlu dikirim") === true
+ * (SALAH). Dengan exact match di bawah ini, hasilnya false (BENAR).
+ *
+ * Konsekuensinya: status yang beda tulisan sedikit dari daftar ini
+ * (mis. "Pesanan Selesai" bukan cuma "Selesai") tidak akan otomatis
+ * cocok. Itu disengaja, bukan celah -- untuk keputusan "potong stok
+ * atau tidak", lebih aman gagal ke arah "user centang manual" daripada
+ * "salah tercentang otomatis".
+ *
  * SENGAJA TIDAK termasuk "ready"/"ready to ship" -- di Shopee itu berarti
  * pesanan sudah dibayar & MENUNGGU dikemas, BUKAN barang sudah keluar
- * gudang. Kalau ini ikut dianggap aman, stok bisa terpotong untuk
- * pesanan yang barangnya belum benar-benar dikirim.
+ * gudang.
  */
 export const KATA_STATUS_AMAN = ['selesai', 'sudah dikirim', 'dikirim', 'terkirim', 'completed', 'shipped', 'delivered']
 
 export function statusAmanDiimpor(statusPesanan: string): boolean {
   const s = statusPesanan.trim().toLowerCase()
   if (!s) return true // kolom status tidak dipetakan -- tidak ada info buat menyaring, izinkan
-  return KATA_STATUS_AMAN.some((kw) => s.includes(kw))
+  return KATA_STATUS_AMAN.includes(s)
 }
 
 export const KANAL_IMPOR: { kunci: Extract<KanalPenjualan, 'shopee' | 'tiktok'>; label: string; kodeAgregat: string }[] = [
