@@ -20,13 +20,11 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0023_perbarui_status_impor.sql`** — dibutuhkan
-> supaya tombol "Perbarui Status" di halaman Impor Pesanan berfungsi
-> (fitur: upload ulang file yang statusnya berubah, mis. "Dikirim" jadi
-> "Selesai", akan MEMPERBARUI status yang tersimpan & menandai Lunas,
-> bukan cuma ditolak dobel). (0020, 0021, 0022 sudah dijalankan
-> sebelumnya.) Sebelum dijalankan, tombol itu akan error "function
-> perbarui_status_impor_marketplace... tidak ditemukan".
+> ✅ Migrasi 0020-0024 terkonfirmasi SUDAH ada di database live (dicek
+> langsung lewat query, 2026-09-08) -- termasuk `0024_pembeli_
+> marketplace.sql` yang baru ditulis di sesi ini. Kalau ternyata BELUM
+> pernah dijalankan manual, jalankan `0024_pembeli_marketplace.sql`
+> untuk berjaga-jaga (aman diulang, cuma `if not exists`/`or replace`).
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
 Editor Supabase, dan setiap file aman dijalankan berkali-kali
@@ -72,6 +70,7 @@ supabase/migrations/0020_penjualan_cepat.sql
 supabase/migrations/0021_impor_pesanan_marketplace.sql
 supabase/migrations/0022_status_platform_impor.sql
 supabase/migrations/0023_perbarui_status_impor.sql
+supabase/migrations/0024_pembeli_marketplace.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

@@ -373,6 +373,21 @@ export interface VPelangganRingkas {
   alamat_lengkap: string | null
 }
 
+export interface PembeliMarketplace {
+  id: string
+  kanal: Extract<KanalPenjualan, 'shopee' | 'tiktok'>
+  telepon: string
+  nama: string | null
+  alamat: string | null
+  diedit_manual: boolean
+  jumlah_pesanan: number
+  total_belanja: number
+  pesanan_terakhir: string | null
+  catatan: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface VLabaProduk {
   produk_id: string
   kode_produk: string

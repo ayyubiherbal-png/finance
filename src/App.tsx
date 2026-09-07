@@ -11,6 +11,7 @@ import { Produk } from '@/pages/Produk'
 import { ProdukForm } from '@/pages/ProdukForm'
 import { Pelanggan } from '@/pages/Pelanggan'
 import { PelangganForm } from '@/pages/PelangganForm'
+import { PembeliMarketplace } from '@/pages/PembeliMarketplace'
 import { Supplier } from '@/pages/Supplier'
 import { SupplierForm } from '@/pages/SupplierForm'
 import { Gudang } from '@/pages/Gudang'
@@ -87,6 +88,7 @@ function Rute() {
         <Route path="produk/:id" element={<ProdukForm />} />
         <Route path="pelanggan" element={<Pelanggan />} />
         <Route path="pelanggan/:id" element={<PelangganForm />} />
+        <Route path="pembeli-marketplace" element={<PembeliMarketplace />} />
         <Route path="supplier" element={<Supplier />} />
         <Route path="supplier/:id" element={<SupplierForm />} />
         <Route path="gudang" element={<Gudang />} />

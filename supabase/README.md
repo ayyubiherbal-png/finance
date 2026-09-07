@@ -432,6 +432,45 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Tab baru "Pembeli Marketplace" -- bisa diedit & dihapus, untuk
+follow-up manual (0024, 2026-09-08).** User tanya kenapa pembeli
+Shopee/TikTok tidak masuk Master Data > Customer -- dijelaskan itu
+disengaja (0015: pesanan marketplace pakai satu akun agregat per
+kanal, individual buyer tidak dibuatkan Customer sendiri, biar Master
+Data tidak penuh pembeli sekali-beli). User lalu minta: "buat saja
+dengan tabnya sendiri. dan buat agar bisa di edit dan di hapus. Karena
+saya berencara mencari datanya dengan cara manual agar bisa di FU."
+
+Tabel baru `pembeli_marketplace` -- BUKAN sumber data transaksi (Sales
+Order/Faktur tetap pakai akun agregat seperti biasa), murni daftar
+kerja/CRM buat follow-up. Kunci alaminya (kanal, telepon) -- BUKAN
+nomor pesanan, karena satu pembeli sering pesan berkali-kali. Nomor
+telepon dinormalisasi lewat fungsi SQL `normalkan_telepon()` (logika
+SAMA seperti `normalkanNomorWa()` di `src/lib/whatsapp.ts` -- format
+bebas jadi "62xxxxxxxxxx"), supaya "0812..." dan "+62 812..." dari
+pesanan berbeda dianggap pembeli yang sama.
+
+Diisi lewat tombol "Sinkronkan dari Pesanan" (fungsi
+`sinkron_pembeli_marketplace()`) yang menarik data dari `sales_order`
+yang SUDAH ada -- bukan otomatis setiap kali `penjualan_cepat` jalan,
+supaya tidak menambah kerumitan fungsi itu (sudah beberapa kali
+diperluas sesi ini). User klik kapan pun mau data terbaru.
+
+Kolom `nama`/`alamat` bisa diedit manual (mis. mengganti username yang
+disensor platform "m***adam_" dengan nama asli hasil riset). Kolom
+`diedit_manual` MELINDUNGI hasil edit itu dari KETIMPA sinkronisasi
+berikutnya -- kalau sudah pernah diedit, sync cuma memperbarui angka
+(jumlah pesanan, total belanja, tanggal terakhir), bukan nama/alamat.
+`telepon` sengaja TIDAK bisa diedit dari UI (itu kunci pencocokan ke
+data asli). Hapus di tab ini cuma menghapus baris follow-up-nya --
+Sales Order/Surat Jalan/Faktur ASLI tidak ikut terhapus.
+
+**Catatan lucu:** migrasi ini (dan 0022/0023 sebelumnya) ternyata SUDAH
+ada di database live begitu dicek langsung lewat query, padahal belum
+sempat dikonfirmasi "sudah dijalankan" oleh user di chat -- kemungkinan
+user menjalankannya sendiri lewat SQL Editor segera setelah filenya
+tersedia, tanpa perlu diminta.
+
 **Impor Pesanan: status yang berubah bisa diperbarui, bukan cuma
 ditolak dobel (0023, 2026-09-08).** User tanya: "kalau misalkan ada
 orderan yang statusnya berubah, apakah akan terupdate otomatis?" --

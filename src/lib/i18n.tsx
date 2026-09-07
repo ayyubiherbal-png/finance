@@ -51,6 +51,7 @@ const KAMUS = {
   'menu.segmenPelanggan': { id: 'Segmen Pelanggan', en: 'Customer Segments' },
   'menu.produk': { id: 'Produk', en: 'Products' },
   'menu.pelanggan': { id: 'Pelanggan', en: 'Customers' },
+  'menu.pembeliMarketplace': { id: 'Pembeli Marketplace', en: 'Marketplace Buyers' },
   'menu.supplier': { id: 'Supplier', en: 'Suppliers' },
   'menu.gudang': { id: 'Gudang', en: 'Warehouse' },
   'menu.omzet': { id: 'Omzet', en: 'Revenue' },

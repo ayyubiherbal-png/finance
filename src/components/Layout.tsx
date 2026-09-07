@@ -116,6 +116,7 @@ const MENU: Grup[] = [
         tab: [
           { ke: '/produk', label: 'menu.produk' },
           { ke: '/pelanggan', label: 'menu.pelanggan' },
+          { ke: '/pembeli-marketplace', label: 'menu.pembeliMarketplace' },
           { ke: '/supplier', label: 'menu.supplier', peran: ['owner', 'admin'] },
           { ke: '/gudang', label: 'menu.gudang', peran: ['owner', 'admin'] },
         ],
