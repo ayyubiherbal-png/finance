@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, angka, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
+import { useI18n } from '@/lib/i18n'
 import { GrafikDonut, GrafikKapsul } from '@/components/Charts'
 import { cn } from '@/lib/utils'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, KondisiKosong, PesanError, Spinner } from '@/components/ui'
@@ -142,6 +143,7 @@ function useRingkasan() {
 }
 
 export function Dashboard() {
+  const { t, bahasa } = useI18n()
   const { data, isLoading, error } = useRingkasan()
 
   if (isLoading) {
@@ -160,46 +162,46 @@ export function Dashboard() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dasbor</h1>
-          <p className="text-sm text-muted-foreground">Ringkasan bisnis 30 hari terakhir</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('dasbor.judul')}</h1>
+          <p className="text-sm text-muted-foreground">{t('dasbor.subjudul')}</p>
         </div>
         <Button variant="pill" size="sm" asChild>
           <Link to="/laporan/omzet">
             <TrendingUp className="h-4 w-4" />
-            Lihat Laporan Omzet
+            {t('dasbor.lihatLaporanOmzet')}
           </Link>
         </Button>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <KartuHero
-          judul="Omzet 30 hari"
+          judul={t('dasbor.omzet30Hari')}
           nilai={rupiah(data.omzet30Hari)}
           ikon={<TrendingUp className="h-4 w-4" />}
           delta={data.deltaOmzetPersen}
           tautan="/laporan/omzet"
         />
         <KartuStat
-          judul="Laba kotor"
+          judul={t('dasbor.labaKotor')}
           nilai={rupiah(data.laba30Hari)}
           warna={AKSEN.biru}
           ikon={<Coins className="h-4 w-4" />}
-          catatan={`Margin ${margin.toFixed(1)}%`}
+          catatan={`${t('dasbor.margin')} ${margin.toFixed(1)}%`}
           tautan="/laporan/laba"
         />
         <KartuStat
-          judul="Nilai persediaan"
+          judul={t('dasbor.nilaiPersediaan')}
           nilai={rupiah(data.nilaiPersediaan)}
           warna={AKSEN.ungu}
           ikon={<Boxes className="h-4 w-4" />}
           tautan="/stok"
         />
         <KartuStat
-          judul="Piutang berjalan"
+          judul={t('dasbor.piutangBerjalan')}
           nilai={rupiah(data.totalPiutang)}
           warna={data.piutangMacet > 0 ? AKSEN.merah : AKSEN.kuning}
           ikon={<Wallet className="h-4 w-4" />}
-          catatan={data.piutangMacet > 0 ? `${rupiah(data.piutangMacet)} lewat 90 hari` : undefined}
+          catatan={data.piutangMacet > 0 ? `${rupiah(data.piutangMacet)} ${t('dasbor.lewat90Hari')}` : undefined}
           bahaya={data.piutangMacet > 0}
           tautan="/laporan/piutang"
         />
@@ -208,7 +210,7 @@ export function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className={cn(GAYA_KARTU, 'lg:col-span-2')}>
           <CardHeader>
-            <CardTitle className="text-base">Tren omzet harian</CardTitle>
+            <CardTitle className="text-base">{t('dasbor.trenOmzetHarian')}</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <GrafikKapsul data={data.trenHarian} />
@@ -217,18 +219,18 @@ export function Dashboard() {
 
         <Card className={GAYA_KARTU}>
           <CardHeader>
-            <CardTitle className="text-base">Margin laba 30 hari</CardTitle>
+            <CardTitle className="text-base">{t('dasbor.marginLaba30Hari')}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-3 pt-0">
             <GrafikDonut persen={margin} warna="hsl(var(--primary))" />
             <div className="flex w-full justify-around text-center text-xs">
               <div>
                 <p className="tabular font-semibold">{rupiah(data.laba30Hari)}</p>
-                <p className="text-muted-foreground">Laba kotor</p>
+                <p className="text-muted-foreground">{t('dasbor.labaKotor')}</p>
               </div>
               <div>
                 <p className="tabular font-semibold">{rupiah(data.omzet30Hari)}</p>
-                <p className="text-muted-foreground">Omzet</p>
+                <p className="text-muted-foreground">{t('dasbor.omzet')}</p>
               </div>
             </div>
           </CardContent>
@@ -240,12 +242,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <CalendarClock className="h-4 w-4 text-muted-foreground" />
-              Jatuh tempo terdekat
+              {t('dasbor.jatuhTempoTerdekat')}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 pb-2">
             {data.jatuhTempo.length === 0 ? (
-              <KondisiKosong pesan="Tidak ada faktur belum lunas." />
+              <KondisiKosong pesan={t('dasbor.tidakAdaFakturBelumLunas')} />
             ) : (
               <div className="divide-y divide-border">
                 {data.jatuhTempo.map((f) => {
@@ -263,7 +265,7 @@ export function Dashboard() {
                       <div className="shrink-0 text-right">
                         <p className="tabular text-sm font-medium">{rupiah(f.sisa)}</p>
                         <p className={cn('text-xs', lewat ? 'font-medium text-destructive' : 'text-muted-foreground')}>
-                          {lewat ? 'Lewat ' : ''}
+                          {lewat ? `${t('dasbor.lewat')} ` : ''}
                           {fmtTanggal(f.jatuh_tempo)}
                         </p>
                       </div>
@@ -279,12 +281,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Users className="h-4 w-4 text-muted-foreground" />
-              Pelanggan teratas
+              {t('dasbor.pelangganTeratas')}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 pb-2">
             {data.pelangganTeratas.length === 0 ? (
-              <KondisiKosong pesan="Belum ada transaksi." />
+              <KondisiKosong pesan={t('dasbor.belumAdaTransaksi')} />
             ) : (
               <div className="divide-y divide-border">
                 {data.pelangganTeratas.map((p) => (
@@ -298,7 +300,9 @@ export function Dashboard() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{p.nama}</p>
-                      <p className="text-xs text-muted-foreground">{p.jumlah_transaksi}x transaksi</p>
+                      <p className="text-xs text-muted-foreground">
+                        {bahasa === 'id' ? `${p.jumlah_transaksi}x transaksi` : `${p.jumlah_transaksi} transactions`}
+                      </p>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">
                       <p className="tabular text-sm font-medium">{rupiah(p.total_belanja)}</p>
@@ -315,12 +319,16 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base text-primary-dark-foreground">
               <Landmark className="h-4 w-4" />
-              Saldo Kas &amp; Bank
+              {t('dasbor.saldoKasBank')}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <p className="tabular text-3xl font-bold">{rupiah(data.totalSaldoKas)}</p>
-            <p className="text-xs text-primary-dark-foreground/60">Total {data.saldoKas.length} akun aktif</p>
+            <p className="text-xs text-primary-dark-foreground/60">
+              {bahasa === 'id'
+                ? `Total ${data.saldoKas.length} akun aktif`
+                : `Total of ${data.saldoKas.length} active accounts`}
+            </p>
             <div className="mt-3 space-y-1.5">
               {data.saldoKas.slice(0, 4).map((a) => (
                 <div key={a.akun_id} className="flex items-center justify-between text-xs">
@@ -333,7 +341,7 @@ export function Dashboard() {
               to="/kas-bank"
               className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition-colors hover:bg-white/25"
             >
-              Lihat semua akun
+              {t('dasbor.lihatSemuaAkun')}
             </Link>
           </CardContent>
         </Card>
@@ -343,12 +351,12 @@ export function Dashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
-            Perlu restock
+            {t('dasbor.perluRestock')}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-2">
           {data.perluRestock.length === 0 ? (
-            <KondisiKosong pesan="Semua produk di atas stok minimum." />
+            <KondisiKosong pesan={t('dasbor.semuaProdukAmanStok')} />
           ) : (
             <div className="divide-y divide-border">
               {data.perluRestock.map((p) => {
@@ -375,7 +383,7 @@ export function Dashboard() {
                       {angka(p.qty)} / min. {angka(p.stok_min)}
                     </div>
                     <Badge variant={habis ? 'bahaya' : 'peringatan'} className="shrink-0">
-                      {habis ? 'Habis' : 'Menipis'}
+                      {habis ? t('dasbor.habis') : t('dasbor.menipis')}
                     </Badge>
                   </Link>
                 )
@@ -402,6 +410,7 @@ function KartuHero({
   delta?: number | null
   tautan: string
 }) {
+  const { t } = useI18n()
   return (
     <Card className={cn(GAYA_KARTU, 'relative overflow-hidden border-none bg-gradient-to-br from-primary to-primary-dark text-primary-dark-foreground')}>
       <CardContent className="p-4">
@@ -418,7 +427,7 @@ function KartuHero({
         {delta !== undefined && delta !== null ? (
           <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium">
             {delta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-            {Math.abs(delta).toFixed(1)}% vs 30 hari sebelumnya
+            {Math.abs(delta).toFixed(1)}% {t('dasbor.vs30HariSebelumnya')}
           </span>
         ) : null}
       </CardContent>
