@@ -250,6 +250,26 @@ export function statusSudahFinal(statusPesanan: string): boolean {
   return KATA_STATUS_SELESAI.includes(statusPesanan.trim().toLowerCase())
 }
 
+/** Status yang jelas berarti pesanan batal/gagal -- dipakai cuma untuk mewarnai badge. */
+const KATA_STATUS_BATAL = ['dibatalkan', 'batal', 'cancelled', 'canceled', 'pengantaran gagal', 'gagal terkirim', 'pengembalian', 'pengembalian/pembatalan']
+
+/**
+ * Warna Badge untuk MENAMPILKAN teks status ASLI dari platform apa
+ * adanya -- bukan bikin nama status baru. User: "kenapa statusnya
+ * tidak mengikuti yang ada di marketplace saja... kalau ikut status
+ * yang di MP kita jadi tahu paket ini statusnya apa." Jadi tulisannya
+ * tetap 100% dari file (mis. "Perlu Dikirim", "Selesai"), fungsi ini
+ * cuma menentukan warnanya supaya gampang di-scan matanya.
+ */
+export function variantStatusPlatform(statusPesanan: string): 'sukses' | 'default' | 'peringatan' | 'bahaya' | 'netral' {
+  const s = statusPesanan.trim().toLowerCase()
+  if (!s) return 'netral'
+  if (KATA_STATUS_SELESAI.includes(s)) return 'sukses'
+  if (KATA_STATUS_AMAN.includes(s)) return 'default'
+  if (KATA_STATUS_BATAL.includes(s)) return 'bahaya'
+  return 'peringatan' // status lain (mis. "Perlu Dikirim", "Dalam proses") -- belum final, bukan berarti salah
+}
+
 export const KANAL_IMPOR: { kunci: Extract<KanalPenjualan, 'shopee' | 'tiktok'>; label: string; kodeAgregat: string }[] = [
   { kunci: 'shopee', label: 'Shopee', kodeAgregat: 'SHOPEE' },
   { kunci: 'tiktok', label: 'TikTok Shop', kodeAgregat: 'TIKTOK' },

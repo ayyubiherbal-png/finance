@@ -35,6 +35,7 @@ import {
   statusAmanDiimpor,
   statusSudahFinal,
   tebakPemetaan,
+  variantStatusPlatform,
   type BarisMentah,
   type PemetaanKolom,
   type PesananDikelompokkan,
@@ -265,6 +266,7 @@ export function ImporPesanan() {
           p_alamat_kirim: p.alamatKirim || null,
           p_catatan: `Impor ${KANAL_IMPOR.find((k) => k.kunci === kanal)!.label} -- ${namaFile}${p.ekspedisi ? ` -- ${p.ekspedisi}` : ''}`,
           p_nomor_pesanan_platform: p.nomorPesanan,
+          p_status_platform: p.statusPesanan || null,
         })
         if (error) throw error
         berhasil++
@@ -463,12 +465,12 @@ export function ImporPesanan() {
               4. {tt('Pratinjau & Proses')} ({dicentang.size}/{pesanan.length} {tt('dipilih')})
             </CardTitle>
             <p className="text-xs text-muted-foreground">
-              {tt('Otomatis tercentang kalau kolom "Status di File" sama persis dengan:')}{' '}
+              {tt('Status di kolom "Status" adalah status ASLI dari marketplace, apa adanya -- bukan istilah aplikasi ini. Otomatis tercentang kalau statusnya sama persis dengan:')}{' '}
               <span className="font-medium text-foreground">{KATA_STATUS_AMAN.join(', ')}</span>.{' '}
               {tt('Selain itu (mis. "Ready to Ship"/masih diproses/dikemas) sengaja TIDAK tercentang -- barangnya belum tentu keluar gudang. Centang manual kalau Anda yakin.')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {tt('Yang statusnya persis "Selesai"/"Completed" (sudah lewat masa retur) otomatis ditandai Lunas. Selain itu tetap jadi piutang, dilunaskan manual lewat Penerimaan Kas saat dana marketplace cair.')}
+              {tt('Yang statusnya persis "Selesai"/"Completed" (sudah lewat masa retur) otomatis ditandai Lunas. Selain itu tetap jadi piutang, dilunaskan manual lewat Penerimaan Kas saat dana marketplace cair. Status ini ikut tersimpan dan bisa dilihat lagi nanti di Faktur-nya.')}
             </p>
           </CardHeader>
           {jumlahAkanLunas > 0 ? (
@@ -503,7 +505,7 @@ export function ImporPesanan() {
                     <Th>{tt('Tanggal')}</Th>
                     <Th>{tt('Pembeli')}</Th>
                     <Th className="text-right">Total</Th>
-                    <Th>{tt('Status di File')}</Th>
+                    <Th>{tt('Status')}</Th>
                     <Th>{tt('Keterangan')}</Th>
                   </Tr>
                 </Thead>
@@ -527,25 +529,27 @@ export function ImporPesanan() {
                         <Td className="text-muted-foreground">{p.tanggal ? fmtTanggal(p.tanggal) : '-'}</Td>
                         <Td>{p.namaPembeli || '-'}</Td>
                         <Td className="tabular text-right">{rupiah(p.total)}</Td>
-                        {/* Teks ASLI dari kolom Status Pesanan di file -- apa adanya, tidak
-                            diterjemahkan/diganti, supaya tidak tertukar dengan label verdict
-                            aplikasi di kolom sebelah (lihat catatan `KATA_STATUS_AMAN`). */}
-                        <Td className="text-muted-foreground">{p.statusPesanan || '-'}</Td>
+                        {/* Badge menampilkan teks ASLI dari kolom Status Pesanan di file, apa
+                            adanya -- bukan istilah/verdict buatan aplikasi. Warnanya saja yang
+                            ditentukan aplikasi (lihat `variantStatusPlatform`), supaya user
+                            selalu tahu status paketnya persis seperti di marketplace. */}
                         <Td>
-                          <div className="flex flex-wrap items-center gap-1">
-                            {duplikat ? (
-                              <Badge variant="netral">{tt('Sudah pernah diimpor')}</Badge>
-                            ) : !siap ? (
-                              <Badge variant="bahaya">{tt('Ada produk belum cocok')}</Badge>
-                            ) : !statusAman ? (
-                              <Badge variant="peringatan">{tt('Status tidak diizinkan')}</Badge>
-                            ) : (
-                              <Badge variant="sukses">{tt('Lolos cek')}</Badge>
-                            )}
-                            {statusAman && statusSudahFinal(p.statusPesanan) ? (
-                              <Badge variant="default">{tt('-> Lunas')}</Badge>
-                            ) : null}
-                          </div>
+                          {p.statusPesanan ? (
+                            <Badge variant={variantStatusPlatform(p.statusPesanan)}>{p.statusPesanan}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </Td>
+                        <Td className="text-xs text-muted-foreground">
+                          {duplikat
+                            ? tt('Sudah pernah diimpor, dilewati')
+                            : !siap
+                              ? tt('Ada produk belum cocok, dilewati')
+                              : !statusAman
+                                ? tt('Status ini tidak diimpor otomatis -- centang manual kalau yakin')
+                                : statusSudahFinal(p.statusPesanan)
+                                  ? tt('Diimpor & langsung Lunas')
+                                  : tt('Diimpor, jadi piutang')}
                         </Td>
                       </Tr>
                     )

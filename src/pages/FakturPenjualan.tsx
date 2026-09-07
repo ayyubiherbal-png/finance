@@ -24,18 +24,23 @@ import {
   Tr,
 } from '@/components/ui'
 import { LABEL_STATUS, VARIAN_STATUS } from '@/pages/SalesOrder'
-import type { StatusBayar, StatusDokumen } from '@/types/db'
+import { variantStatusPlatform } from '@/lib/importPesanan'
+import type { KanalPenjualan, StatusBayar, StatusDokumen } from '@/types/db'
+
+const KANAL_MARKETPLACE: KanalPenjualan[] = ['shopee', 'tiktok']
 
 interface BarisFaktur {
   id: string
   nomor: string
   tanggal: string
   jatuh_tempo: string
+  kanal: KanalPenjualan
   status: StatusDokumen
   status_bayar: StatusBayar
   total: number
   sisa: number
   pelanggan: { nama: string } | null
+  pesanan_marketplace_impor: { status_platform: string | null }[]
 }
 
 const LABEL_BAYAR: Record<StatusBayar, string> = {
@@ -56,7 +61,9 @@ function useDaftarFaktur(cari: string, statusBayar: string, periode: RentangTang
     queryFn: async () => {
       let q = supabase
         .from('faktur_penjualan')
-        .select('id, nomor, tanggal, jatuh_tempo, status, status_bayar, total, sisa, pelanggan:pelanggan_id(nama)')
+        .select(
+          'id, nomor, tanggal, jatuh_tempo, kanal, status, status_bayar, total, sisa, pelanggan:pelanggan_id(nama), pesanan_marketplace_impor(status_platform)',
+        )
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (statusBayar) q = q.eq('status_bayar', statusBayar)
       if (periode.dari) q = q.gte('tanggal', periode.dari)
@@ -131,29 +138,43 @@ export function FakturPenjualan() {
                     <Th className="text-right">Sisa</Th>
                     <Th>Status</Th>
                     <Th>Bayar</Th>
+                    <Th>{tt('Status Marketplace')}</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {data.map((f) => (
-                    <Tr key={f.id}>
-                      <Td>
-                        <Link to={`/faktur-penjualan/${f.id}`} className="font-mono text-xs text-primary hover:underline">
-                          {f.nomor}
-                        </Link>
-                      </Td>
-                      <Td className="text-muted-foreground">{tanggal(f.tanggal)}</Td>
-                      <Td className="font-medium">{f.pelanggan?.nama ?? '-'}</Td>
-                      <Td className="text-muted-foreground">{tanggal(f.jatuh_tempo)}</Td>
-                      <Td className="tabular text-right font-medium">{rupiah(f.total)}</Td>
-                      <Td className="tabular text-right">{f.sisa > 0 ? rupiah(f.sisa) : '-'}</Td>
-                      <Td>
-                        <Badge variant={VARIAN_STATUS[f.status]}>{LABEL_STATUS[f.status]}</Badge>
-                      </Td>
-                      <Td>
-                        <Badge variant={VARIAN_BAYAR[f.status_bayar]}>{LABEL_BAYAR[f.status_bayar]}</Badge>
-                      </Td>
-                    </Tr>
-                  ))}
+                  {data.map((f) => {
+                    // Status ASLI dari Shopee/TikTok saat pesanan ini diimpor -- lihat
+                    // ImporPesanan.tsx. Ditampilkan apa adanya (bukan diterjemahkan jadi
+                    // istilah aplikasi), supaya bisa dilihat lagi kapan pun tanpa buka file.
+                    const statusPlatform = f.pesanan_marketplace_impor?.[0]?.status_platform
+                    return (
+                      <Tr key={f.id}>
+                        <Td>
+                          <Link to={`/faktur-penjualan/${f.id}`} className="font-mono text-xs text-primary hover:underline">
+                            {f.nomor}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{tanggal(f.tanggal)}</Td>
+                        <Td className="font-medium">{f.pelanggan?.nama ?? '-'}</Td>
+                        <Td className="text-muted-foreground">{tanggal(f.jatuh_tempo)}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(f.total)}</Td>
+                        <Td className="tabular text-right">{f.sisa > 0 ? rupiah(f.sisa) : '-'}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_STATUS[f.status]}>{LABEL_STATUS[f.status]}</Badge>
+                        </Td>
+                        <Td>
+                          <Badge variant={VARIAN_BAYAR[f.status_bayar]}>{LABEL_BAYAR[f.status_bayar]}</Badge>
+                        </Td>
+                        <Td>
+                          {KANAL_MARKETPLACE.includes(f.kanal) && statusPlatform ? (
+                            <Badge variant={variantStatusPlatform(statusPlatform)}>{statusPlatform}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </Td>
+                      </Tr>
+                    )
+                  })}
                 </Tbody>
               </Table>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">

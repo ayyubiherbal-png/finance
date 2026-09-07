@@ -432,6 +432,39 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Impor Pesanan: ikut status ASLI marketplace, bukan istilah aplikasi
+sendiri (0021 lanjutan, 2026-09-07).** Setelah fitur "Selesai -> Lunas"
+di bawah selesai, user protes: "kenapa statusnya tidak mengikuti yang
+ada di marketplace saja, dari pada buat versi sendiri malah bingung.
+kalau ikut status yang di MP kita jadi tahu paket ini statusnya apa."
+
+Sebelumnya kolom "Keterangan" di layar pratinjau punya istilah sendiri
+("Lolos cek", "Status tidak diizinkan", badge "-> Lunas") yang berjalan
+BERDAMPINGAN dengan kolom "Status di File" (teks asli platform) --
+dua kosakata soal hal yang sama, membingungkan. Diperbaiki dengan
+prinsip: teks status yang tampil di mana pun HARUS persis kata-kata
+platform (Shopee/TikTok), aplikasi cuma boleh memberi WARNA pada teks
+itu (`variantStatusPlatform` di `importPesanan.ts`) dan kalimat
+penjelas AKIBAT-nya (bukan nama status baru) -- "Diimpor & langsung
+Lunas" / "Diimpor, jadi piutang" / "Status ini tidak diimpor otomatis
+-- centang manual kalau yakin" / "Sudah pernah diimpor, dilewati".
+Logika keamanan di baliknya (`statusAmanDiimpor`/`statusSudahFinal`,
+exact-match allowlist -- lihat catatan bug "Perlu dikirim" di bawah)
+TIDAK diubah, cuma cara MENYAMPAIKANNYA yang dirapikan jadi satu
+kosakata (punya platform), bukan dua yang bersaing.
+
+Supaya "kita jadi tahu paket ini statusnya apa" juga berlaku SETELAH
+diimpor (bukan cuma sekilas di layar pratinjau lalu hilang), kolom
+baru `status_platform text` ditambah ke `pesanan_marketplace_impor`
+(migrasi 0021 -- masih belum dijalankan saat ini ditulis, jadi aman
+diedit langsung, bukan migrasi baru terpisah) dan `penjualan_cepat`
+dapat parameter ke-14 `p_status_platform` yang mengisinya di transaksi
+yang sama saat faktur dibuat. Halaman Faktur Penjualan sekarang punya
+kolom "Status Marketplace" yang menampilkan badge status asli ini
+(join ke `pesanan_marketplace_impor` lewat `faktur_id`) untuk faktur
+berkanal Shopee/TikTok -- jadi statusnya tetap bisa dilihat kapan pun,
+tanpa buka lagi file Excel-nya.
+
 **Impor Pesanan: status "Selesai" langsung ditandai Lunas (2026-09-07,
 murni frontend).** User tanya kenapa faktur hasil impor semuanya
 "Unpaid" -- dijelaskan itu memang sengaja (marketplace mencairkan dana
