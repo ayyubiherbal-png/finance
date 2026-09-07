@@ -6,6 +6,22 @@ import { tanggal as fmtTanggal } from '@/lib/format'
 import { Button, Spinner, PesanError } from '@/components/ui'
 import { NAMA_TOKO, NOMOR_WA_TOKO } from '@/lib/identitasToko'
 
+// Ekspedisi diisi bebas (teks) di form Surat Jalan, jadi dicocokkan by
+// keyword (bukan persis sama) supaya "JNE", "jne reguler", dst. tetap
+// kena. Tambah baris baru di sini kalau ada logo ekspedisi lain nanti.
+const LOGO_EKSPEDISI: { kata: string; src: string }[] = [
+  { kata: 'jne', src: '/ekspedisi/jne.jpg' },
+  { kata: 'j&t', src: '/ekspedisi/jnt.png' },
+  { kata: 'jnt', src: '/ekspedisi/jnt.png' },
+  { kata: 'paxel', src: '/ekspedisi/paxel.svg' },
+]
+
+function cariLogoEkspedisi(nama: string | null): string | null {
+  if (!nama) return null
+  const teks = nama.toLowerCase()
+  return LOGO_EKSPEDISI.find((l) => teks.includes(l.kata))?.src ?? null
+}
+
 interface SJCetakDetail {
   id: string
   nomor: string
@@ -76,6 +92,7 @@ export function SuratJalanCetak() {
   if (!sj) return null
 
   const kontak = sj.pelanggan?.whatsapp || sj.pelanggan?.telepon
+  const logoEkspedisi = cariLogoEkspedisi(sj.ekspedisi)
 
   return (
     <div className="mx-auto min-h-screen bg-white p-4 text-black print:p-0">
@@ -101,10 +118,11 @@ export function SuratJalanCetak() {
           <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-8 w-8 rounded object-cover" />
           <div className="text-right">
             <p className="font-mono text-sm font-bold">{sj.nomor}</p>
-            {/* Belum ada aset logo ekspedisi -- tampil nama ekspedisi dulu
-                sebagai teks. Kirim file logo JNE/J&T/dst. kalau mau
-                diganti jadi gambar logo aslinya. */}
-            <p className="font-semibold uppercase tracking-wide">{sj.ekspedisi || 'Ekspedisi'}</p>
+            {logoEkspedisi ? (
+              <img src={logoEkspedisi} alt={sj.ekspedisi ?? 'Ekspedisi'} className="ml-auto h-6 max-w-[70mm] object-contain" />
+            ) : (
+              <p className="font-semibold uppercase tracking-wide">{sj.ekspedisi || 'Ekspedisi'}</p>
+            )}
             <p className="text-[10px] text-gray-600">{fmtTanggal(sj.tanggal)}</p>
           </div>
         </div>

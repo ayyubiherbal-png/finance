@@ -432,6 +432,23 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Logo ekspedisi asli (JNE/J&T/Paxel) dipasang di label SJ (2026-09-07,
+murni frontend, tanpa migrasi).** User kirim 3 file logo dari
+Downloads (`Logo JNE.jpg`, `Logo JNT.png`, `Logo Paxel.svg`) --
+disalin ke `public/ekspedisi/{jne.jpg,jnt.png,paxel.svg}`. Ketiganya
+sudah berlatar putih/transparan dari sumbernya, jadi TIDAK perlu edit
+gambar apa pun supaya "ikut warna kertas resi" -- otomatis cocok
+begitu ditempel di label yang sudah `bg-white`.
+
+`sj.ekspedisi` adalah teks bebas (diisi manual di form SJ), jadi logo
+dicocokkan lewat keyword-matching (`cariLogoEkspedisi()` di
+`SuratJalanCetak.tsx`, cek `includes()` bukan persis sama) -- "JNE",
+"jne reguler", "J&T", "JNT Express" dst. semua kena. Kalau tidak ada
+yang cocok (ekspedisi lain, mis. SiCepat/AnterAja), tetap fallback ke
+teks nama ekspedisi seperti semula -- tidak ada logo yang hilang
+diam-diam. Tambah logo baru = tambah 1 baris di array
+`LOGO_EKSPEDISI` + taruh file di `public/ekspedisi/`.
+
 **Menu Gudang (master data) dibuat -- ternyata belum pernah ada UI-nya
 sama sekali (2026-09-05).** User tanya "di mana saya bisa memasukkan
 alamat gudang?" setelah fitur alamat-gudang-di-invoice ditambahkan --
