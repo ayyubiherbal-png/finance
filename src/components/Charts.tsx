@@ -140,3 +140,100 @@ export function GrafikArea({
     </div>
   )
 }
+
+interface TitikBatang {
+  label: string
+  nilai: number
+}
+
+/**
+ * Grafik batang untuk perbandingan antar-periode (mis. omzet per bulan/
+ * kuartal/tahun di Laporan Omzet) -- beda dari GrafikArea yang untuk tren
+ * harian kontinu. Label sumbu-X ditipiskan otomatis kalau batangnya banyak
+ * (>12) supaya tidak numpuk.
+ */
+export function GrafikBatang({
+  data,
+  warna = 'hsl(var(--primary))',
+  tinggi = 220,
+}: {
+  data: TitikBatang[]
+  warna?: string
+  tinggi?: number
+}) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null)
+  const lebar = 600
+  const padAtas = 16
+  const padBawah = 24
+
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center text-sm text-muted-foreground" style={{ height: tinggi }}>
+        Belum ada data penjualan.
+      </div>
+    )
+  }
+
+  const nilaiMaks = Math.max(...data.map((d) => d.nilai), 1)
+  const lebarSlot = lebar / data.length
+  const lebarBatang = Math.min(lebarSlot * 0.6, 48)
+  const skalaTinggi = (v: number) => (v / nilaiMaks) * (tinggi - padAtas - padBawah)
+  const langkahLabel = Math.max(1, Math.ceil(data.length / 12))
+
+  const aktif = hoverIdx !== null ? data[hoverIdx] : null
+
+  return (
+    <div className="relative">
+      <svg viewBox={`0 0 ${lebar} ${tinggi}`} preserveAspectRatio="none" className="w-full" style={{ height: tinggi }}>
+        {[0.25, 0.5, 0.75].map((f) => (
+          <line
+            key={f}
+            x1={0}
+            x2={lebar}
+            y1={padAtas + f * (tinggi - padAtas - padBawah)}
+            y2={padAtas + f * (tinggi - padAtas - padBawah)}
+            stroke="hsl(var(--border))"
+            strokeWidth={1}
+          />
+        ))}
+        {data.map((d, i) => {
+          const tinggiBatang = Math.max(skalaTinggi(d.nilai), d.nilai > 0 ? 1 : 0)
+          const x = i * lebarSlot + (lebarSlot - lebarBatang) / 2
+          const y = tinggi - padBawah - tinggiBatang
+          return (
+            <g key={i} onMouseEnter={() => setHoverIdx(i)} onMouseLeave={() => setHoverIdx(null)}>
+              <rect x={i * lebarSlot} y={padAtas} width={lebarSlot} height={tinggi - padAtas - padBawah} fill="transparent" />
+              <rect
+                x={x}
+                y={y}
+                width={lebarBatang}
+                height={tinggiBatang}
+                rx={2}
+                fill={warna}
+                opacity={hoverIdx === null || hoverIdx === i ? 1 : 0.35}
+              />
+              {i % langkahLabel === 0 ? (
+                <text x={i * lebarSlot + lebarSlot / 2} y={tinggi - 8} textAnchor="middle" fontSize={10} fill="hsl(var(--muted-foreground))">
+                  {d.label}
+                </text>
+              ) : null}
+            </g>
+          )
+        })}
+      </svg>
+
+      {aktif ? (
+        <div
+          className="pointer-events-none absolute top-1 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs shadow-md"
+          style={{
+            left: `${((hoverIdx! + 0.5) / data.length) * 100}%`,
+            transform: 'translateX(-50%)',
+          }}
+        >
+          <p className="text-muted-foreground">{aktif.label}</p>
+          <p className="tabular font-semibold">{rupiah(aktif.nilai)}</p>
+        </div>
+      ) : null}
+    </div>
+  )
+}

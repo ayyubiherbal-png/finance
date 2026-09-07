@@ -23,6 +23,7 @@ import { AkunKasBankForm } from '@/pages/AkunKasBankForm'
 import { KartuKasBank } from '@/pages/KartuKasBank'
 import { LaporanPiutang } from '@/pages/LaporanPiutang'
 import { LaporanLaba } from '@/pages/LaporanLaba'
+import { LaporanOmzet } from '@/pages/LaporanOmzet'
 import { SalesOrder } from '@/pages/SalesOrder'
 import { SalesOrderForm } from '@/pages/SalesOrderForm'
 import { PenjualanCepat } from '@/pages/PenjualanCepat'
@@ -99,6 +100,7 @@ function Rute() {
         <Route path="penyesuaian-stok/:id" element={<PenyesuaianStokForm />} />
         <Route path="laporan/piutang" element={<LaporanPiutang />} />
         <Route path="laporan/laba" element={<LaporanLaba />} />
+        <Route path="laporan/omzet" element={<LaporanOmzet />} />
 
         <Route path="penjualan-cepat" element={<PenjualanCepat />} />
         <Route path="sales-order" element={<SalesOrder />} />

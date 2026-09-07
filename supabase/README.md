@@ -432,6 +432,41 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Filter periode di daftar transaksi + Laporan Omzet per
+bulan/kuartal/tahun (2026-09-07, murni frontend, tanpa migrasi).**
+User: "di setiap menu pengiriman dan penjualan belum ada sortir
+perbulan... saya juga ingin agar bisa melihat penjualan hari ini,
+kemarin, minggu lalu, bulan dan tanggal custom." Dua kebutuhan
+berbeda, ditangani terpisah:
+
+1. **Filter tanggal di daftar** -- komponen bersama baru
+   `src/components/FilterPeriode.tsx`: dropdown preset (Semua/Hari
+   ini/Kemarin/Minggu ini/Minggu lalu/Bulan ini/Bulan lalu/Custom),
+   custom munculkan 2 input tanggal. Dipasang di kelima daftar
+   transaksi Penjualan & Pengiriman: Sales Order, Surat Jalan, Faktur
+   Penjualan, Penerimaan Kas, Retur Penjualan (`.gte/.lte('tanggal',
+   ...)`, masuk `queryKey` react-query). Sekalian ditambah baris
+   "Total" di footer tabel (Sales Order/Faktur/Penerimaan Kas/Retur --
+   Surat Jalan dilewati karena tidak punya kolom nominal) yang menjumlah
+   baris yang SEDANG TAMPIL, dengan label jujur "Total 100 X teratas
+   yang tampil" kalau kena batas `limit(100)`, supaya tidak terkesan
+   itu total keseluruhan periode padahal cuma dari 100 baris pertama.
+   Untuk sortir/agregat omzet SUNGGUHAN per periode, itu tugas laporan
+   di bawah, bukan penjumlahan daftar yang dibatasi limit.
+
+2. **Laporan Omzet baru** (`/laporan/omzet`, menu Laporan, gated
+   owner/admin sama seperti Laba Kotor) -- mengambil SEMUA baris dari
+   view `v_penjualan_harian` yang sudah ada (harian, otomatis di luar
+   faktur `dibatalkan`), lalu dikelompokkan di JS jadi per
+   Bulan/Kuartal/Tahun (toggle, pola sama seperti tab "Per
+   produk/pelanggan" di Laporan Laba). Ditampilkan: kartu ringkasan
+   (omzet periode terakhir + delta% vs sebelumnya, total & margin
+   keseluruhan), grafik batang, dan tabel dengan kolom delta% per baris
+   vs periode sebelumnya (kronologis, meski tabelnya tampil terbaru-dulu).
+   Ditambah `GrafikBatang` di `Charts.tsx` (SVG polos, pola sama seperti
+   `GrafikArea` yang sudah ada) -- label sumbu-X otomatis ditipiskan
+   kalau batangnya >12 biar tidak numpuk.
+
 **Retur Penjualan: item dari Faktur asal ikut tertarik otomatis
 (2026-09-07, murni frontend, tanpa migrasi).** User lihat retur draf
 kosong (padahal Faktur asal sudah dipilih) dan tanya: "produk return

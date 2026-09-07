@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal } from '@/lib/format'
+import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
 import {
   Badge,
   Button,
@@ -42,13 +43,15 @@ export const LABEL_METODE: Record<MetodeBayar, string> = {
   kartu: 'Kartu',
 }
 
-function useDaftarKas(cari: string, status: string) {
+function useDaftarKas(cari: string, status: string, periode: RentangTanggal) {
   return useQuery({
-    queryKey: ['penerimaan-kas', cari, status],
+    queryKey: ['penerimaan-kas', cari, status, periode],
     queryFn: async () => {
       let q = supabase.from('penerimaan_kas').select('id, nomor, tanggal, metode, jumlah, status, pelanggan:pelanggan_id(nama)')
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
+      if (periode.dari) q = q.gte('tanggal', periode.dari)
+      if (periode.sampai) q = q.lte('tanggal', periode.sampai)
       const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(100)
       if (error) throw error
       return (data ?? []) as unknown as BarisKas[]
@@ -60,7 +63,8 @@ function useDaftarKas(cari: string, status: string) {
 export function PenerimaanKas() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
-  const { data, isLoading, error, isFetching } = useDaftarKas(cari, status)
+  const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
+  const { data, isLoading, error, isFetching } = useDaftarKas(cari, status, periode)
 
   return (
     <div className="space-y-4">
@@ -88,6 +92,7 @@ export function PenerimaanKas() {
           <option value="disetujui">{LABEL_STATUS.disetujui}</option>
           <option value="dibatalkan">{LABEL_STATUS.dibatalkan}</option>
         </Select>
+        <FilterPeriode onChange={setPeriode} />
       </div>
 
       <Card>
@@ -103,36 +108,44 @@ export function PenerimaanKas() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada Penerimaan Kas." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Nomor</Th>
-                  <Th>Tanggal</Th>
-                  <Th>Pelanggan</Th>
-                  <Th>Metode</Th>
-                  <Th className="text-right">Jumlah</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {data.map((k) => (
-                  <Tr key={k.id}>
-                    <Td>
-                      <Link to={`/penerimaan-kas/${k.id}`} className="font-mono text-xs text-primary hover:underline">
-                        {k.nomor}
-                      </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{tanggal(k.tanggal)}</Td>
-                    <Td className="font-medium">{k.pelanggan?.nama ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{LABEL_METODE[k.metode]}</Td>
-                    <Td className="tabular text-right font-medium">{rupiah(k.jumlah)}</Td>
-                    <Td>
-                      <Badge variant={VARIAN_STATUS[k.status]}>{LABEL_STATUS[k.status]}</Badge>
-                    </Td>
+            <>
+              <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                <Thead>
+                  <Tr>
+                    <Th>Nomor</Th>
+                    <Th>Tanggal</Th>
+                    <Th>Pelanggan</Th>
+                    <Th>Metode</Th>
+                    <Th className="text-right">Jumlah</Th>
+                    <Th>Status</Th>
                   </Tr>
-                ))}
-              </Tbody>
-            </Table>
+                </Thead>
+                <Tbody>
+                  {data.map((k) => (
+                    <Tr key={k.id}>
+                      <Td>
+                        <Link to={`/penerimaan-kas/${k.id}`} className="font-mono text-xs text-primary hover:underline">
+                          {k.nomor}
+                        </Link>
+                      </Td>
+                      <Td className="text-muted-foreground">{tanggal(k.tanggal)}</Td>
+                      <Td className="font-medium">{k.pelanggan?.nama ?? '-'}</Td>
+                      <Td className="text-muted-foreground">{LABEL_METODE[k.metode]}</Td>
+                      <Td className="tabular text-right font-medium">{rupiah(k.jumlah)}</Td>
+                      <Td>
+                        <Badge variant={VARIAN_STATUS[k.status]}>{LABEL_STATUS[k.status]}</Badge>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+              <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
+                <span className="text-muted-foreground">
+                  {data.length >= 100 ? 'Total 100 penerimaan teratas yang tampil' : `Total ${data.length} penerimaan`}
+                </span>
+                <span className="tabular font-semibold">{rupiah(data.reduce((t, k) => t + k.jumlah, 0))}</span>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

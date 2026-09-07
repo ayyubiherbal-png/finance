@@ -91,6 +91,7 @@ const MENU: Grup[] = [
   {
     judul: 'Laporan',
     item: [
+      { ke: '/laporan/omzet', label: 'Omzet', ikon: BarChart3, peran: ['owner', 'admin'] },
       { ke: '/laporan/piutang', label: 'Piutang', ikon: BarChart3 },
       { ke: '/laporan/laba', label: 'Laba Kotor', ikon: BarChart3, peran: ['owner', 'admin'] },
     ],

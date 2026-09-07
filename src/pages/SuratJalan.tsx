@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Printer, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggal } from '@/lib/format'
+import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
 import {
   Badge,
   Button,
@@ -33,13 +34,15 @@ interface BarisSJ {
   gudang: { nama: string } | null
 }
 
-function useDaftarSJ(cari: string, status: string) {
+function useDaftarSJ(cari: string, status: string, periode: RentangTanggal) {
   return useQuery({
-    queryKey: ['surat-jalan', cari, status],
+    queryKey: ['surat-jalan', cari, status, periode],
     queryFn: async () => {
       let q = supabase.from('surat_jalan').select('id, nomor, tanggal, status, pelanggan:pelanggan_id(nama), gudang:gudang_id(nama)')
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
+      if (periode.dari) q = q.gte('tanggal', periode.dari)
+      if (periode.sampai) q = q.lte('tanggal', periode.sampai)
       const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(100)
       if (error) throw error
       return (data ?? []) as unknown as BarisSJ[]
@@ -51,7 +54,8 @@ function useDaftarSJ(cari: string, status: string) {
 export function SuratJalan() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
-  const { data, isLoading, error, isFetching } = useDaftarSJ(cari, status)
+  const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
+  const { data, isLoading, error, isFetching } = useDaftarSJ(cari, status, periode)
 
   // Untuk cetak massal label pengiriman -- lihat SuratJalanCetakMassal.
   // Dikosongkan tiap kali daftar berubah (filter/pencarian) supaya tidak
@@ -59,7 +63,7 @@ export function SuratJalan() {
   const [dipilih, setDipilih] = useState<Set<string>>(new Set())
   useEffect(() => {
     setDipilih(new Set())
-  }, [cari, status])
+  }, [cari, status, periode])
 
   function toggleSatu(id: string) {
     setDipilih((s) => {
@@ -99,6 +103,7 @@ export function SuratJalan() {
             </option>
           ))}
         </Select>
+        <FilterPeriode onChange={setPeriode} />
 
         {dipilih.size > 0 ? (
           <div className="ml-auto flex items-center gap-2">

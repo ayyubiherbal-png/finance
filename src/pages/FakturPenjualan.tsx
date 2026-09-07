@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal } from '@/lib/format'
+import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
 import {
   Badge,
   Button,
@@ -48,15 +49,17 @@ const VARIAN_BAYAR: Record<StatusBayar, 'netral' | 'peringatan' | 'sukses'> = {
   lunas: 'sukses',
 }
 
-function useDaftarFaktur(cari: string, statusBayar: string) {
+function useDaftarFaktur(cari: string, statusBayar: string, periode: RentangTanggal) {
   return useQuery({
-    queryKey: ['faktur-penjualan', cari, statusBayar],
+    queryKey: ['faktur-penjualan', cari, statusBayar, periode],
     queryFn: async () => {
       let q = supabase
         .from('faktur_penjualan')
         .select('id, nomor, tanggal, jatuh_tempo, status, status_bayar, total, sisa, pelanggan:pelanggan_id(nama)')
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (statusBayar) q = q.eq('status_bayar', statusBayar)
+      if (periode.dari) q = q.gte('tanggal', periode.dari)
+      if (periode.sampai) q = q.lte('tanggal', periode.sampai)
       const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(100)
       if (error) throw error
       return (data ?? []) as unknown as BarisFaktur[]
@@ -68,7 +71,8 @@ function useDaftarFaktur(cari: string, statusBayar: string) {
 export function FakturPenjualan() {
   const [cari, setCari] = useState('')
   const [statusBayar, setStatusBayar] = useState('')
-  const { data, isLoading, error, isFetching } = useDaftarFaktur(cari, statusBayar)
+  const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
+  const { data, isLoading, error, isFetching } = useDaftarFaktur(cari, statusBayar, periode)
 
   return (
     <div className="space-y-4">
@@ -98,6 +102,7 @@ export function FakturPenjualan() {
             </option>
           ))}
         </Select>
+        <FilterPeriode onChange={setPeriode} />
       </div>
 
       <Card>
@@ -113,42 +118,50 @@ export function FakturPenjualan() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada Faktur Penjualan." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Nomor</Th>
-                  <Th>Tanggal</Th>
-                  <Th>Pelanggan</Th>
-                  <Th>Jatuh tempo</Th>
-                  <Th className="text-right">Total</Th>
-                  <Th className="text-right">Sisa</Th>
-                  <Th>Status</Th>
-                  <Th>Bayar</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {data.map((f) => (
-                  <Tr key={f.id}>
-                    <Td>
-                      <Link to={`/faktur-penjualan/${f.id}`} className="font-mono text-xs text-primary hover:underline">
-                        {f.nomor}
-                      </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{tanggal(f.tanggal)}</Td>
-                    <Td className="font-medium">{f.pelanggan?.nama ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{tanggal(f.jatuh_tempo)}</Td>
-                    <Td className="tabular text-right font-medium">{rupiah(f.total)}</Td>
-                    <Td className="tabular text-right">{f.sisa > 0 ? rupiah(f.sisa) : '-'}</Td>
-                    <Td>
-                      <Badge variant={VARIAN_STATUS[f.status]}>{LABEL_STATUS[f.status]}</Badge>
-                    </Td>
-                    <Td>
-                      <Badge variant={VARIAN_BAYAR[f.status_bayar]}>{LABEL_BAYAR[f.status_bayar]}</Badge>
-                    </Td>
+            <>
+              <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                <Thead>
+                  <Tr>
+                    <Th>Nomor</Th>
+                    <Th>Tanggal</Th>
+                    <Th>Pelanggan</Th>
+                    <Th>Jatuh tempo</Th>
+                    <Th className="text-right">Total</Th>
+                    <Th className="text-right">Sisa</Th>
+                    <Th>Status</Th>
+                    <Th>Bayar</Th>
                   </Tr>
-                ))}
-              </Tbody>
-            </Table>
+                </Thead>
+                <Tbody>
+                  {data.map((f) => (
+                    <Tr key={f.id}>
+                      <Td>
+                        <Link to={`/faktur-penjualan/${f.id}`} className="font-mono text-xs text-primary hover:underline">
+                          {f.nomor}
+                        </Link>
+                      </Td>
+                      <Td className="text-muted-foreground">{tanggal(f.tanggal)}</Td>
+                      <Td className="font-medium">{f.pelanggan?.nama ?? '-'}</Td>
+                      <Td className="text-muted-foreground">{tanggal(f.jatuh_tempo)}</Td>
+                      <Td className="tabular text-right font-medium">{rupiah(f.total)}</Td>
+                      <Td className="tabular text-right">{f.sisa > 0 ? rupiah(f.sisa) : '-'}</Td>
+                      <Td>
+                        <Badge variant={VARIAN_STATUS[f.status]}>{LABEL_STATUS[f.status]}</Badge>
+                      </Td>
+                      <Td>
+                        <Badge variant={VARIAN_BAYAR[f.status_bayar]}>{LABEL_BAYAR[f.status_bayar]}</Badge>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+              <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
+                <span className="text-muted-foreground">
+                  {data.length >= 100 ? 'Total 100 faktur teratas yang tampil' : `Total ${data.length} faktur`}
+                </span>
+                <span className="tabular font-semibold">{rupiah(data.reduce((t, f) => t + f.total, 0))}</span>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

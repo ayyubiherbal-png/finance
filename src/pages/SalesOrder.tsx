@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal } from '@/lib/format'
+import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
 import {
   Badge,
   Button,
@@ -62,9 +63,9 @@ const LABEL_KANAL: Record<KanalPenjualan, string> = {
   lainnya: 'Lainnya',
 }
 
-function useDaftarSO(cari: string, status: string) {
+function useDaftarSO(cari: string, status: string, periode: RentangTanggal) {
   return useQuery({
-    queryKey: ['sales-order', cari, status],
+    queryKey: ['sales-order', cari, status, periode],
     queryFn: async () => {
       let q = supabase
         .from('sales_order')
@@ -72,6 +73,8 @@ function useDaftarSO(cari: string, status: string) {
 
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
+      if (periode.dari) q = q.gte('tanggal', periode.dari)
+      if (periode.sampai) q = q.lte('tanggal', periode.sampai)
 
       const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(100)
       if (error) throw error
@@ -84,7 +87,8 @@ function useDaftarSO(cari: string, status: string) {
 export function SalesOrder() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
-  const { data, isLoading, error, isFetching } = useDaftarSO(cari, status)
+  const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
+  const { data, isLoading, error, isFetching } = useDaftarSO(cari, status, periode)
 
   return (
     <div className="space-y-4">
@@ -119,6 +123,7 @@ export function SalesOrder() {
             </option>
           ))}
         </Select>
+        <FilterPeriode onChange={setPeriode} />
       </div>
 
       <Card>
@@ -134,38 +139,46 @@ export function SalesOrder() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada Sales Order." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Nomor</Th>
-                  <Th>Tanggal</Th>
-                  <Th>Pelanggan</Th>
-                  <Th>Kanal</Th>
-                  <Th className="text-right">Total</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {data.map((so) => (
-                  <Tr key={so.id} className="cursor-pointer">
-                    <Td>
-                      <Link to={`/sales-order/${so.id}`} className="font-mono text-xs text-primary hover:underline">
-                        {so.nomor}
-                      </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{tanggal(so.tanggal)}</Td>
-                    <Td className="font-medium">{so.pelanggan?.nama ?? '-'}</Td>
-                    <Td>
-                      <Badge variant="netral">{LABEL_KANAL[so.kanal]}</Badge>
-                    </Td>
-                    <Td className="tabular text-right font-medium">{rupiah(so.total)}</Td>
-                    <Td>
-                      <Badge variant={VARIAN_STATUS[so.status]}>{LABEL_STATUS[so.status]}</Badge>
-                    </Td>
+            <>
+              <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                <Thead>
+                  <Tr>
+                    <Th>Nomor</Th>
+                    <Th>Tanggal</Th>
+                    <Th>Pelanggan</Th>
+                    <Th>Kanal</Th>
+                    <Th className="text-right">Total</Th>
+                    <Th>Status</Th>
                   </Tr>
-                ))}
-              </Tbody>
-            </Table>
+                </Thead>
+                <Tbody>
+                  {data.map((so) => (
+                    <Tr key={so.id} className="cursor-pointer">
+                      <Td>
+                        <Link to={`/sales-order/${so.id}`} className="font-mono text-xs text-primary hover:underline">
+                          {so.nomor}
+                        </Link>
+                      </Td>
+                      <Td className="text-muted-foreground">{tanggal(so.tanggal)}</Td>
+                      <Td className="font-medium">{so.pelanggan?.nama ?? '-'}</Td>
+                      <Td>
+                        <Badge variant="netral">{LABEL_KANAL[so.kanal]}</Badge>
+                      </Td>
+                      <Td className="tabular text-right font-medium">{rupiah(so.total)}</Td>
+                      <Td>
+                        <Badge variant={VARIAN_STATUS[so.status]}>{LABEL_STATUS[so.status]}</Badge>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+              <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
+                <span className="text-muted-foreground">
+                  {data.length >= 100 ? 'Total 100 SO teratas yang tampil' : `Total ${data.length} SO`}
+                </span>
+                <span className="tabular font-semibold">{rupiah(data.reduce((t, so) => t + so.total, 0))}</span>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

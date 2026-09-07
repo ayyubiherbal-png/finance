@@ -200,7 +200,7 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Penjualan Cepat | Satu layar: isi pembeli + barang + pembayaran sekali, keempat dokumen dibuat otomatis dalam satu transaksi database | Selesai -- **butuh migrasi 0020** |
 | Pembelian | Purchase Order → Penerimaan Barang → Faktur Pembelian → Pembayaran Supplier → Retur | Selesai, ujung ke ujung |
 | Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
-| Laporan | Piutang (aging), Laba Kotor (per produk/pelanggan) | Selesai |
+| Laporan | Omzet (per bulan/kuartal/tahun, grafik+tabel), Piutang (aging), Laba Kotor (per produk/pelanggan) | Selesai |
 | Dasbor | Ringkasan 30 hari, tren omzet, produk perlu restock | Selesai |
 | Tampilan | Logo & tema warna Ayyubi Food, glassmorphism di sidebar/login | Selesai |
 | — | Transfer Gudang | Skema siap, UI sengaja belum dibuat — tidak berguna selama masih 1 gudang aktif |
