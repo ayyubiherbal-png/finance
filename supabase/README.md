@@ -432,6 +432,33 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Tema disebar ke SELURUH halaman (2026-09-07, murni frontend).** Setelah
+Dasbor di-review dan disetujui, tema disebar ke ~41 halaman lain. Sengaja
+dikerjakan lewat komponen bersama semaksimal mungkin, bukan tempel-tempel
+per halaman:
+
+- **`Card` di `ui.tsx`** diubah sekali (`rounded-lg border shadow-sm` ->
+  `rounded-2xl border-none` + bayangan lembut) -- otomatis mengubah SEMUA
+  kartu di semua halaman. Ini leverage terbesarnya. Sengaja TANPA
+  `overflow-hidden`: dropdown Combobox di form dirender absolut di dalam
+  Card, kalau di-clip malah tidak kelihatan.
+- **`Thead`**: latar `bg-muted/50` dihapus. Tabel biasanya jadi elemen
+  paling atas di dalam Card, dan bidang abu bersudut siku itu menonjol
+  keluar dari sudut kartu yang sekarang lebih membulat. Garis bawah saja
+  sudah cukup memisah, sekaligus lebih dekat ke gaya daftar di referensi.
+- Sisanya mekanis lewat `sed` (diverifikasi polanya dulu sebelum
+  dijalankan): 42 judul halaman `text-xl font-semibold` ->
+  `text-2xl font-bold tracking-tight` (menyamai Dasbor), dan 20 tombol
+  CTA `<Button asChild>` -> `variant="pill"`. Satu kemunculan
+  `text-xl font-semibold` yang BUKAN judul (angka di kartu segmen CRM)
+  sengaja dikecualikan; nomor dokumen di halaman detail tetap
+  `font-mono text-lg` karena memang bukan judul halaman biasa.
+- `GAYA_KARTU` lokal di Dasbor dihapus -- sudah jadi bawaan `Card`.
+- **Halaman cetak (Invoice, Label) tidak ikut**: sudah diperiksa, mereka
+  memakai markup sendiri dan tidak menyentuh `Card`/`Thead`. Memang
+  disengaja sejak awal -- bayangan & sudut membulat boros tinta dan jelek
+  saat dicetak.
+
 **Menu 25 -> 9: halaman sealur digabung jadi tab (2026-09-07, murni
 frontend).** User: "sebelum deploy ada solusi buat ini agar tidak scroll
 terlalu panjang?" -- sidebar punya 25 menu dalam 8 grup, butuh ~1.100px

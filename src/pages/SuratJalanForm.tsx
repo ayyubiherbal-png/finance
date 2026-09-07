@@ -230,7 +230,7 @@ function FormBaru({ soId }: { soId: string | null }) {
           </Link>
         </Button>
         <div>
-          <h1 className="text-xl font-semibold">Surat Jalan Baru</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Surat Jalan Baru</h1>
           <p className="text-sm text-muted-foreground">
             Dari SO <span className="font-mono">{so.nomor}</span> &middot; {so.pelanggan?.nama}
           </p>
@@ -522,7 +522,7 @@ function FormDetail({ sjId }: { sjId: string }) {
               Tandai Terkirim
             </Button>
           ) : (
-            <Button asChild>
+            <Button variant="pill" asChild>
               <Link to={`/faktur-penjualan/baru?pelanggan=${sj.pelanggan_id}`}>Lanjut ke Faktur</Link>
             </Button>
           )}

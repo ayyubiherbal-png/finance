@@ -73,10 +73,10 @@ export function FakturPembelian() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Faktur Pembelian</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Faktur Pembelian</h1>
           <p className="text-sm text-muted-foreground">Tagihan dari supplier, ditagihkan dari satu atau beberapa Penerimaan Barang</p>
         </div>
-        <Button asChild>
+        <Button variant="pill" asChild>
           <Link to="/faktur-pembelian/baru">
             <Plus className="h-4 w-4" />
             Faktur Baru

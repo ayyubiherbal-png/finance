@@ -134,7 +134,7 @@ export function GudangForm() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-xl font-semibold">{isBaru ? 'Gudang Baru' : form.nama || '...'}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{isBaru ? 'Gudang Baru' : form.nama || '...'}</h1>
       </div>
 
       <Card>

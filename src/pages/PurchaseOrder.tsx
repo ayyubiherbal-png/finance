@@ -57,10 +57,10 @@ export function PurchaseOrder() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Purchase Order</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Purchase Order</h1>
           <p className="text-sm text-muted-foreground">Pemesanan barang ke supplier</p>
         </div>
-        <Button asChild>
+        <Button variant="pill" asChild>
           <Link to="/purchase-order/baru">
             <Plus className="h-4 w-4" />
             PO Baru

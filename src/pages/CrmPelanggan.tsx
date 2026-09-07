@@ -75,7 +75,7 @@ export function CrmPelanggan() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">CRM Pelanggan</h1>
+        <h1 className="text-2xl font-bold tracking-tight">CRM Pelanggan</h1>
         <p className="text-sm text-muted-foreground">
           Segmentasi otomatis dari riwayat belanja -- klik segmen untuk menyaring
         </p>

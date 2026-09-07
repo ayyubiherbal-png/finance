@@ -321,7 +321,7 @@ export function PenjualanCepat() {
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="flex items-center gap-2 text-xl font-semibold">
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
             <Zap className="h-5 w-5 text-primary" />
             Penjualan Cepat
           </h1>

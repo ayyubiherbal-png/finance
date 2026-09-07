@@ -64,7 +64,7 @@ export function LaporanLaba() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Laporan Laba Kotor</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Laporan Laba Kotor</h1>
         <p className="text-sm text-muted-foreground">Omzet dikurangi HPP, dari seluruh faktur penjualan</p>
       </div>
 

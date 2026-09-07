@@ -57,7 +57,7 @@ export function PenerimaanBarang() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Penerimaan Barang</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Penerimaan Barang</h1>
         <p className="text-sm text-muted-foreground">
           Dibuat dari Purchase Order yang sudah disetujui. Untuk membuat baru, buka PO-nya dan klik "Buat Penerimaan Barang".
         </p>

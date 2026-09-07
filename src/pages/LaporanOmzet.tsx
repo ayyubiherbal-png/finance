@@ -102,7 +102,7 @@ export function LaporanOmzet() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Laporan Omzet</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Laporan Omzet</h1>
         <p className="text-sm text-muted-foreground">
           Omzet &amp; laba kotor dari seluruh Faktur Penjualan (di luar yang dibatalkan), dikelompokkan per periode
         </p>

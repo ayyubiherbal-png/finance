@@ -215,7 +215,7 @@ function FormBaru() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-xl font-semibold">Faktur Penjualan Baru</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Faktur Penjualan Baru</h1>
       </div>
 
       <Card>
@@ -492,7 +492,7 @@ function FormDetail({ fakturId }: { fakturId: string }) {
             </Button>
           ) : null}
           {faktur.sisa > 0 ? (
-            <Button asChild>
+            <Button variant="pill" asChild>
               <Link to={`/penerimaan-kas/baru?pelanggan=${faktur.pelanggan_id}&faktur=${faktur.id}`}>
                 Catat Pembayaran
               </Link>

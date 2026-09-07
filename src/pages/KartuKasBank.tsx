@@ -71,7 +71,7 @@ export function KartuKasBank() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Kartu Kas & Bank</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Kartu Kas & Bank</h1>
         <p className="text-sm text-muted-foreground">Riwayat mutasi dan saldo berjalan per akun</p>
       </div>
 

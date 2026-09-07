@@ -51,7 +51,7 @@ export function Produk() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Produk</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Produk</h1>
           <p className="text-sm text-muted-foreground">
             Stok lintas gudang dan nilai persediaan berdasarkan HPP rata-rata
           </p>
@@ -67,7 +67,7 @@ export function Produk() {
               onChange={(e) => setCari(e.target.value)}
             />
           </div>
-          <Button asChild>
+          <Button variant="pill" asChild>
             <Link to="/produk/baru">
               <Plus className="h-4 w-4" />
               Produk Baru

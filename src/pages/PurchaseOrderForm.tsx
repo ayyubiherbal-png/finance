@@ -179,7 +179,7 @@ export function PurchaseOrderForm() {
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <h1 className="text-xl font-semibold">Purchase Order Baru</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Purchase Order Baru</h1>
         </div>
 
         <Card>
@@ -585,7 +585,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
         </div>
       ) : po.status === 'disetujui' || po.status === 'sebagian' ? (
         <div className="flex justify-end">
-          <Button asChild>
+          <Button variant="pill" asChild>
             <Link to={`/penerimaan-barang/baru?po=${po.id}`}>Buat Penerimaan Barang</Link>
           </Button>
         </div>

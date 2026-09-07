@@ -61,7 +61,7 @@ export function Stok() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Stok per Gudang</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Stok per Gudang</h1>
         <p className="text-sm text-muted-foreground">Saldo persediaan berjalan, dari kartu stok</p>
       </div>
 

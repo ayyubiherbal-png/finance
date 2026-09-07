@@ -65,7 +65,7 @@ export function LaporanPiutang() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Laporan Piutang</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Laporan Piutang</h1>
         <p className="text-sm text-muted-foreground">Sisa tagihan pelanggan berdasarkan umur jatuh tempo</p>
       </div>
 

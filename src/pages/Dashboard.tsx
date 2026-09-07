@@ -36,11 +36,6 @@ const AKSEN = {
   merah: '#d03b3b',
 } as const
 
-/** Kartu bulat + shadow lembut -- treatment lokal Dasbor (tema baru 2026-09-07),
- * belum diterapkan ke komponen Card bersama supaya halaman lain tidak ikut
- * berubah sebelum di-review. */
-const GAYA_KARTU = 'rounded-2xl border-none shadow-[0_2px_24px_-8px_rgba(0,0,0,0.12)]'
-
 /**
  * Kartu berisi daftar. Tingginya diratakan grid dengan kartu sebelahnya,
  * jadi kalau datanya kosong isinya dipusatkan (`ISI_KOSONG`) supaya ruang
@@ -234,7 +229,7 @@ export function Dashboard() {
       */}
       <div className="grid gap-4 lg:grid-cols-4">
         <div className="grid gap-4 sm:grid-cols-3 lg:col-span-3">
-          <Card className={cn(GAYA_KARTU, 'sm:col-span-2')}>
+          <Card className="sm:col-span-2">
             <CardHeader>
               <CardTitle className="text-base">{t('dasbor.trenOmzetHarian')}</CardTitle>
             </CardHeader>
@@ -243,7 +238,7 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className={cn(GAYA_KARTU, KARTU_LIST)}>
+          <Card className={KARTU_LIST}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <CalendarClock className="h-4 w-4 text-muted-foreground" />
@@ -282,7 +277,7 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className={cn(GAYA_KARTU, KARTU_LIST, 'sm:col-span-2')}>
+          <Card className={cn(KARTU_LIST, 'sm:col-span-2')}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -320,7 +315,7 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className={GAYA_KARTU}>
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">{t('dasbor.marginLaba30Hari')}</CardTitle>
             </CardHeader>
@@ -341,7 +336,7 @@ export function Dashboard() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <Card className={cn(GAYA_KARTU, 'flex flex-1 flex-col')}>
+          <Card className="flex flex-1 flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -386,7 +381,7 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className={cn(GAYA_KARTU, 'border-none bg-gradient-to-br from-primary-dark to-[hsl(24_20%_9%)] text-primary-dark-foreground')}>
+          <Card className="bg-gradient-to-br from-primary-dark to-[hsl(24_20%_9%)] text-primary-dark-foreground">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base text-primary-dark-foreground">
                 <Landmark className="h-4 w-4" />
@@ -438,7 +433,7 @@ function KartuHero({
 }) {
   const { t } = useI18n()
   return (
-    <Card className={cn(GAYA_KARTU, 'relative overflow-hidden border-none bg-gradient-to-br from-primary to-primary-dark text-primary-dark-foreground')}>
+    <Card className="relative overflow-hidden bg-gradient-to-br from-primary to-primary-dark text-primary-dark-foreground">
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
           <p className="text-xs font-medium uppercase tracking-wide text-primary-dark-foreground/70">{judul}</p>
@@ -479,7 +474,7 @@ function KartuStat({
   tautan: string
 }) {
   return (
-    <Card className={cn(GAYA_KARTU, 'overflow-hidden')}>
+    <Card className="overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
           <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">{judul}</p>

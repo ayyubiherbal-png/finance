@@ -80,7 +80,7 @@ export function KartuStok() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-semibold">Kartu Stok</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Kartu Stok</h1>
         <p className="text-sm text-muted-foreground">Riwayat mutasi dan saldo berjalan per produk</p>
       </div>
 

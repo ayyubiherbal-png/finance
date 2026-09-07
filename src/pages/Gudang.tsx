@@ -46,7 +46,7 @@ export function Gudang() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Gudang</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Gudang</h1>
           <p className="text-sm text-muted-foreground">Lokasi penyimpanan stok</p>
         </div>
         <div className="flex flex-1 justify-end gap-2 sm:flex-none">
@@ -54,7 +54,7 @@ export function Gudang() {
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input className="pl-8" placeholder="Cari nama atau kode..." value={cari} onChange={(e) => setCari(e.target.value)} />
           </div>
-          <Button asChild>
+          <Button variant="pill" asChild>
             <Link to="/gudang/baru">
               <Plus className="h-4 w-4" />
               Gudang Baru

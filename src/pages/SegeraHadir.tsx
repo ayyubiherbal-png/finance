@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui'
 export function SegeraHadir({ judul, catatan }: { judul: string; catatan?: string }) {
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">{judul}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{judul}</h1>
       <Card>
         <CardContent className="flex flex-col items-center gap-2 py-16 text-center">
           <Construction className="h-8 w-8 text-muted-foreground" />

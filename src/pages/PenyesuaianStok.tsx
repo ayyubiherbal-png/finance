@@ -63,10 +63,10 @@ export function PenyesuaianStok() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Penyesuaian Stok</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Penyesuaian Stok</h1>
           <p className="text-sm text-muted-foreground">Saldo awal, koreksi hitung fisik, barang rusak/hilang</p>
         </div>
-        <Button asChild>
+        <Button variant="pill" asChild>
           <Link to="/penyesuaian-stok/baru">
             <Plus className="h-4 w-4" />
             Penyesuaian Baru

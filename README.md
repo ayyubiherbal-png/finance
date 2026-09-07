@@ -202,7 +202,7 @@ Aplikasi sudah dijalankan & login berhasil di Supabase asli Anda.
 | Inventori | Stok per Gudang, Kartu Stok, Penyesuaian Stok | Selesai |
 | Laporan | Omzet (per bulan/kuartal/tahun, grafik+tabel), Piutang (aging), Laba Kotor (per produk/pelanggan) | Selesai |
 | Dasbor | Ringkasan 30 hari, tren omzet, produk perlu restock | Selesai |
-| Tampilan | Tema baru (kartu bulat, gradasi hijau, grafik kapsul/donut) + topbar (search global, notifikasi, profil) -- **baru diterapkan di Dasbor**, menunggu di-review sebelum disebar ke halaman lain | Dasbor selesai, sisanya belum |
+| Tampilan | Tema baru (kartu bulat + bayangan lembut, gradasi hijau, grafik kapsul/donut, sidebar & topbar jadi panel mengambang, font Plus Jakarta Sans) -- sudah diterapkan ke **seluruh halaman** lewat komponen bersama. Halaman cetak sengaja dikecualikan (tetap tajam & hemat tinta) | Selesai |
 | Navigasi | 9 menu (dari 25) -- halaman sealur jadi tab di dalam menunya, mis. "Penjualan" berisi tab Sales Order/Surat Jalan/Faktur/Penerimaan Kas/Retur. URL tiap halaman tidak berubah | Selesai |
 | Dwibahasa | Toggle ID/EN di topbar & login (tahap 1: chrome saja -- menu, tombol umum, halaman login). Isi halaman transaksi & dokumen cetak tetap Bahasa Indonesia | Tahap 1 selesai |
 | — | Transfer Gudang | Skema siap, UI sengaja belum dibuat — tidak berguna selama masih 1 gudang aktif |

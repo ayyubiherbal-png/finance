@@ -154,7 +154,7 @@ export function AkunKasBankForm() {
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">{isBaru ? 'Akun Kas/Bank Baru' : form.nama || '...'}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{isBaru ? 'Akun Kas/Bank Baru' : form.nama || '...'}</h1>
         </div>
         {!isBaru && saldo ? (
           <div className="text-right">

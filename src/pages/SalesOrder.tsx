@@ -94,10 +94,10 @@ export function SalesOrder() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Sales Order</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Sales Order</h1>
           <p className="text-sm text-muted-foreground">Pesanan dari canvassing maupun kanal online</p>
         </div>
-        <Button asChild>
+        <Button variant="pill" asChild>
           <Link to="/sales-order/baru">
             <Plus className="h-4 w-4" />
             SO Baru

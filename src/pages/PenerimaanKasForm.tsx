@@ -196,7 +196,7 @@ function FormBaru() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-xl font-semibold">Catat Pembayaran</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Catat Pembayaran</h1>
       </div>
 
       <Card>

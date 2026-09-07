@@ -147,10 +147,22 @@ export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLab
 
 /* ------------------------------------------------------------------ Card */
 
+/**
+ * Gaya kartu tema baru (2026-09-07): sudut lebih membulat, tanpa garis tepi,
+ * dan bayangan lembut menyebar -- kesan "melayang" di atas latar abu-abu.
+ * Diubah DI SINI supaya seluruh halaman ikut berubah sekaligus, bukan
+ * ditempel satu-satu di tiap halaman.
+ *
+ * Sengaja TANPA `overflow-hidden`: dropdown Combobox di dalam form dirender
+ * absolut di dalam Card, kalau di-clip malah tidak kelihatan.
+ */
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('rounded-lg border border-border bg-card text-card-foreground shadow-sm', className)}
+      className={cn(
+        'rounded-2xl border-none bg-card text-card-foreground shadow-[0_2px_24px_-8px_rgba(0,0,0,0.12)]',
+        className,
+      )}
       {...props}
     />
   )
@@ -208,8 +220,14 @@ export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTab
   )
 }
 
+/**
+ * Latar abu-abu kepala tabel dihapus (tema baru): tabel biasanya jadi elemen
+ * paling atas di dalam Card, dan bidang abu-abu bersudut siku itu menonjol
+ * keluar dari sudut membulat kartunya. Garis bawah saja sudah cukup memisah,
+ * sekaligus lebih dekat ke gaya daftar di referensi.
+ */
 export function Thead({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn('border-b border-border bg-muted/50', className)} {...props} />
+  return <thead className={cn('border-b border-border', className)} {...props} />
 }
 
 export function Tbody({ className, ...props }: React.HTMLAttributes<HTMLTableSectionElement>) {

@@ -57,10 +57,10 @@ export function ReturPembelian() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Retur Pembelian</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Retur Pembelian</h1>
           <p className="text-sm text-muted-foreground">Barang dikembalikan ke supplier</p>
         </div>
-        <Button asChild>
+        <Button variant="pill" asChild>
           <Link to="/retur-pembelian/baru">
             <Plus className="h-4 w-4" />
             Retur Baru

@@ -70,10 +70,10 @@ export function PenerimaanKas() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Penerimaan Kas</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Penerimaan Kas</h1>
           <p className="text-sm text-muted-foreground">Pembayaran dari pelanggan, dialokasikan ke faktur</p>
         </div>
-        <Button asChild>
+        <Button variant="pill" asChild>
           <Link to="/penerimaan-kas/baru">
             <Plus className="h-4 w-4" />
             Catat Pembayaran

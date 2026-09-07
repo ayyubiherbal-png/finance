@@ -48,7 +48,7 @@ export function Supplier() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Supplier</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Supplier</h1>
           <p className="text-sm text-muted-foreground">Sumber barang untuk Purchase Order</p>
         </div>
         <div className="flex flex-1 justify-end gap-2 sm:flex-none">
@@ -56,7 +56,7 @@ export function Supplier() {
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input className="pl-8" placeholder="Cari nama atau kode..." value={cari} onChange={(e) => setCari(e.target.value)} />
           </div>
-          <Button asChild>
+          <Button variant="pill" asChild>
             <Link to="/supplier/baru">
               <Plus className="h-4 w-4" />
               Supplier Baru

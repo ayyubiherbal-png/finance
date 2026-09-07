@@ -48,7 +48,7 @@ export function AkunKasBank() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Kas & Bank</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Kas & Bank</h1>
           <p className="text-sm text-muted-foreground">
             Setiap Penerimaan Kas dan Pembayaran Supplier tertaut ke salah satu akun ini
           </p>
@@ -58,7 +58,7 @@ export function AkunKasBank() {
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input className="pl-8" placeholder="Cari nama atau kode..." value={cari} onChange={(e) => setCari(e.target.value)} />
           </div>
-          <Button asChild>
+          <Button variant="pill" asChild>
             <Link to="/kas-bank/baru">
               <Plus className="h-4 w-4" />
               Akun Baru

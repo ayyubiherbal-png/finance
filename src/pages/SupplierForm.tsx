@@ -185,7 +185,7 @@ export function SupplierForm() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-xl font-semibold">{isBaru ? 'Supplier Baru' : form.nama || '...'}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{isBaru ? 'Supplier Baru' : form.nama || '...'}</h1>
       </div>
 
       <Card>

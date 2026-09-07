@@ -158,7 +158,7 @@ export function Pelanggan() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Pelanggan</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Pelanggan</h1>
           <p className="text-sm text-muted-foreground">Data master -- piutang berjalan ada di Laporan Piutang</p>
         </div>
 
@@ -173,7 +173,7 @@ export function Pelanggan() {
             />
           </div>
           <KolomPicker aktif={kolomAktif} onUbah={ubahKolom} />
-          <Button asChild>
+          <Button variant="pill" asChild>
             <Link to="/pelanggan/baru">
               <Plus className="h-4 w-4" />
               Pelanggan Baru

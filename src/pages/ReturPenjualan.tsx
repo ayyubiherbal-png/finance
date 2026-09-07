@@ -61,10 +61,10 @@ export function ReturPenjualan() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Retur Penjualan</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Retur Penjualan</h1>
           <p className="text-sm text-muted-foreground">Barang kembali dari pelanggan</p>
         </div>
-        <Button asChild>
+        <Button variant="pill" asChild>
           <Link to="/retur-penjualan/baru">
             <Plus className="h-4 w-4" />
             Retur Baru

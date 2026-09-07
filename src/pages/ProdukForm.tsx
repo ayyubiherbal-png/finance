@@ -195,7 +195,7 @@ function FormBaru() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-xl font-semibold">Produk Baru</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Produk Baru</h1>
       </div>
 
       <Card>
@@ -543,7 +543,7 @@ function FormEdit({ produkId }: { produkId: string }) {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-xl font-semibold">{form.nama}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{form.nama}</h1>
       </div>
 
       <Card>

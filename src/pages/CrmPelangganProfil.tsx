@@ -148,7 +148,7 @@ export function CrmPelangganProfil() {
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="text-xl font-semibold">{crm.nama}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{crm.nama}</h1>
           <p className="font-mono text-xs text-muted-foreground">{crm.kode}</p>
         </div>
         <Badge variant={LABEL_SEGMEN[crm.segmen].varian}>{LABEL_SEGMEN[crm.segmen].label}</Badge>

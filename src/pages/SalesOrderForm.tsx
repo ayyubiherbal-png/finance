@@ -317,7 +317,7 @@ function FormBaru({
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-xl font-semibold">Sales Order Baru</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Sales Order Baru</h1>
       </div>
 
       <Card>
@@ -813,7 +813,7 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
         </div>
       ) : so.status === 'disetujui' || so.status === 'sebagian' ? (
         <div className="flex justify-end">
-          <Button asChild>
+          <Button variant="pill" asChild>
             <Link to={`/surat-jalan/baru?so=${so.id}`}>Buat Surat Jalan</Link>
           </Button>
         </div>

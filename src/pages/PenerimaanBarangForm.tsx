@@ -221,7 +221,7 @@ function FormBaru({ poId }: { poId: string | null }) {
           </Link>
         </Button>
         <div>
-          <h1 className="text-xl font-semibold">Penerimaan Barang Baru</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Penerimaan Barang Baru</h1>
           <p className="text-sm text-muted-foreground">
             Dari PO <span className="font-mono">{po.nomor}</span> &middot; {po.supplier?.nama}
           </p>
@@ -495,7 +495,7 @@ function FormDetail({ pbId }: { pbId: string }) {
               Tandai Diterima
             </Button>
           ) : (
-            <Button asChild>
+            <Button variant="pill" asChild>
               <Link to={`/faktur-pembelian/baru?supplier=${pb.supplier_id}`}>Lanjut ke Faktur Pembelian</Link>
             </Button>
           )}
