@@ -29,6 +29,7 @@ import {
 import {
   DAFTAR_BIDANG,
   KANAL_IMPOR,
+  KATA_STATUS_AMAN,
   bacaFile,
   kelompokkanPesanan,
   statusAmanDiimpor,
@@ -437,6 +438,11 @@ export function ImporPesanan() {
             <CardTitle className="text-base">
               4. {tt('Pratinjau & Proses')} ({dicentang.size}/{pesanan.length} {tt('dipilih')})
             </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {tt('Otomatis tercentang kalau kolom "Status di File" mengandung kata:')}{' '}
+              <span className="font-medium text-foreground">{KATA_STATUS_AMAN.join(', ')}</span>.{' '}
+              {tt('Selain itu (mis. "Ready to Ship"/masih diproses/dikemas) sengaja TIDAK tercentang -- barangnya belum tentu keluar gudang. Centang manual kalau Anda yakin.')}
+            </p>
           </CardHeader>
           <CardContent className="p-0 pb-2">
             {pesanan.length === 0 ? (
@@ -450,6 +456,7 @@ export function ImporPesanan() {
                     <Th>{tt('Tanggal')}</Th>
                     <Th>{tt('Pembeli')}</Th>
                     <Th className="text-right">Total</Th>
+                    <Th>{tt('Status di File')}</Th>
                     <Th>{tt('Keterangan')}</Th>
                   </Tr>
                 </Thead>
@@ -473,15 +480,19 @@ export function ImporPesanan() {
                         <Td className="text-muted-foreground">{p.tanggal ? fmtTanggal(p.tanggal) : '-'}</Td>
                         <Td>{p.namaPembeli || '-'}</Td>
                         <Td className="tabular text-right">{rupiah(p.total)}</Td>
+                        {/* Teks ASLI dari kolom Status Pesanan di file -- apa adanya, tidak
+                            diterjemahkan/diganti, supaya tidak tertukar dengan label verdict
+                            aplikasi di kolom sebelah (lihat catatan `KATA_STATUS_AMAN`). */}
+                        <Td className="text-muted-foreground">{p.statusPesanan || '-'}</Td>
                         <Td>
                           {duplikat ? (
                             <Badge variant="netral">{tt('Sudah pernah diimpor')}</Badge>
                           ) : !siap ? (
                             <Badge variant="bahaya">{tt('Ada produk belum cocok')}</Badge>
                           ) : !statusAman ? (
-                            <Badge variant="peringatan">{p.statusPesanan || tt('Status tidak dikenal')}</Badge>
+                            <Badge variant="peringatan">{tt('Status tidak diizinkan')}</Badge>
                           ) : (
-                            <Badge variant="sukses">{tt('Siap')}</Badge>
+                            <Badge variant="sukses">{tt('Lolos cek')}</Badge>
                           )}
                         </Td>
                       </Tr>

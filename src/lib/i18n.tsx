@@ -462,7 +462,13 @@ const TEKS: Record<string, string> = {
   'Sudah pernah diimpor': 'Already imported',
   'Ada produk belum cocok': 'Has unmatched products',
   'Status tidak dikenal': 'Unrecognised status',
-  Siap: 'Ready',
+  'Status tidak diizinkan': 'Status not allowed',
+  'Status di File': 'Status in file',
+  'Lolos cek': 'Checks passed',
+  'Otomatis tercentang kalau kolom "Status di File" mengandung kata:':
+    'Auto-checked when the "Status in file" column contains the word:',
+  'Selain itu (mis. "Ready to Ship"/masih diproses/dikemas) sengaja TIDAK tercentang -- barangnya belum tentu keluar gudang. Centang manual kalau Anda yakin.':
+    'Anything else (e.g. "Ready to Ship"/still processing/packing) is deliberately left unchecked -- the goods may not have left the warehouse yet. Check it manually if you\'re sure.',
   'pesanan berhasil diimpor': 'orders imported successfully',
   gagal: 'failed',
   'Lihat Daftar Faktur': 'View invoice list',

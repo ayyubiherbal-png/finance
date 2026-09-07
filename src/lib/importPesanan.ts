@@ -203,8 +203,13 @@ function parseTanggalFleksibel(teks: string): string | null {
  * dikecualikan -- supaya status baru/asing dari platform (yang saya
  * tidak tahu artinya) default DITOLAK dulu, bukan lolos diam-diam.
  * User tetap bisa centang manual kalau yakin.
+ *
+ * SENGAJA TIDAK termasuk "ready"/"ready to ship" -- di Shopee itu berarti
+ * pesanan sudah dibayar & MENUNGGU dikemas, BUKAN barang sudah keluar
+ * gudang. Kalau ini ikut dianggap aman, stok bisa terpotong untuk
+ * pesanan yang barangnya belum benar-benar dikirim.
  */
-const KATA_STATUS_AMAN = ['selesai', 'sudah dikirim', 'dikirim', 'terkirim', 'completed', 'shipped', 'delivered']
+export const KATA_STATUS_AMAN = ['selesai', 'sudah dikirim', 'dikirim', 'terkirim', 'completed', 'shipped', 'delivered']
 
 export function statusAmanDiimpor(statusPesanan: string): boolean {
   const s = statusPesanan.trim().toLowerCase()
