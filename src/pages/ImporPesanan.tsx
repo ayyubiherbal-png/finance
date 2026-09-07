@@ -61,6 +61,23 @@ function kunciProduk(sku: string, namaProduk: string): string {
   return sku.trim() ? `sku:${sku.trim().toLowerCase()}` : `nama:${namaProduk.trim().toLowerCase()}`
 }
 
+/**
+ * Pesan error khusus pemrosesan impor -- kalau constraint dedup kena
+ * (unique_violation, kode Postgres 23505), tampilkan kalimat yang jelas
+ * dan bisa dimengerti user awam, bukan teks mentah Postgres seperti
+ * "duplicate key value violates unique constraint
+ * pesanan_marketplace_impor_kanal_nomor_pesanan_platform_key" yang
+ * pernah bikin user bingung ("ini artinya apa?"). Ini SEHARUSNYA jarang
+ * kejadian -- pengecekan dedup di `lanjutKePencocokan` sudah menandai
+ * "Sudah pernah diimpor" duluan di layar pratinjau -- tapi tetap dijaga
+ * di sini untuk kasus tepi (race condition, dua tab dibuka bersamaan).
+ */
+function pesanKesalahanImpor(err: unknown): string {
+  const kode = err && typeof err === 'object' && 'code' in err ? (err as { code?: unknown }).code : undefined
+  if (kode === '23505') return 'Nomor pesanan ini sudah pernah diimpor sebelumnya -- dilewati supaya tidak tercatat dobel.'
+  return pesanKesalahan(err)
+}
+
 export function ImporPesanan() {
   const navigate = useNavigate()
   const { data: gudangAktif } = useGudangAktif()
@@ -189,14 +206,31 @@ export function ImporPesanan() {
       }
       setPetaProduk(hasil)
 
-      // 2. Cek nomor pesanan yang sudah pernah diimpor (dedup).
+      // 2. Cek nomor pesanan yang sudah pernah diimpor (dedup). Dipecah
+      //    per 200 nomor -- batch bisa berisi ratusan-ribuan pesanan
+      //    sekaligus, dan `.in()` dengan SATU query besar untuk semuanya
+      //    pernah gagal diam-diam untuk batch besar (error-nya tidak
+      //    dicek dulu, jadi `sudahDiimpor` ikut kosong seolah tidak ada
+      //    duplikat -- SEMUA baris kelihatan "siap", padahal beberapa
+      //    sudah pernah diimpor). Constraint unique di database tetap
+      //    menolaknya di langkah akhir (jadi tidak sampai dobel tercatat),
+      //    tapi baru ketahuan sebagai error mentah setelah diproses,
+      //    bukan ditandai "Sudah pernah diimpor" di layar pratinjau
+      //    seperti seharusnya. Sekarang errornya DICEK dan query dipecah
+      //    supaya lebih tahan untuk batch besar.
       const nomorSemua = pesanan.map((p) => p.nomorPesanan)
-      const { data: dup } = await supabase
-        .from('pesanan_marketplace_impor')
-        .select('nomor_pesanan_platform')
-        .eq('kanal', kanal)
-        .in('nomor_pesanan_platform', nomorSemua)
-      setSudahDiimpor(new Set((dup ?? []).map((d) => d.nomor_pesanan_platform)))
+      const sudahDiimporBaru = new Set<string>()
+      for (let i = 0; i < nomorSemua.length; i += 200) {
+        const potongan = nomorSemua.slice(i, i + 200)
+        const { data: dup, error: errDup } = await supabase
+          .from('pesanan_marketplace_impor')
+          .select('nomor_pesanan_platform')
+          .eq('kanal', kanal)
+          .in('nomor_pesanan_platform', potongan)
+        if (errDup) throw errDup
+        for (const d of dup ?? []) sudahDiimporBaru.add(d.nomor_pesanan_platform)
+      }
+      setSudahDiimpor(sudahDiimporBaru)
 
       setLangkah('cocokkan')
     } catch (err) {
@@ -284,7 +318,7 @@ export function ImporPesanan() {
         if (error) throw error
         berhasil++
       } catch (err) {
-        gagal.push({ nomor: p.nomorPesanan, pesan: pesanKesalahan(err) })
+        gagal.push({ nomor: p.nomorPesanan, pesan: pesanKesalahanImpor(err) })
       }
     }
 

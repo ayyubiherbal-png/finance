@@ -432,6 +432,37 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Bug nyata: pengecekan dedup impor diam-diam bisa kosong untuk batch
+besar (murni frontend, 2026-09-08).** User impor 877 pesanan TikTok --
+820 berhasil, 57 gagal dengan pesan Postgres mentah "duplicate key
+value violates unique constraint
+pesanan_marketplace_impor_kanal_nomor_pesanan_platform_key". User
+tanya artinya apa.
+
+Ditelusuri ke `lanjutKePencocokan()` (langkah "Cocokkan Kolom" ->
+"Pencocokan Produk"): query dedup `pesanan_marketplace_impor.in(...)`
+untuk SEMUA nomor pesanan dalam satu file TIDAK MENGECEK error-nya
+(`const { data: dup } = await supabase...` -- pola sama seperti bug
+"[object Object]" yang pernah diperbaiki di `pesanKesalahan`, cuma di
+tempat lain). Kalau query itu gagal apa pun sebabnya (batch besar,
+timeout, dll.), `dup` jadi `undefined`, `sudahDiimpor` jadi Set KOSONG
+-- SEMUA pesanan (termasuk yang SUDAH pernah diimpor) kelihatan "siap"
+di layar Pratinjau, ikut tercentang otomatis, baru gagal belakangan di
+`penjualan_cepat` lewat constraint unique database (yang tetap benar
+menolaknya -- TIDAK ada stok/penjualan tercatat dobel, cuma pesan
+errornya jadi teks Postgres mentah yang membingungkan alih-alih badge
+"Sudah pernah diimpor" yang jelas).
+
+Dua perbaikan: (1) error dari query dedup sekarang DICEK
+(`if (errDup) throw errDup`) dan query dipecah per 200 nomor sekaligus
+(bukan satu query raksasa untuk semua nomor dalam file) supaya lebih
+tahan untuk batch besar; (2) untuk kasus tepi kalau tetap ada yang lolos
+sampai `penjualan_cepat` (race condition, dua tab dibuka bersamaan),
+`pesanKesalahanImpor()` baru mendeteksi kode Postgres `23505`
+(unique_violation) dan tampilkan "Nomor pesanan ini sudah pernah
+diimpor sebelumnya -- dilewati supaya tidak tercatat dobel." alih-alih
+teks constraint mentah.
+
 **Impor Pesanan: alamat bisa dipetakan per bagian (murni frontend,
 2026-09-08).** User tunjukkan layar pemetaan kolom export TikTok Shop --
 alamatnya SUDAH dipecah platform jadi banyak kolom terpisah (Zipcode,
