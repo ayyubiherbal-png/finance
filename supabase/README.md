@@ -432,6 +432,27 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Kamus dwibahasa: 36 teks baru yang sempat terlewat (murni frontend,
+2026-09-08).** User di tab Pembeli Marketplace (toggle bahasa di EN):
+"untu bahasan sebagian halaman masih belum bener-benar di terapkan."
+Benar -- SEMUA fitur yang dibangun di sesi ini (Impor Pesanan lanjutan,
+Pembeli Marketplace, kolom "Status Marketplace" di Faktur) sudah
+dibungkus `tt()`, tapi terjemahan Inggrisnya TIDAK PERNAH ditambahkan ke
+kamus `TEKS` -- `tt()` cuma jatuh balik ke teks Indonesia asli kalau
+tidak ketemu entrinya (aman, tidak error/kosong, tapi diam-diam tidak
+pernah benar-benar diterjemahkan).
+
+Diaudit lewat script bash yang membandingkan tiap pemanggilan `tt('...')`
+di `ImporPesanan.tsx`/`PembeliMarketplace.tsx`/`FakturPenjualan.tsx`/
+`SalesOrder.tsx`/`SuratJalan.tsx`/`CrmPelanggan.tsx` terhadap kunci yang
+sudah ada di `TEKS` -- 36 teks ketemu belum punya terjemahan (termasuk
+judul halaman "Pembeli Marketplace", "CRM Pelanggan", header kolom
+"Jml. Pesanan"/"Total Belanja"/"Catatan FU", tombol "Hapus"/"Perbarui"/
+"Jadikan Pelanggan", dan beberapa paragraf penjelasan panjang). Semua
+ditambahkan, diverifikasi lewat browser dengan `localStorage` bahasa
+di-set 'en' langsung (bukan cuma dibaca kodenya) -- 14 sampel dicek,
+semua benar diterjemahkan.
+
 **Semua tabel bisa digeser pakai mouse (klik-tahan-tarik), bukan cuma
 scrollbar (murni frontend, 2026-09-08).** User di tab Pembeli
 Marketplace (tabelnya lebar -- banyak kolom + alamat tersensor

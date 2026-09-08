@@ -502,6 +502,55 @@ const TEKS: Record<string, string> = {
   'Data master -- piutang berjalan ada di Laporan Piutang': 'Master data -- outstanding receivables are in the Receivables report',
   'Sisa tagihan pelanggan berdasarkan umur jatuh tempo': 'Customer balances by age of due date',
   'Omzet dikurangi HPP, dari seluruh faktur penjualan': 'Revenue minus COGS, across all sales invoices',
+
+  // ---------- Impor Pesanan & Pembeli Marketplace lanjutan (2026-09-08) ----------
+  // Ditambahkan belakangan karena fitur-fitur ini dibangun di sesi ini --
+  // tt() sempat dipasang tanpa entri kamusnya, jadi tampil Indonesia
+  // apa adanya walau toggle bahasa di-set EN. Lihat catatan user:
+  // "untu bahasan sebagian halaman masih belum bener-benar di terapkan".
+  'Ada produk belum cocok, dilewati': 'Has unmatched products, skipped',
+  'Alamat -- isi kolom "Alamat Lengkap" SAJA kalau file sudah satu kolom utuh, ATAU isi bagian-bagian di bawah ini kalau file memisahnya (mis. export TikTok Shop). Kosong yang tidak dipakai tidak apa-apa.':
+    'Address -- fill in the "Full Address" column ONLY if the file already has one combined column, OR fill in the parts below if the file splits it (e.g. TikTok Shop export). It\'s fine to leave unused ones blank.',
+  'Catatan FU': 'Follow-up notes',
+  'Diimpor & langsung Lunas': 'Imported & marked Paid right away',
+  'Diimpor, jadi piutang': 'Imported, becomes a receivable',
+  Edit: 'Edit',
+  'Faktur Penjualan': 'Sales Invoice',
+  Hapus: 'Delete',
+  'Jadikan Pelanggan': 'Make Customer',
+  'Jml. Pesanan': 'Orders',
+  'Kolom ini kebanyakan berisi angka, bukan nama/username -- kemungkinan salah pilih kolom.':
+    "This column is mostly numbers, not a name/username -- you may have picked the wrong column.",
+  'Menampilkan segmen': 'Showing segment',
+  'Nomor-nomor ini SUDAH pernah diimpor sebelumnya, tapi statusnya di file ini berbeda dari yang tersimpan -- kemungkinan sudah berubah di marketplace (mis. "Dikirim" jadi "Selesai"). Ini TIDAK membuat Faktur baru, cuma memperbarui status yang tersimpan (dan menandai Lunas kalau status barunya jadi Selesai/Completed).':
+    'These numbers have ALREADY been imported before, but their status in this file differs from what\'s stored -- it may have changed on the marketplace (e.g. "Dikirim" became "Selesai"). This does NOT create a new Invoice, it only updates the stored status (and marks it Paid if the new status becomes Selesai/Completed).',
+  'Pembeli Marketplace': 'Marketplace Buyers',
+  Perbarui: 'Update',
+  'Perbarui Status Pesanan yang Sudah Diimpor': 'Update Status of Already-Imported Orders',
+  'Pesanan Terakhir': 'Last Order',
+  'Sales Order': 'Sales Order',
+  'Segmentasi otomatis dari riwayat pesanan -- klik segmen untuk menyaring. Bisa diedit & dihapus bebas, tidak memengaruhi Faktur/Surat Jalan yang sudah ada.':
+    'Automatic segmentation from order history -- click a segment to filter. Freely editable & deletable, doesn\'t affect existing Invoices/Delivery Notes.',
+  'Sinkronkan dari Pesanan': 'Sync from Orders',
+  'Status Baru di File': 'New Status in File',
+  'Status Marketplace': 'Marketplace Status',
+  'Status Tersimpan': 'Stored Status',
+  'Status di kolom "Status" adalah status ASLI dari marketplace, apa adanya -- bukan istilah aplikasi ini. Otomatis tercentang kalau statusnya sama persis dengan:':
+    'The status in the "Status" column is the marketplace\'s ACTUAL status, as-is -- not this app\'s own terminology. Auto-checked when the status exactly matches:',
+  'Status diperbarui & ditandai Lunas': 'Status updated & marked Paid',
+  'Status diperbarui, tetap piutang': 'Status updated, still a receivable',
+  'Status ini tidak diimpor otomatis -- centang manual kalau yakin': "This status isn't imported automatically -- check it manually if you're sure",
+  'Sudah jadi Pelanggan': 'Already a Customer',
+  'Sudah pernah diimpor, dilewati': 'Already imported, skipped',
+  'Sudah pernah diimpor, statusnya berubah -- lihat bagian "Perbarui Status" di bawah': 'Already imported, status changed -- see the "Update Status" section below',
+  'Surat Jalan': 'Delivery Note',
+  'Total Belanja': 'Total Spend',
+  'Yang statusnya persis "Selesai"/"Completed" (sudah lewat masa retur) otomatis ditandai Lunas. Selain itu tetap jadi piutang, dilunaskan manual lewat Penerimaan Kas saat dana marketplace cair. Status ini ikut tersimpan dan bisa dilihat lagi nanti di Faktur-nya.':
+    'Orders with status exactly "Selesai"/"Completed" (past the return window) are auto-marked as Paid. Everything else stays as receivables, settled manually via Cash Receipt once the marketplace payout lands. This status is also saved and can be viewed later on the Invoice.',
+  'pesanan yang statusnya diperbarui jadi Selesai/Completed juga akan ditandai Lunas ke akun ini.':
+    'orders whose status is updated to Selesai/Completed will also be marked Paid into this account.',
+  'status berhasil diperbarui': 'statuses updated successfully',
+  'CRM Pelanggan': 'Customer Segments',
 }
 
 interface I18nCtx {
