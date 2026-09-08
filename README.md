@@ -20,17 +20,22 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0035_tahapan_treatment_lanjutan.sql` dan
-> `0036_tahapan_evaluasi_dan_ulang_tahun.sql`**
+> ⏳ **Belum dijalankan: `0035_tahapan_treatment_lanjutan.sql`,
+> `0036_tahapan_evaluasi_dan_ulang_tahun.sql`, dan
+> `0037_riwayat_tahap_pelanggan.sql`**
 > — 0035 murni tambah DATA: draf tahap treatment lanjutan per kategori
 > (mis. "baru" dapat tambahan H+7 & H+14, bukan cuma H+1) supaya
 > perjalanan pelanggan menuju Juara bertahap, tidak cuma 1x FU. 0036
 > menutup 2 lubang di customer journey: mengisi jendela hari 15-45 yang
 > tadinya kosong untuk kategori "baru", dan menambah kategori BARU
 > "Ulang Tahun" (memanfaatkan `pelanggan.tanggal_lahir` yang sudah ada
-> di skema tapi belum pernah dipakai). Kata-katanya semua draf, silakan
-> diedit lewat panel "Tahapan Treatment" kalau kurang pas. (0020-0034
-> terkonfirmasi sudah jalan.)
+> di skema tapi belum pernah dipakai). 0037 menambah tabel baru
+> `riwayat_tahap_pelanggan` -- jejak setiap kali seorang pelanggan
+> masuk jendela suatu tahap FU (bukan cuma dihitung ulang tiap hari
+> seperti sekarang), ditampilkan di halaman profil pelanggan (CRM)
+> sebagai "Riwayat tahap Follow-Up". Kata-kata tahap semua draf,
+> silakan diedit lewat halaman "Tahapan Treatment" kalau kurang pas.
+> (0020-0034 terkonfirmasi sudah jalan.)
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
 Editor Supabase, dan setiap file aman dijalankan berkali-kali
@@ -89,6 +94,7 @@ supabase/migrations/0033_pengaturan_tugas_fu.sql
 supabase/migrations/0034_tahapan_treatment_fu.sql
 supabase/migrations/0035_tahapan_treatment_lanjutan.sql
 supabase/migrations/0036_tahapan_evaluasi_dan_ulang_tahun.sql
+supabase/migrations/0037_riwayat_tahap_pelanggan.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

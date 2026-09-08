@@ -432,6 +432,54 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Riwayat tahap per pelanggan -- jejak perjalanan FU (0037,
+2026-09-08).** User: "Apakah perlu kita buat tabel untuk FU?" --
+diperjelas maksudnya "Riwayat tahap per pelanggan": tahap H+1/H+7/H+14
+mana saja yang PERNAH dilewati seorang pelanggan sepanjang waktu, bukan
+cuma dihitung ulang tiap hari seperti sekarang.
+
+Masalah nyata sebelum ini: tugas di Tugas Follow-Up SELALU dihitung
+ulang di frontend dari data live (hari sejak transaksi/ulang tahun) --
+tidak ada yang disimpan. Begitu pelanggan lewat jendela hari suatu
+tahap (mis. H+1..4) tanpa sempat ditandai selesai, tugasnya hilang dari
+daftar SELAMANYA -- tidak ada jejak bahwa tahap itu pernah muncul untuk
+pelanggan itu sama sekali.
+
+Tabel baru `riwayat_tahap_pelanggan`: murni catatan KEMUNCULAN (beda
+dari `riwayat_follow_up`, 0029, yang catatan PENYELESAIAN). Baris baru
+masuk begitu tahap pertama kali terlihat di daftar Tugas Follow-Up
+siapa pun yang membuka halamannya -- idempotent lewat `tugas_id` unik
+(`upsert(..., { onConflict: 'tugas_id', ignoreDuplicates: true })` di
+frontend), jadi aman dipanggil ulang tiap kali halaman dibuka tanpa
+menimpa `muncul_pertama_pada` yang sudah tercatat pertama kali. Digabung
+dengan `riwayat_follow_up` lewat `tugas_id` yang sama (di frontend,
+bukan SQL join) untuk tahu status: muncul tapi belum ditandai selesai =
+terlewat, muncul dan ada di riwayat_follow_up = selesai (dengan kapan &
+siapa).
+
+`tahapan_id` referensi ke `tahapan_treatment_fu` TAPI `on delete set
+null` (bukan cascade/restrict) -- tahap boleh dihapus admin kapan saja
+lewat halaman Tahapan Treatment tanpa merusak riwayat lama, makanya
+`kategori`/`label` disalin sebagai snapshot juga (prinsip sama dengan
+`nama` di `riwayat_follow_up`). RLS-nya beda dari `riwayat_follow_up`:
+baca DAN tulis cukup `user_aktif()` (bukan `boleh_sales()`) karena ini
+murni catatan otomatis (dicatat siapa pun yang membuka halaman), bukan
+keputusan bisnis "saya sudah follow-up orang ini" seperti
+`riwayat_follow_up`.
+
+Ditambah kolom `Tugas.tahapanId` di `TugasFollowUp.tsx` (sebelumnya
+cuma `tahapanLabel`) supaya `tahapan_id` bisa disertakan saat mencatat
+kemunculan. Halaman profil pelanggan (`CrmPelangganProfil.tsx`) dapat
+kartu baru "Riwayat tahap Follow-Up" menampilkan semua tahap yang
+pernah muncul untuk pelanggan itu + statusnya.
+
+**Belum diverifikasi lewat browser di sesi ini** -- sesi login yang
+dipakai untuk uji coba sebelumnya sudah kedaluwarsa. Sudah lolos
+`tsc --noEmit` dan `vite build`. Mohon dicek: buka Tugas Follow-Up
+sekali (supaya kemunculan tercatat), lalu buka profil salah satu
+pelanggan yang muncul di daftar tugas -- harus muncul kartu "Riwayat
+tahap Follow-Up" dengan tahap yang sesuai.
+
 **Tahapan Treatment jadi halaman tersendiri, tampilan dirapikan (murni
 frontend, 2026-09-08).** User setelah lihat panel Tahapan Treatment
 makin ramai isinya (0036 menambah kategori & tahap baru): "bagian ini

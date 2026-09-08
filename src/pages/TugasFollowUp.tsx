@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { tt } from '@/lib/i18nText'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -133,6 +133,7 @@ function tugasId(tipe: EntitasTipe, entitasId: string, tahapanId: string, katego
 interface Tugas {
   id: string
   kategori: Kategori
+  tahapanId: string | null
   tahapanLabel: string | null
   entitasTipe: EntitasTipe
   entitasId: string
@@ -279,6 +280,7 @@ function susunTugas(
       hasil.push({
         id: tugasId('pelanggan', p.pelanggan_id, tahap.id, kategori, p.terakhir_order),
         kategori,
+        tahapanId: tahap.id,
         tahapanLabel: tahap.label,
         entitasTipe: 'pelanggan',
         entitasId: p.pelanggan_id,
@@ -305,6 +307,7 @@ function susunTugas(
       hasil.push({
         id: tugasId('pelanggan', p.id, tahap.id, 'ulang_tahun', String(tahunAcuan)),
         kategori: 'ulang_tahun',
+        tahapanId: tahap.id,
         tahapanLabel: tahap.label,
         entitasTipe: 'pelanggan',
         entitasId: p.id,
@@ -323,6 +326,7 @@ function susunTugas(
       hasil.push({
         id: tugasId('pembeli_marketplace', p.id, 'jadikan_pelanggan', 'jadikan_pelanggan', null),
         kategori: 'jadikan_pelanggan',
+        tahapanId: null,
         tahapanLabel: null,
         entitasTipe: 'pembeli_marketplace',
         entitasId: p.id,
@@ -345,6 +349,7 @@ function susunTugas(
       hasil.push({
         id: tugasId('pembeli_marketplace', p.id, tahap.id, kategori, p.pesanan_terakhir),
         kategori,
+        tahapanId: tahap.id,
         tahapanLabel: tahap.label,
         entitasTipe: 'pembeli_marketplace',
         entitasId: p.id,
@@ -385,6 +390,32 @@ export function TugasFollowUp() {
   const semua = semuaTugas.filter((t) => !sudahSelesai?.has(t.id))
   const hitungan = URUTAN_KATEGORI.map((k) => ({ kunci: k, ...INFO_KATEGORI[k], jumlah: semua.filter((t) => t.kategori === k).length }))
   const tersaring = kategoriAktif ? semua.filter((t) => t.kategori === kategoriAktif) : semua
+
+  // Catat kemunculan tiap tugas ke `riwayat_tahap_pelanggan` (0037) --
+  // idempotent lewat `tugas_id` unik (ignoreDuplicates), jadi aman
+  // dipanggil ulang tiap kali halaman ini dibuka siapa pun tanpa
+  // menimpa `muncul_pertama_pada` yang sudah tercatat. Dari `semuaTugas`
+  // (BUKAN `semua`) supaya kemunculan tetap tercatat walau kebetulan
+  // sudah ditandai selesai di render yang sama.
+  useEffect(() => {
+    if (semuaTugas.length === 0) return
+    const baris = semuaTugas.map((t) => ({
+      tugas_id: t.id,
+      entitas_tipe: t.entitasTipe,
+      entitas_id: t.entitasId,
+      tahapan_id: t.tahapanId,
+      kategori: t.kategori,
+      label: t.tahapanLabel ?? INFO_KATEGORI[t.kategori].label,
+      nama: t.nama,
+    }))
+    supabase
+      .from('riwayat_tahap_pelanggan')
+      .upsert(baris, { onConflict: 'tugas_id', ignoreDuplicates: true })
+      .then(({ error: err }) => {
+        if (err) console.error('Gagal mencatat riwayat tahap FU:', err)
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [semuaTugas.map((t) => t.id).join('|')])
 
   async function simpanSelesai(t: Tugas) {
     setMenyimpan(true)

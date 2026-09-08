@@ -459,6 +459,19 @@ export interface TahapanTreatmentFu {
   updated_oleh: string | null
 }
 
+/** Jejak kemunculan tahap FU per pelanggan/pembeli -- lihat 0037. Beda dari RiwayatFollowUp (itu catatan PENYELESAIAN, ini catatan KEMUNCULAN). */
+export interface RiwayatTahapPelanggan {
+  id: string
+  tugas_id: string
+  entitas_tipe: 'pelanggan' | 'pembeli_marketplace'
+  entitas_id: string
+  tahapan_id: string | null
+  kategori: string
+  label: string
+  nama: string | null
+  muncul_pertama_pada: string
+}
+
 export interface VLabaProduk {
   produk_id: string
   kode_produk: string

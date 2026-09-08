@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, MessageCircle, Pencil } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { angka, rupiah, tanggal as fmtTanggal } from '@/lib/format'
+import { angka, rupiah, tanggal as fmtTanggal, tanggalWaktu } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import {
   Badge,
@@ -21,7 +21,8 @@ import {
   Thead,
   Tr,
 } from '@/components/ui'
-import type { SegmenPelanggan, StatusBayar, VPelangganCrm, VProdukFavoritPelanggan } from '@/types/db'
+import { INFO_KATEGORI, type Kategori } from '@/pages/TugasFollowUp'
+import type { RiwayatTahapPelanggan, SegmenPelanggan, StatusBayar, VPelangganCrm, VProdukFavoritPelanggan } from '@/types/db'
 
 const LABEL_SEGMEN: Record<SegmenPelanggan, { label: string; varian: 'sukses' | 'default' | 'peringatan' | 'bahaya' | 'netral' }> = {
   juara: { label: 'Juara', varian: 'sukses' },
@@ -118,6 +119,41 @@ export function CrmPelangganProfil() {
         .returns<RiwayatFaktur[]>()
       if (error) throw error
       return data ?? []
+    },
+    enabled: !!crm,
+  })
+
+  // Riwayat tahap FU (0037) -- jejak setiap kali pelanggan ini masuk jendela
+  // suatu tahap treatment, digabung (di frontend, bukan SQL join) dengan
+  // riwayat_follow_up lewat tugas_id yang sama untuk tahu statusnya:
+  // sudah ditandai selesai (dan kapan), atau muncul tapi terlewat.
+  const { data: riwayatTahap } = useQuery({
+    queryKey: ['crm-riwayat-tahap', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('riwayat_tahap_pelanggan')
+        .select('*')
+        .eq('entitas_tipe', 'pelanggan')
+        .eq('entitas_id', id as string)
+        .order('muncul_pertama_pada', { ascending: false })
+        .limit(50)
+        .returns<RiwayatTahapPelanggan[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!crm,
+  })
+
+  const { data: tahapSelesai } = useQuery({
+    queryKey: ['crm-riwayat-tahap-selesai', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('riwayat_follow_up')
+        .select('tugas_id, selesai_pada')
+        .eq('entitas_tipe', 'pelanggan')
+        .eq('entitas_id', id as string)
+      if (error) throw error
+      return new Map((data ?? []).map((r) => [r.tugas_id, r.selesai_pada as string]))
     },
     enabled: !!crm,
   })
@@ -260,6 +296,53 @@ export function CrmPelangganProfil() {
                     </Td>
                   </Tr>
                 ))}
+              </Tbody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Riwayat tahap Follow-Up</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Semua tahap treatment yang pernah muncul untuk pelanggan ini, terlepas apakah sempat ditandai selesai.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0 pb-2">
+          {!riwayatTahap || riwayatTahap.length === 0 ? (
+            <KondisiKosong pesan="Belum ada tahap FU yang tercatat untuk pelanggan ini." />
+          ) : (
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Kategori</Th>
+                  <Th>Tahap</Th>
+                  <Th>Muncul pertama</Th>
+                  <Th>Status</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {riwayatTahap.map((r) => {
+                  const info = INFO_KATEGORI[r.kategori as Kategori] as (typeof INFO_KATEGORI)[Kategori] | undefined
+                  const selesaiPada = tahapSelesai?.get(r.tugas_id)
+                  return (
+                    <Tr key={r.id}>
+                      <Td>
+                        <Badge variant={info?.varian ?? 'netral'}>{info?.label ?? r.kategori}</Badge>
+                      </Td>
+                      <Td className="font-medium">{r.label}</Td>
+                      <Td className="text-muted-foreground">{fmtTanggal(r.muncul_pertama_pada)}</Td>
+                      <Td>
+                        {selesaiPada ? (
+                          <span className="text-xs text-emerald-700 dark:text-emerald-400">Selesai -- {tanggalWaktu(selesaiPada)}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Belum ditandai selesai</span>
+                        )}
+                      </Td>
+                    </Tr>
+                  )
+                })}
               </Tbody>
             </Table>
           )}
