@@ -432,6 +432,22 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Konfirmasi order H+0 (murni frontend, 2026-09-09).** Celah #3 dari 7.
+Tahap 1 (Onboarding) di customer journey butuh konfirmasi order segera
+setelah dibuat -- sebelum ini tidak ada satu pun WA otomatis/draf yang
+tersedia di momen order baru dibuat, beda dari Tahapan Treatment FU
+yang baru mulai di H+1 ke atas.
+
+Tombol "Kirim Konfirmasi" baru di halaman detail Sales Order (`SalesOrderForm.tsx`,
+`FormEdit`) -- BUKAN pengiriman otomatis (tetap manual klik Chat, sama
+filosofinya dengan Tahapan Treatment), tapi draf pesannya (`pesanKonfirmasiOrder()`)
+sudah berisi daftar item + total begitu SO dibuat, apa pun statusnya
+(draf/disetujui/dst.) -- tidak perlu menunggu approval dulu. Muncul
+kalau ada nomor telepon penerima & minimal 1 item.
+
+**Belum diverifikasi lewat browser** -- sudah lolos `tsc`/`build`/
+`npm run cek:bahasa`.
+
 **Tingkat Follow-Up Selesai -- akhirnya bisa dihitung (0039,
 2026-09-09).** Celah #2 dari 7. Sejak 0029 dibuat, metrik ini SENGAJA
 ditunda -- catatan lama di kepala `RiwayatFollowUp.tsx` bilang tidak

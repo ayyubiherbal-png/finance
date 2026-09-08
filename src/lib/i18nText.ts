@@ -1018,6 +1018,9 @@ export const TEKS: Record<string, string> = {
   // ---------- Tingkat Follow-Up Selesai (0039) ----------
   'Tingkat Selesai Keseluruhan': 'Overall Completion Rate',
   tugas: 'tasks',
+
+  // ---------- Konfirmasi order H+0 (celah customer journey #3) ----------
+  'Kirim Konfirmasi': 'Send Confirmation',
 }
 
 

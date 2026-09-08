@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { ArrowLeft, MessageCircle, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useGudangAktif, useProdukSatuan, useTierHarga, ambilHargaJual, cariProduk, cariPelanggan } from '@/lib/queries'
 import { rupiah, tanggalISO, tanggal as fmtTanggal } from '@/lib/format'
+import { tautanWa } from '@/lib/whatsapp'
+import { NAMA_TOKO } from '@/lib/identitasToko'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
 import {
@@ -132,6 +134,19 @@ function teksDiskon(b: { diskon_persen: number; diskon_nilai: number }) {
   if (b.diskon_persen > 0) bagian.push(`${b.diskon_persen}%`)
   if (b.diskon_nilai > 0) bagian.push(rupiah(b.diskon_nilai))
   return bagian.length > 0 ? bagian.join(' + ') : '-'
+}
+
+/**
+ * Konfirmasi order H+0 (celah #3 dari analisa customer journey,
+ * Tahap 1 Onboarding) -- BUKAN pengiriman otomatis (tetap manual, klik
+ * Chat), tapi draf pesannya sudah siap sejak order dibuat, sama
+ * filosofinya dengan Tahapan Treatment FU: sistem menyiapkan, manusia
+ * yang menekan kirim.
+ */
+function pesanKonfirmasiOrder(so: SODetail, items: BarisItem[]): string {
+  const nama = so.nama_penerima || so.pelanggan?.nama || 'Kak'
+  const daftarItem = items.map((it) => `- ${it.produk?.nama ?? '-'} (${it.qty} ${it.satuan?.kode ?? ''})`).join('\n')
+  return `Halo ${nama}, pesanan ${so.nomor} sudah kami terima:\n${daftarItem}\n\nTotal: ${rupiah(so.total)}\nAkan segera kami proses, terima kasih sudah order di ${NAMA_TOKO}!`
 }
 
 export function SalesOrderForm() {
@@ -622,6 +637,7 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
   if (!so) return null
 
   const bisaEdit = so.status === 'draf'
+  const tautanKonfirmasi = items && items.length > 0 ? tautanWa(so.telepon_penerima, pesanKonfirmasiOrder(so, items)) : null
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -638,6 +654,14 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
           </p>
         </div>
         <Badge variant={VARIAN_STATUS[so.status]}>{LABEL_STATUS[so.status]}</Badge>
+        {tautanKonfirmasi ? (
+          <Button variant="outline" size="sm" asChild>
+            <a href={tautanKonfirmasi} target="_blank" rel="noreferrer">
+              <MessageCircle className="h-4 w-4" />
+              {tt('Kirim Konfirmasi')}
+            </a>
+          </Button>
+        ) : null}
       </div>
 
       <Card>
