@@ -164,6 +164,7 @@ export function PelangganForm() {
   const [aktif, setAktif] = useState(true)
   const [menyimpan, setMenyimpan] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  const [kodeReferral, setKodeReferral] = useState('')
 
   // Saran ID berikutnya, berurutan dari yang sudah ada -- lihat
   // useKodeBerikutnya(). Cuma dipasang otomatis kalau user BELUM mengetik
@@ -288,6 +289,17 @@ export function PelangganForm() {
             .eq('id', prefill.dariPembeliMarketplaceId)
           if (errTaut)
             toast(tt('Pelanggan tersimpan, tapi gagal menandai baris Pembeli Marketplace: {pesan}').replace('{pesan}', pesanKesalahan(errTaut)))
+        }
+
+        if (kodeReferral.trim()) {
+          // Best-effort, sama seperti penautan Pembeli Marketplace di atas --
+          // kode salah/kadaluwarsa tidak boleh membatalkan pelanggan yang
+          // sudah tersimpan, cuma diberi tahu lewat toast peringatan.
+          const { error: errReferral } = await supabase.rpc('pakai_kode_referral', {
+            p_kode: kodeReferral.trim(),
+            p_pelanggan_baru_id: data.id,
+          })
+          if (errReferral) toast(tt('Pelanggan tersimpan, tapi kode referral gagal dipakai: {pesan}').replace('{pesan}', pesanKesalahan(errReferral)))
         }
 
         toast('Pelanggan tersimpan.')
@@ -499,6 +511,16 @@ export function PelangganForm() {
                   placeholder="mis. Tokopedia, WhatsApp, pameran, ..."
                   value={form.sumber_custom}
                   onChange={(e) => ubah('sumber_custom', e.target.value)}
+                />
+              </div>
+            ) : null}
+            {isBaru ? (
+              <div className="space-y-1.5">
+                <Label>Kode referral (opsional)</Label>
+                <Input
+                  placeholder="mis. REFCUST0001, kalau dirujuk pelanggan lain"
+                  value={kodeReferral}
+                  onChange={(e) => setKodeReferral(e.target.value)}
                 />
               </div>
             ) : null}

@@ -499,6 +499,24 @@ export interface RiwayatPoin {
   dibuat_pada: string
 }
 
+/** Kode referral milik seorang pelanggan -- lihat 0041. Dibuat otomatis lewat trigger saat pelanggan dibuat. */
+export interface KodeReferral {
+  id: string
+  pelanggan_id: string
+  kode: string
+  dibuat_pada: string
+}
+
+/** Satu pemakaian kode referral -- lihat 0041. Bonus diberikan ke pereferensi saat pelanggan_baru_id lunas faktur pertamanya. */
+export interface ReferralPemakaian {
+  id: string
+  kode_referral_id: string
+  pelanggan_baru_id: string
+  bonus_poin: number
+  bonus_diberikan: boolean
+  dipakai_pada: string
+}
+
 export interface VLabaProduk {
   produk_id: string
   kode_produk: string

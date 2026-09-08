@@ -432,6 +432,40 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Sistem kode referral sungguhan (0041, 2026-09-09).** Celah #5 dari 7
+(customer journey Tahap 5, Advokasi). Pesan WA di tahap "Aktivasi
+Referral" (0034/0035) cuma teks chat -- "mau saya kirimkan kodenya?" --
+TIDAK ADA sistem kode sungguhan di baliknya. 0011 malah eksplisit bilang
+"referral ... SENGAJA belum ditambahkan" waktu itu.
+
+Setiap pelanggan otomatis dapat 1 kode referral (trigger
+`fn_buat_kode_referral()` saat baris pelanggan dibuat, format
+`"REF" + kode pelanggan` -- otomatis unik karena `pelanggan.kode` sudah
+unik, tidak perlu random suffix; pelanggan lama di-backfill dalam
+migrasi yang sama). Bonus poin (terintegrasi ke `riwayat_poin`/
+`poin_pelanggan` dari 0040, BUKAN tabel poin terpisah) diberikan ke
+PEREFERENSI begitu pelanggan yang direferensikan menyelesaikan faktur
+LUNAS PERTAMANYA -- bukan langsung saat kode dipakai, supaya tidak
+gampang disalahgunakan (buat akun kosong lalu klaim bonus tanpa
+transaksi nyata).
+
+RPC `pakai_kode_referral(kode, pelanggan_baru_id)` dipanggil dari
+`PelangganForm.tsx` (field baru "Kode referral (opsional)", cuma
+muncul saat bikin pelanggan baru) -- best-effort sama seperti penautan
+Pembeli Marketplace yang sudah ada di form itu, kode salah tidak
+membatalkan penyimpanan pelanggan. Trigger `fn_bonus_referral_faktur()`
+(mirror pola `fn_akrual_poin_faktur` dari 0040) yang mengecek "apakah
+ini faktur lunas pertama" & memberi bonus.
+
+Frontend: kartu baru "Kode Referral" di profil pelanggan (CRM) --
+tampilkan kode sendiri + tombol kirim ke pelanggan itu via WA, dan
+daftar siapa saja yang sudah pakai kodenya + status bonus.
+
+**Belum diverifikasi lewat browser** -- sudah lolos `tsc`/`build`/
+`npm run cek:bahasa`. Mohon dicek: buat pelanggan baru dengan kode
+referral pelanggan lain, lunas-kan faktur pertamanya, cek pereferensi
+dapat +50 poin & baris "bonus diberikan" di kartu Kode Referral-nya.
+
 **Program loyalitas -- poin pelanggan (0040, 2026-09-09).** Celah #4
 dari 7 (customer journey Tahap 4, Retensi). `tier_harga` yang ada di
 skema itu murni harga grosir B2B yang ditentukan STAF -- tidak ada

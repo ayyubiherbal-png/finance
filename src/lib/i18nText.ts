@@ -1032,6 +1032,21 @@ export const TEKS: Record<string, string> = {
   Perubahan: 'Change',
   'Jumlah poin harus lebih dari 0.': 'Point amount must be greater than 0.',
   'Poin berhasil ditukar.': 'Points redeemed successfully.',
+
+  // ---------- Kode Referral (0041, celah customer journey #5) ----------
+  'Kode Referral': 'Referral Code',
+  'Bagikan ke teman/keluarga -- bonus poin masuk begitu rujukannya order pertama kali.':
+    "Share with friends/family -- bonus points land as soon as the referral's first order comes in.",
+  'Kirim ke Pelanggan': 'Send to Customer',
+  'Belum ada yang pakai kode referral ini.': 'No one has used this referral code yet.',
+  'Pelanggan Rujukan': 'Referred Customer',
+  Dipakai: 'Used',
+  'Status Bonus': 'Bonus Status',
+  'poin diberikan': 'points awarded',
+  'Menunggu order pertama': 'Awaiting first order',
+  'Kode referral (opsional)': 'Referral code (optional)',
+  'mis. REFCUST0001, kalau dirujuk pelanggan lain': 'e.g. REFCUST0001, if referred by another customer',
+  'Pelanggan tersimpan, tapi kode referral gagal dipakai: {pesan}': 'Customer saved, but the referral code failed: {pesan}',
 }
 
 

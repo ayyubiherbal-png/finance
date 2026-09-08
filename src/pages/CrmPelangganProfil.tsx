@@ -28,7 +28,17 @@ import {
   Tr,
 } from '@/components/ui'
 import { INFO_KATEGORI, type Kategori } from '@/pages/TugasFollowUp'
-import type { PoinPelanggan, RiwayatPoin, RiwayatTahapPelanggan, SegmenPelanggan, StatusBayar, VPelangganCrm, VProdukFavoritPelanggan } from '@/types/db'
+import type {
+  KodeReferral,
+  PoinPelanggan,
+  ReferralPemakaian,
+  RiwayatPoin,
+  RiwayatTahapPelanggan,
+  SegmenPelanggan,
+  StatusBayar,
+  VPelangganCrm,
+  VProdukFavoritPelanggan,
+} from '@/types/db'
 
 const LABEL_SEGMEN: Record<SegmenPelanggan, { label: string; varian: 'sukses' | 'default' | 'peringatan' | 'bahaya' | 'netral' }> = {
   juara: { label: 'Juara', varian: 'sukses' },
@@ -193,6 +203,32 @@ export function CrmPelangganProfil() {
     enabled: !!crm,
   })
 
+  // Kode referral (0041) -- kode dibuat otomatis oleh trigger saat pelanggan
+  // dibuat, di sini murni dibaca + ditampilkan siapa saja yang sudah pakai.
+  const { data: kodeReferral } = useQuery({
+    queryKey: ['crm-kode-referral', id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('kode_referral').select('*').eq('pelanggan_id', id as string).maybeSingle()
+      if (error) throw error
+      return data as KodeReferral | null
+    },
+    enabled: !!crm,
+  })
+
+  const { data: pemakaianReferral } = useQuery({
+    queryKey: ['crm-referral-pemakaian', kodeReferral?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('referral_pemakaian')
+        .select('*, pelanggan_baru:pelanggan_baru_id(nama)')
+        .eq('kode_referral_id', kodeReferral!.id)
+        .order('dipakai_pada', { ascending: false })
+      if (error) throw error
+      return (data ?? []) as (ReferralPemakaian & { pelanggan_baru: { nama: string } | null })[]
+    },
+    enabled: !!kodeReferral,
+  })
+
   const [formTukar, setFormTukar] = useState({ jumlah: '', alasan: '' })
   const [menukar, setMenukar] = useState(false)
   const [errorTukar, setErrorTukar] = useState<unknown>(null)
@@ -234,6 +270,12 @@ export function CrmPelangganProfil() {
   if (!crm) return null
 
   const wa = tautanWa(crm.whatsapp ?? crm.telepon)
+  const waBagikanReferral = kodeReferral
+    ? tautanWa(
+        crm.whatsapp ?? crm.telepon,
+        `Halo ${crm.nama}, ini kode referral Anda: ${kodeReferral.kode} -- bagikan ke teman/keluarga, dapat bonus kalau mereka order pertama kali lewat kode ini!`,
+      )
+    : null
   const alamatLengkap = kontak
     ? [kontak.alamat, kontak.kelurahan?.nama, kontak.kecamatan?.nama, kontak.kabupaten_kota?.nama, kontak.provinsi?.nama]
         .filter(Boolean)
@@ -474,6 +516,60 @@ export function CrmPelangganProfil() {
                     <Td className={cn('tabular text-right font-medium', r.perubahan > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive')}>
                       {r.perubahan > 0 ? '+' : ''}
                       {angka(r.perubahan)}
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base">Kode Referral</CardTitle>
+              <p className="text-sm text-muted-foreground">{tt('Bagikan ke teman/keluarga -- bonus poin masuk begitu rujukannya order pertama kali.')}</p>
+            </div>
+            {kodeReferral ? (
+              <div className="flex items-center gap-2">
+                <span className="rounded-md bg-muted px-3 py-1.5 font-mono text-sm font-semibold">{kodeReferral.kode}</span>
+                {waBagikanReferral ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={waBagikanReferral} target="_blank" rel="noreferrer">
+                      <MessageCircle className="h-4 w-4" />
+                      {tt('Kirim ke Pelanggan')}
+                    </a>
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </CardHeader>
+        <CardContent className="p-0 pb-2">
+          {!pemakaianReferral || pemakaianReferral.length === 0 ? (
+            <KondisiKosong pesan="Belum ada yang pakai kode referral ini." />
+          ) : (
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Pelanggan Rujukan</Th>
+                  <Th>Dipakai</Th>
+                  <Th>Status Bonus</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {pemakaianReferral.map((p) => (
+                  <Tr key={p.id}>
+                    <Td className="font-medium">{p.pelanggan_baru?.nama ?? '-'}</Td>
+                    <Td className="text-muted-foreground">{fmtTanggal(p.dipakai_pada)}</Td>
+                    <Td>
+                      {p.bonus_diberikan ? (
+                        <Badge variant="sukses">{`+${p.bonus_poin} ${tt('poin diberikan')}`}</Badge>
+                      ) : (
+                        <Badge variant="netral">{tt('Menunggu order pertama')}</Badge>
+                      )}
                     </Td>
                   </Tr>
                 ))}
