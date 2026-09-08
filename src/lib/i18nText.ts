@@ -832,6 +832,10 @@ export const TEKS: Record<string, string> = {
   'Tahap tersimpan.': 'Stage saved.',
   'Tahap ditambahkan.': 'Stage added.',
   'Tahap dihapus.': 'Stage deleted.',
+
+  // ---------- Kategori Ulang Tahun (0036) ----------
+  'Ulang Tahun': 'Birthday',
+  'Hari ulang tahun pelanggan -- ucapkan & tawarkan promo (0036)': "Customer's birthday -- greet them & offer a promo",
   'Tanpa nomor': 'No number',
   'Tidak ada tugas follow-up hari ini. Cek lagi besok.': 'No follow-up tasks today. Check again tomorrow.',
   'Tidak ada tugas di kategori ini.': 'No tasks in this category.',

@@ -432,6 +432,53 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Tutup 2 lubang customer journey: jendela evaluasi + kategori Ulang
+Tahun (0036, 2026-09-08).** User membagikan framework customer journey
+5 tahap (Onboarding -> Adopsi -> Evaluasi -> Retensi -> Advokasi) dari
+bisnis lain, tanya sudah ada di aplikasi ini atau belum. Dianalisa
+jujur per tahap (lihat percakapan) -- cuma Tahap 2 (Adopsi) yang benar-
+benar terbangun lewat 0034/0035. Ditawarkan 2 celah termurah untuk
+ditutup dulu, user pilih "Kerjakan" (keduanya):
+
+1. **Jendela hari 15-45 KOSONG** untuk kategori "baru" -- pelanggan
+   baru di hari ke-20 misalnya tidak dapat follow-up apa pun sampai
+   nanti jatuh ke "Mulai Hilang" di hari 61. Ditambah 2 tahap: cek
+   kepuasan (H+21..25) dan tips lanjutan (H+35..40) -- BUKAN survei
+   NPS/CSAT formal (di luar cakupan migrasi data), tapi pesan WA
+   percakapan biasa, konsisten dengan pola tahap lain.
+
+2. **Kategori BARU "ulang_tahun"** -- memanfaatkan kolom
+   `pelanggan.tanggal_lahir` yang sudah ada sejak 0011 tapi cuma
+   tersimpan/ditampilkan, tidak pernah dipakai automasi apa pun.
+   Constraint `kategori` di `tahapan_treatment_fu` diperlebar
+   (`alter table ... drop constraint ... add constraint`) untuk
+   menampung nilai baru ini.
+
+Beda struktural dari 5 kategori lain: bukan hari-sejak-TRANSAKSI, tapi
+hari-sejak-ULANG-TAHUN-TERAKHIR (0-364, berulang tiap tahun) --
+dihitung frontend lewat `hariSejakUlangTahunTerakhir()` baru di
+`TugasFollowUp.tsx`. Berlaku independen dari kategori RFM (pelanggan
+Juara yang lagi ulang tahun tetap dapat tugas ulang tahun, terlepas
+dari kategori RFM-nya saat itu), dan berlaku BAHKAN untuk pelanggan
+yang belum pernah order sama sekali (beda dari `usePelangganUntukTugas()`
+yang mensyaratkan minimal 1 transaksi) -- makanya dibuat hook query
+terpisah `usePelangganUlangTahun()` yang query langsung ke tabel
+`pelanggan`, bukan lewat `v_pelanggan_crm`. `pembeli_marketplace` tidak
+punya kolom tanggal lahir sama sekali, jadi kategori ini cuma berlaku
+untuk pelanggan Master Data.
+
+`tugasId()` untuk kategori ini menyertakan TAHUN acuan (bukan tanggal
+lengkap) supaya ulang tahun tahun ini dan tahun depan dianggap 2
+kejadian terpisah yang masing-masing bisa ditandai selesai sendiri --
+sama prinsipnya dengan `terakhir_order` di kategori mulai_hilang/tidur.
+
+**Belum diverifikasi lewat browser di sesi ini** -- sesi login yang
+dipakai untuk uji coba sebelumnya sudah kedaluwarsa. Sudah lolos
+`tsc --noEmit` dan `vite build`, logika tanggal sudah ditelusuri manual
+(termasuk kasus ulang tahun yang belum lewat tahun ini vs sudah lewat).
+Mohon dicek: isi `tanggal_lahir` salah satu pelanggan ke tanggal hari
+ini, refresh Tugas Follow-Up, harus muncul tugas "Ulang Tahun".
+
 **Draf tahap treatment lanjutan -- nurture menuju Juara (0035,
 2026-09-08).** Setelah 0034 dijalankan, user lihat panel Tahapan
 Treatment isinya cuma 1 tahap per kategori (persis migrasi dari

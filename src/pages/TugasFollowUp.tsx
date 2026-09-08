@@ -48,7 +48,7 @@ import type { KategoriTreatmentFu, PembeliMarketplace, TahapanTreatmentFu, VPela
  * unik per KEJADIAN (bukan cuma per orang, karena satu pelanggan bisa
  * lewat lebih dari satu kategori sepanjang waktu).
  */
-type Kategori = 'baru' | 'naik_setia' | 'naik_juara' | 'mulai_hilang' | 'tidur' | 'jadikan_pelanggan'
+type Kategori = 'baru' | 'naik_setia' | 'naik_juara' | 'mulai_hilang' | 'tidur' | 'jadikan_pelanggan' | 'ulang_tahun'
 type EntitasTipe = 'pelanggan' | 'pembeli_marketplace'
 
 const INFO_KATEGORI: Record<Kategori, { label: string; varian: 'sukses' | 'default' | 'peringatan' | 'bahaya' | 'netral'; jelas: string }> = {
@@ -58,8 +58,9 @@ const INFO_KATEGORI: Record<Kategori, { label: string; varian: 'sukses' | 'defau
   mulai_hilang: { label: 'Mulai Hilang', varian: 'peringatan', jelas: 'Baru lewat 60 hari tanpa order -- check-in ringan' },
   tidur: { label: 'Berisiko Tidur', varian: 'bahaya', jelas: 'Baru lewat 120 hari tanpa order -- coba tarik balik' },
   jadikan_pelanggan: { label: 'Siap Dijadikan Pelanggan', varian: 'netral', jelas: 'Data marketplace sudah lengkap, siap dipindah ke Master Data' },
+  ulang_tahun: { label: 'Ulang Tahun', varian: 'netral', jelas: 'Hari ulang tahun pelanggan -- ucapkan & tawarkan promo (0036)' },
 }
-const URUTAN_KATEGORI: Kategori[] = ['jadikan_pelanggan', 'baru', 'naik_setia', 'naik_juara', 'mulai_hilang', 'tidur']
+const URUTAN_KATEGORI: Kategori[] = ['jadikan_pelanggan', 'baru', 'naik_setia', 'naik_juara', 'mulai_hilang', 'tidur', 'ulang_tahun']
 
 /**
  * Tahapan treatment (0034) -- pengganti "Aturan Jendela FU" (0033).
@@ -83,7 +84,7 @@ function useTahapanTreatment() {
 
 /** Kelompokkan baris flat hasil query per kategori -- urutannya sudah dari query (order by urutan). */
 function kelompokTahapan(rows: TahapanTreatmentFu[] | undefined): Record<KategoriTreatmentFu, TahapanTreatmentFu[]> {
-  const hasil: Record<KategoriTreatmentFu, TahapanTreatmentFu[]> = { baru: [], naik_setia: [], naik_juara: [], mulai_hilang: [], tidur: [] }
+  const hasil: Record<KategoriTreatmentFu, TahapanTreatmentFu[]> = { baru: [], naik_setia: [], naik_juara: [], mulai_hilang: [], tidur: [], ulang_tahun: [] }
   for (const r of rows ?? []) hasil[r.kategori].push(r)
   return hasil
 }
@@ -108,6 +109,29 @@ function hariSejak(tanggalISO: string): number {
 }
 
 /**
+ * Kategori "ulang_tahun" (0036) beda dari 5 kategori lain -- bukan
+ * hari-sejak-transaksi, tapi hari-sejak-ULANG-TAHUN-TERAKHIR (0-364,
+ * berulang tiap tahun). `tahunAcuan` dipakai di `tugasId()` sebagai
+ * penanda "kejadian tahun yang mana" -- sama alasannya dengan
+ * `terakhir_order` di kategori mulai_hilang/tidur: ulang tahun berulang
+ * tiap tahun, jadi tanpa penanda tahun, tugas tahun ini & tahun depan
+ * akan dianggap kejadian yang SAMA (padahal harus bisa ditandai selesai
+ * masing-masing secara independen).
+ */
+function hariSejakUlangTahunTerakhir(tanggalLahirISO: string): { hari: number; tahunAcuan: number } {
+  const [, bulan, tanggal] = tanggalLahirISO.split('-').map(Number)
+  const now = new Date()
+  const hariIni = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+  let tahunAcuan = now.getFullYear()
+  let ulangTahunTerakhir = Date.UTC(tahunAcuan, bulan! - 1, tanggal!)
+  if (ulangTahunTerakhir > hariIni) {
+    tahunAcuan -= 1
+    ulangTahunTerakhir = Date.UTC(tahunAcuan, bulan! - 1, tanggal!)
+  }
+  return { hari: Math.round((hariIni - ulangTahunTerakhir) / 86_400_000), tahunAcuan }
+}
+
+/**
  * Id deterministik per KEJADIAN tugas -- dipakai sebagai key React DAN
  * sebagai `tugas_id` di `riwayat_follow_up` (unique constraint di 0029).
  * SEJAK 0034 diikat ke `tahapanId` (bukan cuma kategori) -- satu kategori
@@ -115,13 +139,14 @@ function hariSejak(tanggalISO: string): number {
  * yang dipakai untuk keunikan, bukan cuma nama kategorinya. Untuk kategori
  * berbasis FREKUENSI (baru/naik_setia/naik_juara), tahap+entitas sudah
  * unik (jumlah transaksi 1/2/3 cuma terjadi sekali seumur hidup
- * pelanggan). Untuk kategori berbasis RECENCY (mulai_hilang/tidur), satu
- * pelanggan bisa lewat itu BERKALI-KALI (order, sepi, order lagi, sepi
- * lagi) -- makanya diikutkan tanggal transaksi terakhir sebagai penanda
- * kejadian yang mana.
+ * pelanggan). Untuk kategori berbasis RECENCY (mulai_hilang/tidur) DAN
+ * "ulang_tahun" (0036, berulang tiap tahun), satu pelanggan bisa lewat
+ * itu BERKALI-KALI (order-sepi-order lagi; atau ulang tahun tahun ini
+ * vs tahun depan) -- makanya diikutkan penanda kejadian yang mana
+ * (tanggal transaksi terakhir, atau tahun ulang tahun).
  */
 function tugasId(tipe: EntitasTipe, entitasId: string, tahapanId: string, kategori: Kategori, tanggalAcuan: string | null): string {
-  const perluTanggal = kategori === 'mulai_hilang' || kategori === 'tidur'
+  const perluTanggal = kategori === 'mulai_hilang' || kategori === 'tidur' || kategori === 'ulang_tahun'
   return [tipe, tahapanId, entitasId, perluTanggal ? tanggalAcuan : null].filter(Boolean).join('-')
 }
 
@@ -203,6 +228,39 @@ function usePelangganUntukTugas() {
   })
 }
 
+interface PelangganUlangTahun {
+  id: string
+  kode: string
+  nama: string
+  whatsapp: string | null
+  telepon: string | null
+  tanggal_lahir: string
+}
+
+/**
+ * Pelanggan dengan tanggal lahir terisi -- terpisah dari `usePelangganUntukTugas()`
+ * (yang mensyaratkan minimal 1 transaksi) karena ulang tahun berlaku
+ * apa pun riwayat transaksinya (bahkan pelanggan yang belum pernah
+ * order sama sekali tetap punya ulang tahun). `pembeli_marketplace`
+ * tidak punya kolom ini sama sekali (cuma `pelanggan`/Master Data),
+ * jadi kategori "ulang_tahun" cuma berlaku untuk entitas tipe pelanggan.
+ */
+function usePelangganUlangTahun() {
+  return useQuery({
+    queryKey: ['tugas-fu-ulang-tahun'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('pelanggan')
+        .select('id, kode, nama, whatsapp, telepon, tanggal_lahir')
+        .eq('aktif', true)
+        .eq('akun_agregat', false)
+        .not('tanggal_lahir', 'is', null)
+      if (error) throw error
+      return (data ?? []) as PelangganUlangTahun[]
+    },
+  })
+}
+
 function usePembeliUntukTugas() {
   return useQuery({
     queryKey: ['tugas-fu-pembeli'],
@@ -230,6 +288,7 @@ function susunTugas(
   pelanggan: VPelangganCrm[],
   pembeli: PembeliMarketplace[],
   tahapanPerKategori: Record<KategoriTreatmentFu, TahapanTreatmentFu[]>,
+  ulangTahun: PelangganUlangTahun[],
 ): Tugas[] {
   const hasil: Tugas[] = []
 
@@ -249,6 +308,32 @@ function susunTugas(
         telepon: p.whatsapp || p.telepon,
         pesan: renderPesan(tahap.pesan_template, p.nama),
         tautanProfil: `/crm/pelanggan/${p.pelanggan_id}`,
+      })
+    }
+
+  }
+
+  // "ulang_tahun" independen dari kategori RFM di atas (berlaku apa pun
+  // status transaksinya, termasuk pelanggan yang belum pernah order) --
+  // loop terpisah dari `pelanggan` (VPelangganCrm) di atas yang
+  // mensyaratkan minimal 1 transaksi, supaya semua pelanggan aktif
+  // dengan tanggal lahir terisi tetap kecek.
+  for (const p of ulangTahun) {
+    const { hari: hariUlangTahun, tahunAcuan } = hariSejakUlangTahunTerakhir(p.tanggal_lahir)
+    const tahapUlangTahun = (tahapanPerKategori.ulang_tahun ?? []).filter((t) => t.aktif && diJendela(hariUlangTahun, t.hari_min, t.hari_max))
+    for (const tahap of tahapUlangTahun) {
+      hasil.push({
+        id: tugasId('pelanggan', p.id, tahap.id, 'ulang_tahun', String(tahunAcuan)),
+        kategori: 'ulang_tahun',
+        tahapanLabel: tahap.label,
+        entitasTipe: 'pelanggan',
+        entitasId: p.id,
+        nama: p.nama,
+        sumber: p.kode,
+        konteks: hariUlangTahun === 0 ? 'Ulang tahun hari ini' : `Ulang tahun ${hariUlangTahun} hari lalu`,
+        telepon: p.whatsapp || p.telepon,
+        pesan: renderPesan(tahap.pesan_template, p.nama),
+        tautanProfil: `/crm/pelanggan/${p.id}`,
       })
     }
   }
@@ -302,6 +387,7 @@ export function TugasFollowUp() {
 
   const { data: pelanggan, isLoading: loadingPelanggan, error: errorPelanggan } = usePelangganUntukTugas()
   const { data: pembeli, isLoading: loadingPembeli, error: errorPembeli } = usePembeliUntukTugas()
+  const { data: ulangTahun } = usePelangganUlangTahun()
   const { data: sudahSelesai, isLoading: loadingSelesai } = useTugasSelesai()
   const { data: tahapan } = useTahapanTreatment()
   const queryClient = useQueryClient()
@@ -316,7 +402,7 @@ export function TugasFollowUp() {
   const tahapanPerKategori = kelompokTahapan(tahapan)
   const isLoading = loadingPelanggan || loadingPembeli || loadingSelesai
   const error = errorPelanggan || errorPembeli
-  const semuaTugas = isLoading || error ? [] : susunTugas(pelanggan ?? [], pembeli ?? [], tahapanPerKategori)
+  const semuaTugas = isLoading || error ? [] : susunTugas(pelanggan ?? [], pembeli ?? [], tahapanPerKategori, ulangTahun ?? [])
   const semua = semuaTugas.filter((t) => !sudahSelesai?.has(t.id))
   const hitungan = URUTAN_KATEGORI.map((k) => ({ kunci: k, ...INFO_KATEGORI[k], jumlah: semua.filter((t) => t.kategori === k).length }))
   const tersaring = kategoriAktif ? semua.filter((t) => t.kategori === kategoriAktif) : semua
@@ -507,7 +593,7 @@ export function TugasFollowUp() {
   )
 }
 
-const URUTAN_KATEGORI_TREATMENT: KategoriTreatmentFu[] = ['baru', 'naik_setia', 'naik_juara', 'mulai_hilang', 'tidur']
+const URUTAN_KATEGORI_TREATMENT: KategoriTreatmentFu[] = ['baru', 'naik_setia', 'naik_juara', 'mulai_hilang', 'tidur', 'ulang_tahun']
 
 interface FormTahap {
   kategori: KategoriTreatmentFu

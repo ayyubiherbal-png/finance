@@ -441,7 +441,8 @@ export interface CatatanRiwayat {
   created_at: string
 }
 
-export type KategoriTreatmentFu = 'baru' | 'naik_setia' | 'naik_juara' | 'mulai_hilang' | 'tidur'
+/** `ulang_tahun` ditambahkan di 0036 -- beda dari yang lain, berbasis hari-sejak-ulang-tahun-terakhir, bukan hari-sejak-transaksi. */
+export type KategoriTreatmentFu = 'baru' | 'naik_setia' | 'naik_juara' | 'mulai_hilang' | 'tidur' | 'ulang_tahun'
 
 /** Satu tahap treatment FU (H+N, pesan sendiri) -- lihat 0034. Satu kategori bisa punya banyak tahap. */
 export interface TahapanTreatmentFu {
