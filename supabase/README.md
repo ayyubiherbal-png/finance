@@ -432,6 +432,35 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Dasbor: grafik "Pelanggan Aktif per Bulan" (0030, 2026-09-08).**
+Fitur #2 dari 5 -- lanjutan "Kerjakan berurut" setelah fitur #1
+(Riwayat Follow-Up, 0029, entri di bawah). Diadaptasi dari dashboard
+Analytics CRM omnichannel pihak ketiga yang punya "Historical MAU"
+(Monthly Active Users) berbasis sesi chat -- Ayyubi tidak punya live
+chat, tapi konsep intinya (berapa pelanggan unik yang aktif tiap
+bulan) bisa dipetakan ke data transaksi yang sudah ada.
+
+View baru `v_pelanggan_aktif_bulanan`: `count(distinct pelanggan_id)`
+dari faktur penjualan tidak dibatalkan, dikelompokkan per bulan
+kalender, MENGECUALIKAN `akun_agregat` (akun payung marketplace --
+kalau ikut dihitung, satu akun agregat dengan puluhan pesanan/bulan
+akan terhitung sebagai "1 pelanggan aktif" sama seperti pelanggan
+individu, menyesatkan). Ditampilkan sebagai kartu grafik batang penuh
+lebar di bawah grid Dasbor yang sudah ada, 6 bulan terakhir, bulan
+tanpa pelanggan aktif diisi 0 (pola sama seperti `trenHarian`).
+
+`GrafikBatang` (`components/Charts.tsx`) yang sebelumnya cuma dipakai
+Laporan Omzet (selalu format Rupiah) diberi prop opsional
+`formatNilai` supaya bisa dipakai ulang untuk data berbasis JUMLAH
+(bukan uang) tanpa mengubah pemakaian lamanya (default tetap `rupiah`).
+
+**Belum diverifikasi lewat browser di sesi ini** -- sesi login
+Supabase yang dipakai untuk uji coba sebelumnya sudah kedaluwarsa saat
+fitur ini selesai ditulis, dan view-nya sendiri baru ada setelah 0030
+dijalankan. Sudah lolos `tsc --noEmit` dan `vite build`; mohon dicek
+sekali lagi di browser (Dasbor, paling bawah) setelah migrasi
+dijalankan dan login ulang.
+
 **Tugas Follow-Up: tombol "Tandai Selesai" + halaman "Riwayat
 Follow-Up" (0029, 2026-09-08).** Setelah PDF framework CRM disetujui
 dan dianalisa vs. fitur CRM omnichannel pihak ketiga (2 screenshot

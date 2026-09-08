@@ -156,10 +156,14 @@ export function GrafikBatang({
   data,
   warna = 'hsl(var(--primary))',
   tinggi = 220,
+  formatNilai = rupiah,
 }: {
   data: TitikBatang[]
   warna?: string
   tinggi?: number
+  /** Format angka di tooltip -- default Rupiah (dipakai Laporan Omzet). Grafik
+   * berbasis JUMLAH (bukan uang), mis. pelanggan aktif/bulan, kirim formatter sendiri. */
+  formatNilai?: (n: number) => string
 }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null)
   const lebar = 600
@@ -231,7 +235,7 @@ export function GrafikBatang({
           }}
         >
           <p className="text-muted-foreground">{aktif.label}</p>
-          <p className="tabular font-semibold">{rupiah(aktif.nilai)}</p>
+          <p className="tabular font-semibold">{formatNilai(aktif.nilai)}</p>
         </div>
       ) : null}
     </div>

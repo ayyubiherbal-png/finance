@@ -17,11 +17,13 @@ import {
 import { supabase } from '@/lib/supabase'
 import { rupiah, angka, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { useI18n } from '@/lib/i18n'
-import { GrafikDonut, GrafikKapsul } from '@/components/Charts'
+import { GrafikBatang, GrafikDonut, GrafikKapsul } from '@/components/Charts'
 import { cn } from '@/lib/utils'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, KondisiKosong, PesanError, Spinner } from '@/components/ui'
 import { INFO_SEGMEN } from '@/pages/CrmPelanggan'
-import type { VPenjualanHarian, VStokProduk, VPiutangAging, VPelangganCrm, VSaldoKasBank } from '@/types/db'
+import type { VPenjualanHarian, VStokProduk, VPiutangAging, VPelangganCrm, VSaldoKasBank, VPelangganAktifBulanan } from '@/types/db'
+
+const NAMA_BULAN_PENDEK = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
 /**
  * Aksen warna per kartu -- hijau diambil dari logo Ayyubi Food, tiga lainnya
@@ -55,7 +57,9 @@ function useRingkasan() {
       const batas60 = new Date(hariIni)
       batas60.setDate(batas60.getDate() - 59)
 
-      const [penjualan, stok, piutang, jatuhTempo, pelangganTeratas, saldoKas] = await Promise.all([
+      const bulanAwal = new Date(hariIni.getFullYear(), hariIni.getMonth() - 5, 1)
+
+      const [penjualan, stok, piutang, jatuhTempo, pelangganTeratas, saldoKas, aktifBulanan] = await Promise.all([
         supabase
           .from('v_penjualan_harian')
           .select('tanggal, jumlah_faktur, omzet, laba_kotor')
@@ -94,6 +98,11 @@ function useRingkasan() {
           .eq('aktif', true)
           .order('saldo', { ascending: false })
           .returns<Pick<VSaldoKasBank, 'akun_id' | 'kode' | 'nama' | 'jenis' | 'saldo'>[]>(),
+        supabase
+          .from('v_pelanggan_aktif_bulanan')
+          .select('bulan, jumlah_pelanggan_aktif')
+          .gte('bulan', tanggalISO(bulanAwal))
+          .returns<VPelangganAktifBulanan[]>(),
       ])
 
       if (penjualan.error) throw penjualan.error
@@ -102,6 +111,7 @@ function useRingkasan() {
       if (jatuhTempo.error) throw jatuhTempo.error
       if (pelangganTeratas.error) throw pelangganTeratas.error
       if (saldoKas.error) throw saldoKas.error
+      if (aktifBulanan.error) throw aktifBulanan.error
 
       const semuaHari = penjualan.data ?? []
       const barisStok = stok.data ?? []
@@ -120,6 +130,20 @@ function useRingkasan() {
         trenHarian.push({ tanggal: iso, nilai: Number(petaHari.get(iso)?.omzet ?? 0) })
       }
 
+      // 6 titik bulanan berurutan, bulan tanpa pelanggan aktif diisi 0 --
+      // sama seperti trenHarian, supaya bar kosong tetap kelihatan sebagai
+      // "memang nol", bukan cuma hilang dari grafik.
+      const petaBulan = new Map((aktifBulanan.data ?? []).map((b) => [b.bulan, b.jumlah_pelanggan_aktif]))
+      const pelangganAktifPerBulan: { label: string; nilai: number }[] = []
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(hariIni.getFullYear(), hariIni.getMonth() - i, 1)
+        const iso = tanggalISO(d)
+        pelangganAktifPerBulan.push({
+          label: `${NAMA_BULAN_PENDEK[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`,
+          nilai: Number(petaBulan.get(iso) ?? 0),
+        })
+      }
+
       const periodeIni = semuaHari.filter((h) => h.tanggal >= isoBatas30)
       const periodeSebelum = semuaHari.filter((h) => h.tanggal < isoBatas30)
 
@@ -130,6 +154,7 @@ function useRingkasan() {
 
       return {
         trenHarian,
+        pelangganAktifPerBulan,
         omzet30Hari,
         laba30Hari,
         deltaOmzetPersen,
@@ -413,6 +438,22 @@ export function Dashboard() {
           </Card>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            {t('dasbor.pelangganAktifPerBulan')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <GrafikBatang
+            data={data.pelangganAktifPerBulan}
+            warna={AKSEN.biru}
+            formatNilai={(n) => (bahasa === 'id' ? `${angka(n)} pelanggan` : `${angka(n)} customers`)}
+          />
+        </CardContent>
+      </Card>
     </div>
   )
 }

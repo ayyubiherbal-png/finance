@@ -121,6 +121,7 @@ export const KAMUS = {
   'dasbor.semuaProdukAmanStok': { id: 'Semua produk di atas stok minimum.', en: 'All products are above minimum stock.' },
   'dasbor.habis': { id: 'Habis', en: 'Out of stock' },
   'dasbor.menipis': { id: 'Menipis', en: 'Low stock' },
+  'dasbor.pelangganAktifPerBulan': { id: 'Pelanggan aktif per bulan', en: 'Active customers per month' },
 
   // ---------- Login ----------
   'login.subjudul': { id: 'Masuk untuk melanjutkan', en: 'Sign in to continue' },

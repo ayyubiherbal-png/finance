@@ -405,6 +405,12 @@ export interface RiwayatFollowUp {
   selesai_pada: string
 }
 
+/** Pelanggan (non-agregat) dengan minimal 1 faktur per bulan kalender -- lihat 0030. */
+export interface VPelangganAktifBulanan {
+  bulan: string
+  jumlah_pelanggan_aktif: number
+}
+
 export interface VLabaProduk {
   produk_id: string
   kode_produk: string
