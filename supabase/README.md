@@ -432,6 +432,47 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Tiket -- lacak komplain/pertanyaan/retur pelanggan sampai tuntas
+(0031, 2026-09-08).** Fitur #3 dari 5 -- lanjutan "Kerjakan berurut"
+setelah fitur #2 (Grafik Pelanggan Aktif per Bulan, 0030, entri di
+bawah). Diadaptasi dari fitur "Tickets" pada CRM omnichannel pihak
+ketiga.
+
+Beda dengan Retur Penjualan (0004, murni transaksi barang/nilai
+keuangan): Tiket untuk MELACAK PENANGANAN keluhan sampai tuntas --
+komplain kualitas produk, salah kirim, pertanyaan, dst. -- yang belum
+tentu berujung retur barang. `faktur_id` di sini cuma REFERENSI opsional
+(bukan trigger apa pun ke stok/keuangan); kalau ujungnya memang retur,
+retur barangnya tetap dicatat terpisah lewat halaman Retur Penjualan
+seperti biasa -- sengaja tidak digabung supaya tidak menambah
+kerumitan pada alur retur yang sudah ada.
+
+Tabel baru `tiket`: `pelanggan_id`, `faktur_id` (opsional), `judul`,
+`deskripsi`, `status` (terbuka/diproses/selesai/dibatalkan),
+`prioritas` (rendah/sedang/tinggi), `ditugaskan_ke`/`dibuat_oleh`
+(keduanya referensi `profil`). Penomoran pakai `generate_nomor()` yang
+SAMA dengan dokumen lain (SO/PO/Faktur dst., lihat 0001/0006), prefix
+`TKT` -- format "TKT/2026/09/00001" -- supaya tidak menambah fungsi
+baru untuk hal yang sudah ada polanya.
+
+Halaman baru: **Tiket** (daftar, filter status & periode, cari nomor/
+judul) dan form buat/edit gabungan (pola sama seperti Akun Kas & Bank --
+satu form untuk baru maupun ubah, bukan alur draf->approve seperti
+Sales Order karena Tiket tidak punya baris item). Pelanggan & faktur
+terkait dipilih lewat `Combobox` yang sudah ada; faktur discope ke
+pelanggan yang sedang dipilih (baru bisa dicari setelah pelanggan
+dipilih). Ditambah komponen `Textarea` baru di `ui.tsx` (dulu semua
+field multi-baris di aplikasi ini "dipaksa" jadi `Input` satu baris --
+deskripsi tiket wajar lebih dari satu kalimat, jadi dibuatkan padanan
+`Input` yang men-support banyak baris, style konsisten) dan hook
+`useProfilAktif()` di `lib/queries.ts` untuk selector "Ditugaskan ke".
+
+**Belum diverifikasi lewat browser di sesi ini** -- sesi login yang
+dipakai untuk uji coba sebelumnya sudah kedaluwarsa. Sudah lolos
+`tsc --noEmit` dan `vite build`; mohon dicek alur buat tiket baru ->
+ubah status -> lihat lagi di daftar, setelah migrasi dijalankan dan
+login ulang.
+
 **Dasbor: grafik "Pelanggan Aktif per Bulan" (0030, 2026-09-08).**
 Fitur #2 dari 5 -- lanjutan "Kerjakan berurut" setelah fitur #1
 (Riwayat Follow-Up, 0029, entri di bawah). Diadaptasi dari dashboard

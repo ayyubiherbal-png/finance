@@ -99,6 +99,25 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
     )
   },
 )
+
+/** Sama seperti Input, tapi multi-baris -- dipakai untuk teks bebas yang bisa lebih dari satu kalimat (mis. deskripsi Tiket). */
+export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
+  ({ className, placeholder, ...props }, ref) => {
+    const { tt } = useI18n()
+    return (
+      <textarea
+        ref={ref}
+        placeholder={placeholder ? tt(placeholder) : placeholder}
+        className={cn(
+          'flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+          className,
+        )}
+        {...props}
+      />
+    )
+  },
+)
+Textarea.displayName = 'Textarea'
 Input.displayName = 'Input'
 
 function formatRibuan(n: number): string {

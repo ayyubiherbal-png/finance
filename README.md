@@ -20,13 +20,15 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0029_riwayat_follow_up.sql` dan
-> `0030_pelanggan_aktif_bulanan.sql`**
+> ⏳ **Belum dijalankan: `0029_riwayat_follow_up.sql`,
+> `0030_pelanggan_aktif_bulanan.sql`, dan `0031_tiket.sql`**
 > — 0029 dibutuhkan supaya tombol "Tandai Selesai" di halaman Tugas
 > Follow-Up berfungsi (tabel baru `riwayat_follow_up`, log siapa/kapan/
 > catatan hasil FU). 0030 dibutuhkan supaya grafik "Pelanggan Aktif per
 > Bulan" di Dasbor tidak error (view baru `v_pelanggan_aktif_bulanan`).
-> (0020-0028 terkonfirmasi sudah jalan.)
+> 0031 dibutuhkan supaya menu "Tiket" (CRM) berfungsi (tabel baru
+> `tiket`, penomoran otomatis prefix TKT). (0020-0028 terkonfirmasi
+> sudah jalan.)
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
 Editor Supabase, dan setiap file aman dijalankan berkali-kali
@@ -79,6 +81,7 @@ supabase/migrations/0027_pembeli_marketplace_telepon_manual.sql
 supabase/migrations/0028_pembeli_marketplace_jadi_pelanggan.sql
 supabase/migrations/0029_riwayat_follow_up.sql
 supabase/migrations/0030_pelanggan_aktif_bulanan.sql
+supabase/migrations/0031_tiket.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

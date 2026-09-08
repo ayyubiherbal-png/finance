@@ -117,6 +117,7 @@ const MENU: Grup[] = [
           { ke: '/pembeli-marketplace', label: 'menu.pembeliMarketplace' },
           { ke: '/tugas-follow-up', label: 'menu.tugasFollowUp' },
           { ke: '/riwayat-follow-up', label: 'menu.riwayatFollowUp' },
+          { ke: '/tiket', label: 'menu.tiket' },
         ],
       },
       {

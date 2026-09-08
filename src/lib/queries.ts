@@ -10,6 +10,7 @@ import type {
   WilayahKabupatenKota,
   WilayahKecamatan,
   WilayahKelurahan,
+  Profil,
 } from '@/types/db'
 
 /**
@@ -51,6 +52,24 @@ export function useAkunKasBankAktif() {
       return data ?? []
     },
     staleTime: 60_000,
+  })
+}
+
+/** Pengguna aktif -- untuk selector "ditugaskan ke" (mis. Tiket). */
+export function useProfilAktif() {
+  return useQuery({
+    queryKey: ['profil-aktif'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profil')
+        .select('id, nama, peran, telepon, aktif')
+        .eq('aktif', true)
+        .order('nama')
+        .returns<Profil[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 5 * 60_000,
   })
 }
 

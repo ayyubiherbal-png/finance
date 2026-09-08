@@ -20,6 +20,8 @@ import { CrmPelanggan } from '@/pages/CrmPelanggan'
 import { CrmPelangganProfil } from '@/pages/CrmPelangganProfil'
 import { TugasFollowUp } from '@/pages/TugasFollowUp'
 import { RiwayatFollowUp } from '@/pages/RiwayatFollowUp'
+import { Tiket } from '@/pages/Tiket'
+import { TiketForm } from '@/pages/TiketForm'
 import { Stok } from '@/pages/Stok'
 import { KartuStok } from '@/pages/KartuStok'
 import { AkunKasBank } from '@/pages/AkunKasBank'
@@ -99,6 +101,8 @@ function Rute() {
         <Route path="crm/pelanggan/:id" element={<CrmPelangganProfil />} />
         <Route path="tugas-follow-up" element={<TugasFollowUp />} />
         <Route path="riwayat-follow-up" element={<RiwayatFollowUp />} />
+        <Route path="tiket" element={<Tiket />} />
+        <Route path="tiket/:id" element={<TiketForm />} />
         <Route path="stok" element={<Stok />} />
         <Route path="kartu-stok" element={<KartuStok />} />
         <Route path="kas-bank" element={<AkunKasBank />} />

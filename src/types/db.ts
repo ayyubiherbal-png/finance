@@ -392,6 +392,26 @@ export interface PembeliMarketplace {
   updated_at: string
 }
 
+export type StatusTiket = 'terbuka' | 'diproses' | 'selesai' | 'dibatalkan'
+export type PrioritasTiket = 'rendah' | 'sedang' | 'tinggi'
+
+/** Komplain/retur pelanggan yang dilacak sampai tuntas -- lihat 0031. */
+export interface Tiket {
+  id: string
+  nomor: string
+  tanggal: string
+  pelanggan_id: string
+  faktur_id: string | null
+  judul: string
+  deskripsi: string | null
+  status: StatusTiket
+  prioritas: PrioritasTiket
+  ditugaskan_ke: string | null
+  dibuat_oleh: string | null
+  created_at: string
+  updated_at: string
+}
+
 /** Log "Tandai Selesai" di Tugas Follow-Up -- lihat 0029. entitas_id polymorphic (bukan FK). */
 export interface RiwayatFollowUp {
   id: string
