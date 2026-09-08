@@ -441,13 +441,19 @@ export interface CatatanRiwayat {
   created_at: string
 }
 
-export type KategoriJendelaFu = 'baru' | 'naik_kelas' | 'mulai_hilang' | 'tidur'
+export type KategoriTreatmentFu = 'baru' | 'naik_setia' | 'naik_juara' | 'mulai_hilang' | 'tidur'
 
-/** Jendela hari-sejak-transaksi yang menentukan cadence Tugas Follow-Up -- lihat 0033. */
-export interface PengaturanTugasFu {
-  kategori: KategoriJendelaFu
+/** Satu tahap treatment FU (H+N, pesan sendiri) -- lihat 0034. Satu kategori bisa punya banyak tahap. */
+export interface TahapanTreatmentFu {
+  id: string
+  kategori: KategoriTreatmentFu
+  label: string
   hari_min: number
   hari_max: number
+  pesan_template: string
+  urutan: number
+  aktif: boolean
+  created_at: string
   updated_at: string
   updated_oleh: string | null
 }

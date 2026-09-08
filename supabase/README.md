@@ -432,6 +432,55 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Tahapan treatment Follow-Up -- mengganti Aturan Jendela FU (0034,
+2026-09-08).** Setelah 5 fitur "Kerjakan berurut" selesai dan user
+mencoba langsung: "CRM saya masih belum puas ... timeline untuk FU
+juga belum bisa saya atur dari dashboard." Diperjelas lewat tanya
+jawab -- maksudnya bukan "kapan mulai" (itu yang 0033 kerjakan), tapi
+**treatment**: beberapa titik sentuh berurutan dengan pesan WA
+berbeda-beda per titik, mis. untuk pembeli baru: H+1 "sapa & cara
+pakai", H+3 "cek kepuasan", H+7 "tawarkan repeat order". Sekaligus
+menjawab permintaan lain di sesi yang sama: pesan WA yang tadinya
+hardcode (`pesanUntuk()`) sekarang bisa diedit sendiri lewat UI.
+
+**Tabel `pengaturan_tugas_fu` (0033) DIHAPUS di migrasi ini** -- baru
+dibuat sehari sebelumnya, isinya masih nilai default seed (user cuma
+sempat klik tombolnya, belum benar-benar mengubah angka), dan
+sepenuhnya digantikan tabel baru `tahapan_treatment_fu`. Ini kasus
+khusus (bukan pola umum "jangan pernah drop tabel produksi") --
+migrasi kemarin belum sempat benar-benar dipakai.
+
+Beda struktural dari 0033: satu baris di `tahapan_treatment_fu` = satu
+TAHAP (bukan satu kategori) -- kolom `hari_min`/`hari_max` (jendela
+H+N, sama seperti 0033) ditambah `label` (nama tahap, mis. "Sapa H+1")
+dan `pesan_template` (isi pesan WA, placeholder `{nama}` diganti nama
+pembeli/pelanggan saat dirender). Satu kategori bisa punya BANYAK baris
+tahap -- itulah "treatment" yang diminta. Dikunci ke 5 kategori tugas
+ASLI (baru/naik_setia/naik_juara/mulai_hilang/tidur), bukan 4 nilai
+gabungan "naik_kelas" seperti 0033 -- soalnya naik_setia (order ke-2)
+dan naik_juara (order ke-3) punya pesan beda meski jendela harinya
+kebetulan sama; dengan model banyak-tahap, tidak perlu lagi digabung.
+`jadikan_pelanggan` sengaja tidak dipindah ke sini -- pemicunya
+kelengkapan data kontak, bukan jendela hari, tetap satu pesan tunggal
+di kode seperti sebelumnya.
+
+Frontend (`TugasFollowUp.tsx`): `tugasId()` sekarang diikat ke id TAHAP
+(bukan cuma nama kategori) supaya H+1 dan H+3 pelanggan yang sama
+dianggap 2 tugas terpisah, bisa ditandai selesai satu-satu. Kolom baru
+"Tahap" di tabel tugas menampilkan label tahap yang cocok. Tombol
+"Tahapan Treatment" (ganti nama dari "Aturan Jendela FU", admin/owner
+saja) sekarang membuka panel penuh: tambah tahap baru, edit/hapus tahap
+yang ada, toggle aktif/nonaktif per tahap, dan textarea untuk pesan WA
+(pakai komponen `Textarea` dari `ui.tsx`, sudah ada sejak 0031).
+
+**Belum diverifikasi lewat browser di sesi ini** -- sesi login yang
+dipakai untuk uji coba sebelumnya sudah kedaluwarsa. Sudah lolos
+`tsc --noEmit` dan `vite build`; mohon dicek sebagai admin/owner:
+buka panel "Tahapan Treatment", tambah satu tahap baru untuk kategori
+"baru" (mis. label "Cek Kepuasan H+7", hari 5-9), Simpan, lalu cek
+pembeli yang cocok mendapat 2 tugas terpisah (H+1 dan H+7) di daftar
+Tugas Follow-Up dengan pesan WA yang berbeda.
+
 **Aturan Tugas Follow-Up bisa diatur sendiri (0033, 2026-09-08).**
 Fitur #5 -- TERAKHIR dari 5 yang disepakati "Kerjakan berurut",
 lanjutan fitur #4 (Catatan FU jadi riwayat, 0032, entri di bawah).

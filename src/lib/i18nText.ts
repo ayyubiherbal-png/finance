@@ -816,14 +816,22 @@ export const TEKS: Record<string, string> = {
   'Riwayat catatan': 'Note history',
   'Belum ada riwayat.': 'No history yet.',
 
-  // ---------- Aturan Jendela FU (0033, fitur #5 "Kerjakan berurut") ----------
-  'Aturan Jendela FU': 'Follow-Up Window Rules',
-  'Berapa hari sejak transaksi terakhir sebuah kategori tugas muncul di daftar. Cuma admin/owner yang boleh mengubah.':
-    'How many days since the last transaction a task category appears in the list. Only admins/owners may change this.',
-  'Baru Jadi Setia/Juara': 'Just Became Loyal/Champion',
-  's/d': 'to',
-  hari: 'days',
-  'Aturan jendela FU tersimpan.': 'Follow-up window rules saved.',
+  // ---------- Tahapan Treatment FU (0034, ganti "Aturan Jendela FU" 0033) ----------
+  'Tahapan Treatment': 'Follow-Up Treatment Stages',
+  'Titik sentuh (H+N) dan pesan WA per kategori -- satu kategori bisa punya beberapa tahap. Cuma admin/owner yang boleh mengubah.':
+    'Touchpoints (Day+N) and WA message per category -- one category can have several stages. Only admins/owners may change this.',
+  'Tambah Tahap': 'Add Stage',
+  'Belum ada tahap treatment.': 'No treatment stages yet.',
+  Label: 'Label',
+  Hari: 'Day',
+  Pesan: 'Message',
+  Tahap: 'Stage',
+  'Hari minimum': 'Minimum day',
+  'Hari maksimum': 'Maximum day',
+  'Pesan WA': 'WA message',
+  'Tahap tersimpan.': 'Stage saved.',
+  'Tahap ditambahkan.': 'Stage added.',
+  'Tahap dihapus.': 'Stage deleted.',
   'Tanpa nomor': 'No number',
   'Tidak ada tugas follow-up hari ini. Cek lagi besok.': 'No follow-up tasks today. Check again tomorrow.',
   'Tidak ada tugas di kategori ini.': 'No tasks in this category.',
