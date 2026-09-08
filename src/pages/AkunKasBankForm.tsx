@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { tt } from '@/lib/i18n'
 import { toast } from '@/components/Toast'
 import { rupiah } from '@/lib/format'
 import { Button, Card, CardContent, Input, InputAngka, Label, PesanError, Select, Spinner } from '@/components/ui'
@@ -158,7 +159,7 @@ export function AkunKasBankForm() {
         </div>
         {!isBaru && saldo ? (
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Saldo berjalan</p>
+            <p className="text-xs text-muted-foreground">{tt('Saldo berjalan')}</p>
             <p className="tabular text-lg font-semibold">{rupiah(saldo.saldo)}</p>
           </div>
         ) : null}
@@ -209,8 +210,7 @@ export function AkunKasBankForm() {
             <InputAngka value={form.saldo_awal} onChange={(nilai) => ubah('saldo_awal', nilai)} />
             {!isBaru ? (
               <p className="text-xs text-muted-foreground">
-                Saldo dihitung ulang otomatis (saldo awal + semua transaksi), jadi mengubah ini langsung
-                mengubah saldo berjalan di kanan atas -- pakai kalau ada salah input di awal, bukan buat "menambah" saldo.
+                {tt('Saldo dihitung ulang otomatis (saldo awal + semua transaksi), jadi mengubah ini langsung mengubah saldo berjalan di kanan atas -- pakai kalau ada salah input di awal, bukan buat "menambah" saldo.')}
               </p>
             ) : null}
           </div>

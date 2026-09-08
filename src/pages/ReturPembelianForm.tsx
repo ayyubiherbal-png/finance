@@ -316,7 +316,7 @@ function FormEdit({ returId }: { returId: string }) {
   }
 
   async function hapusItem(itemId: string) {
-    if (!window.confirm('Hapus baris ini?')) return
+    if (!window.confirm(tt('Hapus baris ini?'))) return
     const { error } = await supabase.from('retur_pembelian_item').delete().eq('id', itemId)
     if (!error) {
       toast('Item dihapus.')
@@ -325,7 +325,7 @@ function FormEdit({ returId }: { returId: string }) {
   }
 
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
-    if (statusBaru === 'dibatalkan' && !window.confirm('Batalkan retur ini? Efek stoknya akan dibalik.')) return
+    if (statusBaru === 'dibatalkan' && !window.confirm(tt('Batalkan retur ini? Efek stoknya akan dibalik.'))) return
     setError(null)
     setMemprosesStatus(true)
     try {

@@ -51,7 +51,7 @@ export function AkunKasBank() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{tt('Kas & Bank')}</h1>
           <p className="text-sm text-muted-foreground">
-            Setiap Penerimaan Kas dan Pembayaran Supplier tertaut ke salah satu akun ini
+            {tt('Setiap Penerimaan Kas dan Pembayaran Supplier tertaut ke salah satu akun ini')}
           </p>
         </div>
         <div className="flex flex-1 justify-end gap-2 sm:flex-none">
@@ -117,7 +117,7 @@ export function AkunKasBank() {
 
       {data && data.length > 0 ? (
         <p className="text-right text-sm text-muted-foreground">
-          Total saldo (akun aktif): <span className="tabular font-medium text-foreground">{rupiah(totalSaldo)}</span>
+          {tt('Total saldo (akun aktif):')} <span className="tabular font-medium text-foreground">{rupiah(totalSaldo)}</span>
         </p>
       ) : null}
     </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { tt } from '@/lib/i18n'
 import { toast } from '@/components/Toast'
 import {
   useWilayahProvinsi,
@@ -218,7 +219,7 @@ export function SupplierForm() {
           </div>
 
           <div className="space-y-3 border-t border-border pt-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Wilayah</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tt('Wilayah')}</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Provinsi</Label>

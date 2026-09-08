@@ -60,7 +60,7 @@ export function PenerimaanBarang() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{tt('Penerimaan Barang')}</h1>
         <p className="text-sm text-muted-foreground">
-          Dibuat dari Purchase Order yang sudah disetujui. Untuk membuat baru, buka PO-nya dan klik "Buat Penerimaan Barang".
+          {tt('Dibuat dari Purchase Order yang sudah disetujui. Untuk membuat baru, buka PO-nya dan klik "Buat Penerimaan Barang".')}
         </p>
       </div>
 

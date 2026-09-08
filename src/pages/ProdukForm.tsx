@@ -134,7 +134,7 @@ function FormBaru() {
       .single()
     if (error) {
       const err = error as { code?: string }
-      setError(err.code === '23505' ? new Error(`Kode "${kode}" sudah dipakai kategori lain.`) : error)
+      setError(err.code === '23505' ? new Error(tt('Kode "{kode}" sudah dipakai kategori lain.').replace('{kode}', kode)) : error)
       return
     }
     queryClient.invalidateQueries({ queryKey: ['kategori-produk'] })
@@ -238,7 +238,7 @@ function FormBaru() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Kode awal dipakai sebagai awalan SKU produk di kategori ini, mis. "MKR" jadi MKR-001.
+                  {tt('Kode awal dipakai sebagai awalan SKU produk di kategori ini, mis. "MKR" jadi MKR-001.')}
                 </p>
                 <div className="flex gap-2">
                   <Button type="button" onClick={buatKategori}>
@@ -285,7 +285,7 @@ function FormBaru() {
               ))}
             </Select>
             <p className="text-xs text-muted-foreground">
-              Satuan terkecil untuk stok & HPP, mis. PCS. Satuan lain (LUSIN, DUS) ditambahkan setelah produk tersimpan.
+              {tt('Satuan terkecil untuk stok & HPP, mis. PCS. Satuan lain (LUSIN, DUS) ditambahkan setelah produk tersimpan.')}
             </p>
           </div>
 
@@ -478,7 +478,7 @@ function FormEdit({ produkId }: { produkId: string }) {
       setError(new Error('Satuan dasar tidak bisa dihapus.'))
       return
     }
-    if (!window.confirm('Hapus satuan ini?')) return
+    if (!window.confirm(tt('Hapus satuan ini?'))) return
     const { error } = await supabase.from('produk_satuan').delete().eq('id', baris.id)
     if (error) setError(error)
     else {
@@ -517,7 +517,7 @@ function FormEdit({ produkId }: { produkId: string }) {
     }
   }
   async function hapusHarga(id: string) {
-    if (!window.confirm('Hapus aturan harga ini?')) return
+    if (!window.confirm(tt('Hapus aturan harga ini?'))) return
     const { error } = await supabase.from('produk_harga').delete().eq('id', id)
     if (error) setError(error)
     else {
@@ -584,7 +584,7 @@ function FormEdit({ produkId }: { produkId: string }) {
             <Label>Satuan dasar</Label>
             <Input disabled value={satuanDasar ? `${satuanDasar.nama} (${satuanDasar.kode})` : '-'} />
             <p className="text-xs text-muted-foreground">
-              Tidak bisa diubah setelah produk dibuat -- konversi transaksi lama bergantung pada satuan ini.
+              {tt('Tidak bisa diubah setelah produk dibuat -- konversi transaksi lama bergantung pada satuan ini.')}
             </p>
           </div>
 
@@ -626,7 +626,7 @@ function FormEdit({ produkId }: { produkId: string }) {
 
           <div className="grid grid-cols-2 gap-4 rounded-md bg-muted/50 p-3 text-sm">
             <div>
-              <p className="text-xs text-muted-foreground">HPP rata-rata</p>
+              <p className="text-xs text-muted-foreground">{tt('HPP rata-rata')}</p>
               <p className="tabular font-medium">{rupiah(produk.hpp_rata2)}</p>
             </div>
           </div>
@@ -661,7 +661,7 @@ function FormEdit({ produkId }: { produkId: string }) {
                   <Td className="font-medium">
                     {s.satuan?.nama} ({s.satuan?.kode})
                     {s.satuan_id === produk.satuan_dasar_id ? (
-                      <span className="ml-2 text-xs text-muted-foreground">(satuan dasar)</span>
+                      <span className="ml-2 text-xs text-muted-foreground">{tt('(satuan dasar)')}</span>
                     ) : null}
                   </Td>
                   <Td className="tabular text-right">{s.konversi}</Td>
@@ -788,7 +788,7 @@ function FormEdit({ produkId }: { produkId: string }) {
             <Button onClick={tambahHarga}>Tambah</Button>
           </div>
           <p className="px-3 pb-2 text-xs text-muted-foreground">
-            Isi min. qty lebih dari 1 untuk diskon bertingkat (mis. beli 12+ dapat harga lebih murah).
+            {tt('Isi min. qty lebih dari 1 untuk diskon bertingkat (mis. beli 12+ dapat harga lebih murah).')}
           </p>
         </CardContent>
       </Card>

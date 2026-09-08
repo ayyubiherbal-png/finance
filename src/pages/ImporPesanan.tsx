@@ -372,7 +372,7 @@ export function ImporPesanan() {
 
     setHasilProses({ berhasil, dilewati: pesanan.length - dipilih.length, gagal })
     setMemproses(false)
-    if (berhasil > 0) toast(`${berhasil} pesanan berhasil diimpor.`)
+    if (berhasil > 0) toast(tt('{n} pesanan berhasil diimpor.').replace('{n}', String(berhasil)))
   }
 
   /**
@@ -415,7 +415,7 @@ export function ImporPesanan() {
 
     setHasilUpdate({ berhasil, gagal })
     setMemprosesUpdate(false)
-    if (berhasil > 0) toast(`${berhasil} status pesanan berhasil diperbarui.`)
+    if (berhasil > 0) toast(tt('{n} status pesanan berhasil diperbarui.').replace('{n}', String(berhasil)))
   }
 
   return (

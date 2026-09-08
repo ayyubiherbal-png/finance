@@ -289,7 +289,7 @@ function FormBaru() {
             </Select>
             {akunAktif && akunAktif.length === 0 ? (
               <p className="text-xs text-destructive">
-                Belum ada akun kas/bank. Tambahkan dulu di menu Kas & Bank.
+                {tt('Belum ada akun kas/bank. Tambahkan dulu di menu Kas & Bank.')}
               </p>
             ) : null}
           </div>
@@ -392,7 +392,7 @@ function FormDetail({ kasId }: { kasId: string }) {
   })
 
   async function batalkan() {
-    if (!window.confirm('Batalkan penerimaan kas ini? Sisa tagihan di faktur terkait akan naik lagi.')) return
+    if (!window.confirm(tt('Batalkan penerimaan kas ini? Sisa tagihan di faktur terkait akan naik lagi.'))) return
     setError(null)
     setMemproses(true)
     try {

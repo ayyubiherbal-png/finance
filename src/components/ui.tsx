@@ -379,11 +379,18 @@ export function KondisiKosong({ pesan = 'Belum ada data.' }: { pesan?: string })
   return <div className="px-3 py-10 text-center text-sm text-muted-foreground">{tt(pesan)}</div>
 }
 
+/**
+ * Pesan errornya ikut diterjemahkan lewat `tt()` -- pesan buatan sendiri
+ * (`new Error('Pilih pelanggan dulu.')` dkk. di ~20 halaman) ada di kamus
+ * jadi ikut berganti bahasa, sementara pesan teknis dari Postgres/Supabase
+ * (bahasa Inggris, tidak ada di kamus) aman lewat apa adanya karena `tt()`
+ * mengembalikan teks aslinya kalau tidak ketemu.
+ */
 export function PesanError({ error }: { error: unknown }) {
-  const pesan = pesanKesalahan(error)
+  const { tt } = useI18n()
   return (
     <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-      {pesan}
+      {tt(pesanKesalahan(error))}
     </div>
   )
 }

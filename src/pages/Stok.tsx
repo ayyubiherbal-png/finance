@@ -126,7 +126,7 @@ export function Stok() {
 
       {data && data.length > 0 ? (
         <p className="text-right text-sm text-muted-foreground">
-          Total nilai persediaan: <span className="tabular font-medium text-foreground">{rupiah(totalNilai)}</span>
+          {tt('Total nilai persediaan:')} <span className="tabular font-medium text-foreground">{rupiah(totalNilai)}</span>
         </p>
       ) : null}
     </div>

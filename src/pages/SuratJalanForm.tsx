@@ -136,9 +136,9 @@ function FormBaru({ soId }: { soId: string | null }) {
   if (!soId) {
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
-        <p className="font-medium">Surat Jalan dibuat dari Sales Order</p>
+        <p className="font-medium">{tt('Surat Jalan dibuat dari Sales Order')}</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Buka daftar Sales Order, pilih yang berstatus "Disetujui", lalu klik "Buat Surat Jalan".
+          {tt('Buka daftar Sales Order, pilih yang berstatus "Disetujui", lalu klik "Buat Surat Jalan".')}
         </p>
         <Button asChild className="mt-4">
           <Link to="/sales-order">Ke Sales Order</Link>
@@ -233,7 +233,7 @@ function FormBaru({ soId }: { soId: string | null }) {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{tt('Surat Jalan Baru')}</h1>
           <p className="text-sm text-muted-foreground">
-            Dari SO <span className="font-mono">{so.nomor}</span> &middot; {so.pelanggan?.nama}
+            {tt('Dari SO')} <span className="font-mono">{so.nomor}</span> &middot; {so.pelanggan?.nama}
           </p>
         </div>
       </div>
@@ -342,7 +342,7 @@ function FormBaru({ soId }: { soId: string | null }) {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            "Kirim Sekarang" langsung mengurangi stok gudang {so.gudang?.nama}.
+            {tt('"Kirim Sekarang" langsung mengurangi stok gudang')} {so.gudang?.nama}.
           </p>
         </CardContent>
       </Card>
@@ -414,7 +414,7 @@ function FormDetail({ sjId }: { sjId: string }) {
   })
 
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
-    if (statusBaru === 'dibatalkan' && !window.confirm('Batalkan Surat Jalan ini? Stok yang sudah terkirim akan dikembalikan.')) {
+    if (statusBaru === 'dibatalkan' && !window.confirm(tt('Batalkan Surat Jalan ini? Stok yang sudah terkirim akan dikembalikan.'))) {
       return
     }
     setError(null)

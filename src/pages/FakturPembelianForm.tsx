@@ -369,7 +369,7 @@ function FormDetail({ fakturId }: { fakturId: string }) {
   })
 
   async function batalkan() {
-    if (!window.confirm('Batalkan faktur ini? Hanya bisa kalau belum ada pembayaran tercatat.')) return
+    if (!window.confirm(tt('Batalkan faktur ini? Hanya bisa kalau belum ada pembayaran tercatat.'))) return
     setError(null)
     setMemproses(true)
     try {
@@ -462,15 +462,15 @@ function FormDetail({ fakturId }: { fakturId: string }) {
           <div className="flex justify-end border-t border-border p-3">
             <div className="w-full max-w-xs space-y-1 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Total</span>
+                <span>{tt('Total')}</span>
                 <span className="tabular">{rupiah(faktur.total)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Terbayar</span>
+                <span>{tt('Terbayar')}</span>
                 <span className="tabular">{rupiah(faktur.terbayar)}</span>
               </div>
               <div className="flex justify-between text-base font-semibold">
-                <span>Sisa</span>
+                <span>{tt('Sisa')}</span>
                 <span className="tabular">{rupiah(faktur.sisa)}</span>
               </div>
             </div>

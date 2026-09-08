@@ -432,6 +432,48 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Dwibahasa TAHAP 2: sapuan menyeluruh SEMUA halaman (murni frontend,
+2026-09-08).** User: "cek juga semua halaman. semuanya yang belum bisa."
+Rollout dwibahasa TAHAP 1 memang sengaja cuma "chrome" aplikasi (lihat
+catatan kepala `i18n.tsx`) -- isi halamannya menyusul, dan ini
+penyusulannya.
+
+Disisir lewat script (`scan`/`kurang-kamus`/`error-kurang` di scratchpad
+sesi): semua `tt('...')`, `placeholder=`, `toast()`, `new Error()`,
+`window.confirm()`, dan teks mentah di dalam `<h1>/<h2>/<p>/<span>` di
+49 halaman + komponen. Hasil:
+
+- **2 perbaikan terpusat** (sekali edit, kena semua halaman):
+  `PesanError` sekarang menerjemahkan pesannya (`tt(pesanKesalahan(...))`)
+  -- ini menutup SEMUA `new Error('...')` buatan sendiri di ~20 halaman
+  sekaligus, sementara error teknis Supabase (Inggris) lewat apa adanya
+  karena tidak ada entrinya. (`toast()` ternyata SUDAH diterjemahkan
+  saat render di `Toaster`, dan placeholder `Input`/`Combobox` juga
+  sudah -- jadi keduanya cuma kurang entri kamus, bukan kurang kode.)
+- **62 pembungkusan `tt()`** di 24 file: 44 teks JSX + 18
+  `window.confirm()`, dikerjakan lewat script transformasi konservatif
+  (cuma menyentuh blok teks murni tanpa JSX/interpolasi di dalamnya),
+  sisanya manual untuk yang bercampur `<span>`/`${...}`.
+- **~130 entri kamus baru**: judul halaman (Kas & Bank, Kartu Stok,
+  Laporan Omzet, ...), teks bantuan, 30 pesan validasi, konfirmasi
+  hapus/batal, dan placeholder.
+- Teks dengan angka/nama di tengahnya (mis. "3 pesanan berhasil
+  diimpor.") diubah pakai pola placeholder `{n}`/`{nama}`/`{kode}` +
+  `.replace()` supaya kalimat utuhnya bisa masuk kamus, bukan dipecah
+  jadi potongan yang tidak nyambung kalau dibalik urutannya di Inggris.
+
+Yang SENGAJA tidak ikut: halaman CETAK (Invoice, Label pengiriman) --
+itu untuk pembeli/kurir Indonesia (keputusan lama, lihat kepala
+`i18n.tsx`); nama merek "Ayyubi Finance"; dan satu error internal
+developer (`useAuth harus dipakai di dalam AuthProvider`) yang tidak
+pernah tampil ke user.
+
+Diverifikasi: `tsc` bersih, `vite build` bersih, 38 sampel teks dicek
+lewat browser dengan bahasa dipaksa 'en' (semua benar diterjemahkan),
+dan 28 halaman yang tersentuh script di-import ulang satu per satu di
+browser untuk memastikan tidak ada JSX yang rusak akibat transformasi
+otomatis.
+
 **Kamus dwibahasa lanjutan: teks yang RENDER TANPA `tt()` sama sekali
 (murni frontend, 2026-09-08).** Setelah 36 teks di atas ditambahkan,
 user masih lihat "Customer Segments" (h1, sudah benar) tapi subjudul

@@ -105,7 +105,7 @@ export function KartuKasBank() {
       {!akunId ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            Pilih akun dulu untuk melihat kartunya.
+            {tt('Pilih akun dulu untuk melihat kartunya.')}
           </CardContent>
         </Card>
       ) : (

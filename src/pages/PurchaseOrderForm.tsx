@@ -260,7 +260,7 @@ export function PurchaseOrderForm() {
                 Simpan sebagai Draf
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">Item produk ditambahkan setelah draf tersimpan.</p>
+            <p className="text-xs text-muted-foreground">{tt('Item produk ditambahkan setelah draf tersimpan.')}</p>
           </CardContent>
         </Card>
       </div>
@@ -365,7 +365,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
   }
 
   async function hapusItem(itemId: string) {
-    if (!window.confirm('Hapus baris ini dari Purchase Order?')) return
+    if (!window.confirm(tt('Hapus baris ini dari Purchase Order?'))) return
     const { error } = await supabase.from('purchase_order_item').delete().eq('id', itemId)
     if (!error) {
       toast('Item dihapus.')
@@ -374,7 +374,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
   }
 
   async function ubahStatus(statusBaru: 'disetujui' | 'dibatalkan' | 'draf') {
-    if (statusBaru === 'dibatalkan' && !window.confirm('Batalkan Purchase Order ini?')) return
+    if (statusBaru === 'dibatalkan' && !window.confirm(tt('Batalkan Purchase Order ini?'))) return
     setErrorStatus(null)
     setMemprosesStatus(true)
     try {
@@ -560,11 +560,11 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
           <div className="flex justify-end border-t border-border p-3">
             <div className="w-full max-w-xs space-y-1 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal</span>
+                <span>{tt('Subtotal')}</span>
                 <span className="tabular">{rupiah(po.subtotal)}</span>
               </div>
               <div className="flex justify-between text-base font-semibold">
-                <span>Total</span>
+                <span>{tt('Total')}</span>
                 <span className="tabular">{rupiah(po.total)}</span>
               </div>
             </div>

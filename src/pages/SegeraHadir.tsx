@@ -1,4 +1,5 @@
 import { Construction } from 'lucide-react'
+import { tt } from '@/lib/i18n'
 import { Card, CardContent } from '@/components/ui'
 
 /**
@@ -12,7 +13,7 @@ export function SegeraHadir({ judul, catatan }: { judul: string; catatan?: strin
       <Card>
         <CardContent className="flex flex-col items-center gap-2 py-16 text-center">
           <Construction className="h-8 w-8 text-muted-foreground" />
-          <p className="font-medium">Layar ini belum dibangun</p>
+          <p className="font-medium">{tt('Layar ini belum dibangun')}</p>
           <p className="max-w-md text-sm text-muted-foreground">
             {catatan ?? 'Tabel dan trigger di database sudah siap; tinggal antarmukanya.'}
           </p>

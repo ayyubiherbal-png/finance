@@ -451,7 +451,7 @@ export function PenjualanCepat() {
                       {barisPending.produkLabel.sublabel}
                     </span>
                     <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold not-italic text-amber-800">
-                      belum ditekan Tambah
+                      {tt('belum ditekan Tambah')}
                     </span>
                   </Td>
                   <Td className="text-xs text-muted-foreground">{barisPending.satuanKode}</Td>
@@ -473,8 +473,8 @@ export function PenjualanCepat() {
           </Table>
           {barisPending ? (
             <p className="px-3 pt-2 text-xs text-amber-700">
-              Baris di atas belum ditekan <strong>Tambah</strong> tapi tetap akan ikut diproses. Klik{' '}
-              <strong>Tambah</strong> untuk memastikan sebelum menambah barang lain.
+              {tt('Baris di atas belum ditekan')} <strong>{tt('Tambah')}</strong> {tt('tapi tetap akan ikut diproses. Klik')}{' '}
+              <strong>{tt('Tambah')}</strong> {tt('untuk memastikan sebelum menambah barang lain.')}
             </p>
           ) : null}
 
@@ -558,7 +558,7 @@ export function PenjualanCepat() {
 
           <div className="flex justify-end border-t border-border p-3">
             <div className="flex w-full max-w-xs justify-between text-base font-semibold">
-              <span>Total</span>
+              <span>{tt('Total')}</span>
               <span className="tabular">{rupiah(total)}</span>
             </div>
           </div>
@@ -607,7 +607,7 @@ export function PenjualanCepat() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Fakturnya akan tercatat sebagai piutang. Pembayarannya dicatat nanti lewat menu Penerimaan Kas.
+              {tt('Fakturnya akan tercatat sebagai piutang. Pembayarannya dicatat nanti lewat menu Penerimaan Kas.')}
             </p>
           )}
 

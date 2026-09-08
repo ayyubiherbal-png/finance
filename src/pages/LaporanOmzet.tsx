@@ -105,7 +105,7 @@ export function LaporanOmzet() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{tt('Laporan Omzet')}</h1>
         <p className="text-sm text-muted-foreground">
-          Omzet &amp; laba kotor dari seluruh Faktur Penjualan (di luar yang dibatalkan), dikelompokkan per periode
+          {tt('Omzet & laba kotor dari seluruh Faktur Penjualan (di luar yang dibatalkan), dikelompokkan per periode')}
         </p>
       </div>
 

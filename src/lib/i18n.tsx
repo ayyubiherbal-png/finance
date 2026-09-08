@@ -561,6 +561,182 @@ const TEKS: Record<string, string> = {
   'Terdaftar tapi belum pernah belanja': 'Registered but never ordered',
   'Dibuat dari Sales Order yang sudah disetujui. Untuk membuat baru, buka SO-nya dan klik "Buat Surat Jalan". Centang beberapa baris untuk mencetak banyak label pengiriman sekaligus.':
     'Created from an approved Sales Order. To create a new one, open the SO and click "Create Delivery Note". Check several rows to print multiple shipping labels at once.',
+
+  // ---------- Sapuan menyeluruh SEMUA halaman (2026-09-08) ----------
+  // User: "cek juga semua halaman. semuanya yang belum bisa". Disisir lewat
+  // script: judul halaman, teks bantuan, pesan konfirmasi/error/toast, dan
+  // placeholder di 49 halaman. Halaman CETAK (Invoice/Label) sengaja TIDAK
+  // ikut -- itu untuk pembeli/kurir Indonesia, lihat catatan di atas.
+
+  // Judul halaman & form
+  'Kas & Bank': 'Cash & Bank',
+  'Kartu Kas & Bank': 'Cash & Bank Ledger',
+  'Kartu Stok': 'Stock Card',
+  'Stok per Gudang': 'Stock by Warehouse',
+  'Penjualan Cepat': 'Quick Sale',
+  'Penerimaan Kas': 'Cash Receipt',
+  'Penerimaan Barang': 'Goods Receipt',
+  'Penerimaan Barang Baru': 'New Goods Receipt',
+  'Purchase Order': 'Purchase Order',
+  'Purchase Order Baru': 'New Purchase Order',
+  'Pembayaran Supplier': 'Supplier Payment',
+  'Faktur Pembelian': 'Purchase Invoice',
+  'Faktur Pembelian Baru': 'New Purchase Invoice',
+  'Faktur Penjualan Baru': 'New Sales Invoice',
+  'Sales Order Baru': 'New Sales Order',
+  'Surat Jalan Baru': 'New Delivery Note',
+  'Retur Penjualan': 'Sales Return',
+  'Retur Penjualan Baru': 'New Sales Return',
+  'Retur Pembelian': 'Purchase Return',
+  'Retur Pembelian Baru': 'New Purchase Return',
+  'Penyesuaian Stok': 'Stock Adjustment',
+  'Penyesuaian Stok Baru': 'New Stock Adjustment',
+  'Laporan Omzet': 'Revenue Report',
+  'Laporan Piutang': 'Receivables Report',
+  'Laporan Laba Kotor': 'Gross Profit Report',
+
+  // Label & potongan teks pendek
+  'Saldo berjalan': 'Running balance',
+  Terbayar: 'Paid',
+  'HPP rata-rata': 'Average COGS',
+  '(satuan dasar)': '(base unit)',
+  Nonaktif: 'Inactive',
+  Utama: 'Main',
+  Wilayah: 'Region',
+  QRIS: 'QRIS',
+  'Faktur lewat jatuh tempo': 'Overdue invoices',
+  'Total saldo (akun aktif):': 'Total balance (active accounts):',
+  'Total nilai persediaan:': 'Total inventory value:',
+  'Dari PO': 'From PO',
+  'Dari SO': 'From SO',
+  'Layar ini belum dibangun': "This screen isn't built yet",
+  'Tidak ada pembeli yang cocok.': 'No matching buyers.',
+  'Belum ada data. Klik': 'No data yet. Click',
+  'belum ditekan Tambah': 'Add not pressed yet',
+  'Baris di atas belum ditekan': "The row above hasn't been added with",
+  'tapi tetap akan ikut diproses. Klik': 'yet, but it will still be processed. Click',
+
+  // Teks bantuan / penjelasan di halaman
+  'Setiap Penerimaan Kas dan Pembayaran Supplier tertaut ke salah satu akun ini':
+    'Every Cash Receipt and Supplier Payment is linked to one of these accounts',
+  'Saldo dihitung ulang otomatis (saldo awal + semua transaksi), jadi mengubah ini langsung mengubah saldo berjalan di kanan atas -- pakai kalau ada salah input di awal, bukan buat "menambah" saldo.':
+    'The balance is recalculated automatically (opening balance + all transactions), so changing this directly changes the running balance shown top-right -- use it to fix a wrong initial entry, not to "top up" the balance.',
+  'Dipakai di kop dokumen cetak (Invoice, dll.) untuk gudang utama.': 'Used in the letterhead of printed documents (Invoice, etc.) for the main warehouse.',
+  'Stok lintas gudang dan nilai persediaan berdasarkan HPP rata-rata': 'Stock across warehouses and inventory value based on average COGS',
+  'Omzet & laba kotor dari seluruh Faktur Penjualan (di luar yang dibatalkan), dikelompokkan per periode':
+    'Revenue & gross profit from all Sales Invoices (excluding cancelled ones), grouped by period',
+  'Barang langsung diserahkan & dibayar. Sistem otomatis membuat Sales Order, Surat Jalan, Faktur, dan Penerimaan Kas sekaligus.':
+    'Goods handed over & paid on the spot. The system automatically creates the Sales Order, Delivery Note, Invoice, and Cash Receipt all at once.',
+  'Fakturnya akan tercatat sebagai piutang. Pembayarannya dicatat nanti lewat menu Penerimaan Kas.':
+    'The invoice will be recorded as a receivable. Payment is recorded later via the Cash Receipt menu.',
+  'Item produk ditambahkan setelah draf tersimpan.': 'Product items are added after the draft is saved.',
+  'Belum ada akun kas/bank. Tambahkan dulu di menu Kas & Bank.': 'No cash/bank account yet. Add one from the Cash & Bank menu first.',
+  'Penerimaan Barang dibuat dari Purchase Order': 'Goods Receipts are created from a Purchase Order',
+  'Buka daftar Purchase Order, pilih yang berstatus "Disetujui", lalu klik "Buat Penerimaan Barang".':
+    'Open the Purchase Order list, pick one with "Approved" status, then click "Create Goods Receipt".',
+  'Dibuat dari Purchase Order yang sudah disetujui. Untuk membuat baru, buka PO-nya dan klik "Buat Penerimaan Barang".':
+    'Created from an approved Purchase Order. To create a new one, open the PO and click "Create Goods Receipt".',
+  'Dibagi proporsional ke tiap produk dan ikut masuk perhitungan HPP.': 'Split proportionally across products and included in the COGS calculation.',
+  '"Terima Sekarang" langsung menambah stok gudang': '"Receive Now" immediately adds stock to warehouse',
+  'dan menghitung ulang HPP.': 'and recalculates COGS.',
+  'Surat Jalan dibuat dari Sales Order': 'Delivery Notes are created from a Sales Order',
+  'Buka daftar Sales Order, pilih yang berstatus "Disetujui", lalu klik "Buat Surat Jalan".':
+    'Open the Sales Order list, pick one with "Approved" status, then click "Create Delivery Note".',
+  '"Kirim Sekarang" langsung mengurangi stok gudang': '"Ship Now" immediately reduces stock from warehouse',
+  'Terisi otomatis ke akun agregat kanal ini. Ganti kalau pembeli sudah punya data pelanggan sendiri.':
+    "Auto-filled to this channel's aggregate account. Change it if the buyer already has their own customer record.",
+  'Kode awal dipakai sebagai awalan SKU produk di kategori ini, mis. "MKR" jadi MKR-001.':
+    'The prefix is used as the SKU prefix for products in this category, e.g. "MKR" becomes MKR-001.',
+  'Satuan terkecil untuk stok & HPP, mis. PCS. Satuan lain (LUSIN, DUS) ditambahkan setelah produk tersimpan.':
+    'Smallest unit for stock & COGS, e.g. PCS. Other units (DOZEN, BOX) are added after the product is saved.',
+  'Tidak bisa diubah setelah produk dibuat -- konversi transaksi lama bergantung pada satuan ini.':
+    'Cannot be changed after the product is created -- conversions on past transactions depend on this unit.',
+  'Isi min. qty lebih dari 1 untuk diskon bertingkat (mis. beli 12+ dapat harga lebih murah).':
+    'Set min. qty above 1 for tiered discounts (e.g. buy 12+ for a lower price).',
+  'Qty positif menambah stok (HPP ikut bergerak kalau diisi). Qty negatif mengurangi stok (mis. rusak/hilang), HPP tidak berlaku.':
+    'Positive qty adds stock (COGS moves too if filled in). Negative qty reduces stock (e.g. damaged/lost); COGS does not apply.',
+  'Diisi otomatis dari data Pembeli Marketplace -- periksa dulu, lengkapi wilayah/tier harga kalau perlu, lalu Simpan.':
+    'Auto-filled from Marketplace Buyer data -- review it first, complete the region/price tier if needed, then Save.',
+
+  // Konfirmasi (window.confirm) & pesan
+  'Batalkan faktur ini? Hanya bisa kalau belum ada pembayaran tercatat.': 'Cancel this invoice? Only possible if no payment has been recorded yet.',
+  'Batalkan pembayaran ini? Sisa tagihan di faktur terkait akan naik lagi.':
+    'Cancel this payment? The outstanding balance on the related invoices will go back up.',
+  'Batalkan penerimaan kas ini? Sisa tagihan di faktur terkait akan naik lagi.':
+    'Cancel this cash receipt? The outstanding balance on the related invoices will go back up.',
+  'Batalkan Penerimaan Barang ini? Stok yang sudah masuk akan dikurangi lagi.':
+    'Cancel this goods receipt? The stock already added will be deducted again.',
+  'Batalkan Surat Jalan ini? Stok yang sudah terkirim akan dikembalikan.': 'Cancel this delivery note? The stock already shipped will be returned.',
+  'Batalkan penyesuaian ini? Efek stoknya akan dibalik.': 'Cancel this adjustment? Its stock effect will be reversed.',
+  'Batalkan retur ini? Efek stoknya akan dibalik.': 'Cancel this return? Its stock effect will be reversed.',
+  'Batalkan Purchase Order ini?': 'Cancel this purchase order?',
+  'Batalkan Sales Order ini?': 'Cancel this sales order?',
+  'Hapus baris ini?': 'Delete this row?',
+  'Hapus baris ini dari Purchase Order?': 'Delete this row from the purchase order?',
+  'Hapus baris ini dari Sales Order?': 'Delete this row from the sales order?',
+  'Hapus satuan ini?': 'Delete this unit?',
+  'Hapus aturan harga ini?': 'Delete this price rule?',
+  'Hapus {nama} dari daftar ini? Data pesanan/Faktur asli TIDAK ikut terhapus, ini cuma daftar follow-up.':
+    'Remove {nama} from this list? The original order/Invoice data is NOT deleted -- this is only a follow-up list.',
+  'ID "{kode}" sudah dipakai pelanggan lain. Pakai ID yang berbeda.': 'ID "{kode}" is already used by another customer. Use a different ID.',
+  'Kode "{kode}" sudah dipakai kategori lain.': 'Code "{kode}" is already used by another category.',
+  'Pelanggan tersimpan, tapi gagal menandai baris Pembeli Marketplace: {pesan}':
+    'Customer saved, but marking the Marketplace Buyer row failed: {pesan}',
+  'Sinkronisasi selesai -- {n} baris ditambah/diperbarui.': 'Sync complete -- {n} rows added/updated.',
+  '{n} pesanan berhasil diimpor.': '{n} orders imported successfully.',
+  '{n} status pesanan berhasil diperbarui.': '{n} order statuses updated successfully.',
+
+  // Placeholder
+  'Pilih produk...': 'Select product...',
+  'Nama asli...': 'Real name...',
+  'Alamat...': 'Address...',
+  'Cari nama, telepon, catatan...': 'Search name, phone, notes...',
+  'mis. sudah dihubungi...': 'e.g. already contacted...',
+  'untuk memastikan sebelum menambah barang lain.': 'to confirm it before adding another item.',
+  'Draf retur tersimpan, {n} item dari faktur ikut dimuat. Hapus/sesuaikan yang tidak diretur.':
+    'Return draft saved, {n} items loaded from the invoice. Delete/adjust the ones not being returned.',
+  '{n} item dari faktur dimuat.': '{n} items loaded from the invoice.',
+  'Semua item faktur sudah ada di retur ini.': 'All invoice items are already in this return.',
+
+  // ---------- Pesan validasi (new Error -> tampil lewat <PesanError>) ----------
+  // `PesanError` menerjemahkan pesannya saat render, jadi pesan buatan sendiri
+  // di sini ikut berganti bahasa; error teknis dari Supabase (Inggris) lewat
+  // apa adanya karena tidak ada entrinya.
+  'Kode dan nama wajib diisi.': 'Code and name are required.',
+  'Kode, nama, dan satuan dasar wajib diisi.': 'Code, name, and base unit are required.',
+  'Nama dan kode awal kategori wajib diisi.': 'Category name and prefix code are required.',
+  'Lengkapi tier, satuan, dan harga.': 'Fill in the tier, unit, and price.',
+  'Satuan dasar tidak bisa dihapus.': 'The base unit cannot be deleted.',
+  'Pilih satuan dan isi konversi lebih dari 0.': 'Pick a unit and enter a conversion greater than 0.',
+  'Pilih pelanggan dulu.': 'Pick a customer first.',
+  'Pilih supplier dulu.': 'Pick a supplier first.',
+  'Pilih pelanggan dan gudang dulu.': 'Pick a customer and warehouse first.',
+  'Pilih supplier dan gudang dulu.': 'Pick a supplier and warehouse first.',
+  'Pilih pelanggan dan minimal satu Surat Jalan.': 'Pick a customer and at least one delivery note.',
+  'Pilih supplier dan minimal satu Penerimaan Barang.': 'Pick a supplier and at least one goods receipt.',
+  'Pilih pelanggan dan minimal satu faktur dengan jumlah bayar lebih dari 0.':
+    'Pick a customer and at least one invoice with a payment amount greater than 0.',
+  'Pilih supplier dan minimal satu faktur dengan jumlah bayar lebih dari 0.':
+    'Pick a supplier and at least one invoice with a payment amount greater than 0.',
+  'Pilih akun kas/bank sumber pembayaran ini.': 'Pick the cash/bank account this payment comes from.',
+  'Pilih akun kas/bank tujuan pembayaran ini.': 'Pick the cash/bank account this payment goes into.',
+  'Pilih akun kas/bank tujuan pembayaran.': 'Pick the destination cash/bank account for the payment.',
+  'Pilih produk, satuan, dan isi qty lebih dari 0.': 'Pick a product and unit, and enter a qty greater than 0.',
+  'Pilih produk, satuan, dan isi qty (tidak boleh 0).': 'Pick a product and unit, and enter a qty (cannot be 0).',
+  'Saldo awal dengan qty positif wajib mengisi HPP per satuan dasar.': 'An opening balance with positive qty must include the COGS per base unit.',
+  'Belum ada barang yang ditambahkan.': 'No items have been added yet.',
+  'Belum ada gudang aktif.': 'No active warehouse yet.',
+  'Belum ada gudang aktif. Tambahkan gudang di master data dulu.': 'No active warehouse yet. Add one in master data first.',
+  'Isi jumlah kirim minimal satu produk.': 'Enter a shipping quantity for at least one product.',
+  'Isi jumlah terima minimal satu produk.': 'Enter a receiving quantity for at least one product.',
+  'Tidak ada Surat Jalan yang dipilih.': 'No delivery note selected.',
+  'File kosong atau formatnya tidak terbaca.': 'The file is empty or its format could not be read.',
+  'Akun agregat marketplace untuk kanal ini tidak ditemukan di master Pelanggan.':
+    "This channel's marketplace aggregate account was not found in the Customer master data.",
+  'Ada pesanan berstatus Selesai/Completed yang akan ditandai Lunas -- pilih akun kas/bank tujuannya dulu.':
+    'Some orders with Selesai/Completed status will be marked Paid -- pick the destination cash/bank account first.',
+  'Ada pesanan yang statusnya berubah jadi Selesai/Completed dan akan ditandai Lunas -- pilih akun kas/bank tujuannya dulu.':
+    'Some orders changed to Selesai/Completed and will be marked Paid -- pick the destination cash/bank account first.',
 }
 
 interface I18nCtx {

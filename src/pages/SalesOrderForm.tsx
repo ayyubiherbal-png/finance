@@ -356,7 +356,7 @@ function FormBaru({
             />
             {bukanCanvassing ? (
               <p className="text-xs text-muted-foreground">
-                Terisi otomatis ke akun agregat kanal ini. Ganti kalau pembeli sudah punya data pelanggan sendiri.
+                {tt('Terisi otomatis ke akun agregat kanal ini. Ganti kalau pembeli sudah punya data pelanggan sendiri.')}
               </p>
             ) : null}
           </div>
@@ -463,7 +463,7 @@ function FormBaru({
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Item produk ditambahkan setelah draf tersimpan.
+            {tt('Item produk ditambahkan setelah draf tersimpan.')}
           </p>
         </CardContent>
       </Card>
@@ -585,7 +585,7 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
   }
 
   async function hapusItem(itemId: string) {
-    if (!window.confirm('Hapus baris ini dari Sales Order?')) return
+    if (!window.confirm(tt('Hapus baris ini dari Sales Order?'))) return
     const { error } = await supabase.from('sales_order_item').delete().eq('id', itemId)
     if (!error) {
       toast('Item dihapus.')
@@ -594,7 +594,7 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
   }
 
   async function ubahStatus(statusBaru: 'disetujui' | 'dibatalkan' | 'draf') {
-    if (statusBaru === 'dibatalkan' && !window.confirm('Batalkan Sales Order ini?')) return
+    if (statusBaru === 'dibatalkan' && !window.confirm(tt('Batalkan Sales Order ini?'))) return
     setErrorStatus(null)
     setMemprosesStatus(true)
     try {
@@ -785,11 +785,11 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
           <div className="flex justify-end border-t border-border p-3">
             <div className="w-full max-w-xs space-y-1 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal</span>
+                <span>{tt('Subtotal')}</span>
                 <span className="tabular">{rupiah(so.subtotal)}</span>
               </div>
               <div className="flex justify-between text-base font-semibold">
-                <span>Total</span>
+                <span>{tt('Total')}</span>
                 <span className="tabular">{rupiah(so.total)}</span>
               </div>
             </div>

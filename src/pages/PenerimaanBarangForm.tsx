@@ -126,9 +126,9 @@ function FormBaru({ poId }: { poId: string | null }) {
   if (!poId) {
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
-        <p className="font-medium">Penerimaan Barang dibuat dari Purchase Order</p>
+        <p className="font-medium">{tt('Penerimaan Barang dibuat dari Purchase Order')}</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Buka daftar Purchase Order, pilih yang berstatus "Disetujui", lalu klik "Buat Penerimaan Barang".
+          {tt('Buka daftar Purchase Order, pilih yang berstatus "Disetujui", lalu klik "Buat Penerimaan Barang".')}
         </p>
         <Button asChild className="mt-4">
           <Link to="/purchase-order">Ke Purchase Order</Link>
@@ -224,7 +224,7 @@ function FormBaru({ poId }: { poId: string | null }) {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{tt('Penerimaan Barang Baru')}</h1>
           <p className="text-sm text-muted-foreground">
-            Dari PO <span className="font-mono">{po.nomor}</span> &middot; {po.supplier?.nama}
+            {tt('Dari PO')} <span className="font-mono">{po.nomor}</span> &middot; {po.supplier?.nama}
           </p>
         </div>
       </div>
@@ -303,7 +303,7 @@ function FormBaru({ poId }: { poId: string | null }) {
             <Label>Biaya tambahan (ongkos angkut/bongkar)</Label>
             <InputAngka value={header.biaya_tambahan} onChange={(nilai) => setHeader((h) => ({ ...h, biaya_tambahan: nilai }))} />
             <p className="text-xs text-muted-foreground">
-              Dibagi proporsional ke tiap produk dan ikut masuk perhitungan HPP.
+              {tt('Dibagi proporsional ke tiap produk dan ikut masuk perhitungan HPP.')}
             </p>
           </div>
 
@@ -320,7 +320,7 @@ function FormBaru({ poId }: { poId: string | null }) {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            "Terima Sekarang" langsung menambah stok gudang {po.gudang?.nama} dan menghitung ulang HPP.
+            {tt('"Terima Sekarang" langsung menambah stok gudang')} {po.gudang?.nama} {tt('dan menghitung ulang HPP.')}
           </p>
         </CardContent>
       </Card>
@@ -391,7 +391,7 @@ function FormDetail({ pbId }: { pbId: string }) {
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
     if (
       statusBaru === 'dibatalkan' &&
-      !window.confirm('Batalkan Penerimaan Barang ini? Stok yang sudah masuk akan dikurangi lagi.')
+      !window.confirm(tt('Batalkan Penerimaan Barang ini? Stok yang sudah masuk akan dikurangi lagi.'))
     ) {
       return
     }

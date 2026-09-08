@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { tt } from '@/lib/i18n'
 import { toast } from '@/components/Toast'
 import { Button, Card, CardContent, Input, Label, PesanError, Spinner } from '@/components/ui'
 import type { Gudang } from '@/types/db'
@@ -153,7 +154,7 @@ export function GudangForm() {
           <div className="space-y-1.5">
             <Label>Alamat</Label>
             <Input value={form.alamat} onChange={(e) => ubah('alamat', e.target.value)} />
-            <p className="text-xs text-muted-foreground">Dipakai di kop dokumen cetak (Invoice, dll.) untuk gudang utama.</p>
+            <p className="text-xs text-muted-foreground">{tt('Dipakai di kop dokumen cetak (Invoice, dll.) untuk gudang utama.')}</p>
           </div>
 
           <label className="flex items-center gap-2 text-sm">

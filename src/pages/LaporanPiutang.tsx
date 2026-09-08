@@ -124,7 +124,7 @@ export function LaporanPiutang() {
 
           {lewatTempo && lewatTempo.length > 0 ? (
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold">Faktur lewat jatuh tempo</h2>
+              <h2 className="text-sm font-semibold">{tt('Faktur lewat jatuh tempo')}</h2>
               <Card>
                 <CardContent className="p-0 pb-2">
                   <Table>

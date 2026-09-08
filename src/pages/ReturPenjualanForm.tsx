@@ -155,7 +155,7 @@ function FormBaru() {
           const jumlah = await muatItemDariFaktur(data.id, header.faktur_id)
           toast(
             jumlah > 0
-              ? `Draf retur tersimpan, ${jumlah} item dari faktur ikut dimuat. Hapus/sesuaikan yang tidak diretur.`
+              ? tt('Draf retur tersimpan, {n} item dari faktur ikut dimuat. Hapus/sesuaikan yang tidak diretur.').replace('{n}', String(jumlah))
               : 'Draf retur tersimpan.',
           )
         } catch {
@@ -399,7 +399,7 @@ function FormEdit({ returId }: { returId: string }) {
     try {
       const sudahAda = new Set((items ?? []).map((it) => it.produk_id))
       const jumlah = await muatItemDariFaktur(returId, retur.faktur_id, sudahAda)
-      toast(jumlah > 0 ? `${jumlah} item dari faktur dimuat.` : 'Semua item faktur sudah ada di retur ini.')
+      toast(jumlah > 0 ? tt('{n} item dari faktur dimuat.').replace('{n}', String(jumlah)) : 'Semua item faktur sudah ada di retur ini.')
       invalidateSemua()
     } catch (e) {
       setErrorTambah(e)
@@ -409,7 +409,7 @@ function FormEdit({ returId }: { returId: string }) {
   }
 
   async function hapusItem(itemId: string) {
-    if (!window.confirm('Hapus baris ini?')) return
+    if (!window.confirm(tt('Hapus baris ini?'))) return
     const { error } = await supabase.from('retur_penjualan_item').delete().eq('id', itemId)
     if (!error) {
       toast('Item dihapus.')
@@ -418,7 +418,7 @@ function FormEdit({ returId }: { returId: string }) {
   }
 
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
-    if (statusBaru === 'dibatalkan' && !window.confirm('Batalkan retur ini? Efek stoknya akan dibalik.')) return
+    if (statusBaru === 'dibatalkan' && !window.confirm(tt('Batalkan retur ini? Efek stoknya akan dibalik.'))) return
     setError(null)
     setMemprosesStatus(true)
     try {

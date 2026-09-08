@@ -127,7 +127,7 @@ export function KartuStok() {
       {!produkId ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            Pilih produk dulu untuk melihat kartu stoknya.
+            {tt('Pilih produk dulu untuk melihat kartu stoknya.')}
           </CardContent>
         </Card>
       ) : (

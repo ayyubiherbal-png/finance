@@ -157,7 +157,7 @@ function FormBaru() {
               Simpan sebagai Draf
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Item produk ditambahkan setelah draf tersimpan.</p>
+          <p className="text-xs text-muted-foreground">{tt('Item produk ditambahkan setelah draf tersimpan.')}</p>
         </CardContent>
       </Card>
     </div>
@@ -297,7 +297,7 @@ function FormEdit({ adjId }: { adjId: string }) {
   }
 
   async function hapusItem(itemId: string) {
-    if (!window.confirm('Hapus baris ini?')) return
+    if (!window.confirm(tt('Hapus baris ini?'))) return
     const { error } = await supabase.from('penyesuaian_stok_item').delete().eq('id', itemId)
     if (!error) {
       toast('Item dihapus.')
@@ -306,7 +306,7 @@ function FormEdit({ adjId }: { adjId: string }) {
   }
 
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
-    if (statusBaru === 'dibatalkan' && !window.confirm('Batalkan penyesuaian ini? Efek stoknya akan dibalik.')) return
+    if (statusBaru === 'dibatalkan' && !window.confirm(tt('Batalkan penyesuaian ini? Efek stoknya akan dibalik.'))) return
     setError(null)
     setMemprosesStatus(true)
     try {
@@ -446,7 +446,7 @@ function FormEdit({ adjId }: { adjId: string }) {
               </div>
               {errorTambah ? <PesanError error={errorTambah} /> : null}
               <p className="text-xs text-muted-foreground">
-                Qty positif menambah stok (HPP ikut bergerak kalau diisi). Qty negatif mengurangi stok (mis. rusak/hilang), HPP tidak berlaku.
+                {tt('Qty positif menambah stok (HPP ikut bergerak kalau diisi). Qty negatif mengurangi stok (mis. rusak/hilang), HPP tidak berlaku.')}
               </p>
             </div>
           ) : null}

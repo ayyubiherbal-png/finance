@@ -95,7 +95,7 @@ const LABEL_SUMBER: Record<SumberPelanggan, string> = {
 function ramahkanErrorSimpan(e: unknown, kode: string): unknown {
   const err = e as { code?: string; message?: string; details?: string } | null
   if (err?.code === '23505' && `${err.message ?? ''} ${err.details ?? ''}`.toLowerCase().includes('kode')) {
-    return new Error(`ID "${kode}" sudah dipakai pelanggan lain. Pakai ID yang berbeda.`)
+    return new Error(tt('ID "{kode}" sudah dipakai pelanggan lain. Pakai ID yang berbeda.').replace('{kode}', kode))
   }
   return e
 }
@@ -246,7 +246,8 @@ export function PelangganForm() {
             .from('pembeli_marketplace')
             .update({ pelanggan_id: data.id })
             .eq('id', prefill.dariPembeliMarketplaceId)
-          if (errTaut) toast(`Pelanggan tersimpan, tapi gagal menandai baris Pembeli Marketplace: ${pesanKesalahan(errTaut)}`)
+          if (errTaut)
+            toast(tt('Pelanggan tersimpan, tapi gagal menandai baris Pembeli Marketplace: {pesan}').replace('{pesan}', pesanKesalahan(errTaut)))
         }
 
         toast('Pelanggan tersimpan.')
@@ -375,7 +376,7 @@ export function PelangganForm() {
           </div>
 
           <div className="space-y-3 border-t border-border pt-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Wilayah</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{tt('Wilayah')}</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Provinsi</Label>

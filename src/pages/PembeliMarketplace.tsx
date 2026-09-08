@@ -113,7 +113,7 @@ export function PembeliMarketplace() {
     try {
       const { data: jumlah, error: err } = await supabase.rpc('sinkron_pembeli_marketplace')
       if (err) throw err
-      toast(`Sinkronisasi selesai -- ${jumlah ?? 0} baris ditambah/diperbarui.`)
+      toast(tt('Sinkronisasi selesai -- {n} baris ditambah/diperbarui.').replace('{n}', String(jumlah ?? 0)))
       muatUlang()
     } catch (err) {
       setErrorAksi(err)
@@ -165,7 +165,9 @@ export function PembeliMarketplace() {
   }
 
   async function hapus(p: BarisPembeli) {
-    if (!window.confirm(`Hapus ${p.nama || p.telepon || p.kunci} dari daftar ini? Data pesanan/Faktur asli TIDAK ikut terhapus, ini cuma daftar follow-up.`)) return
+    const label = p.nama || p.telepon || p.kunci
+    if (!window.confirm(tt('Hapus {nama} dari daftar ini? Data pesanan/Faktur asli TIDAK ikut terhapus, ini cuma daftar follow-up.').replace('{nama}', label)))
+      return
     setErrorAksi(null)
     try {
       const { error: err } = await supabase.from('pembeli_marketplace').delete().eq('id', p.id)
