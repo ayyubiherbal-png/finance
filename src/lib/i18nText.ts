@@ -1070,6 +1070,9 @@ export const TEKS: Record<string, string> = {
   'Terima kasih atas masukannya!': 'Thank you for your feedback!',
   'Cerita singkat pengalaman Anda (opsional)...': 'A short note about your experience (optional)...',
   Kirim: 'Submit',
+
+  // ---------- Surat Jalan: nama penerima = nama pelanggan (murni frontend) ----------
+  'Sama dengan nama pelanggan': 'Same as customer name',
 }
 
 

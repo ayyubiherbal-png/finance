@@ -329,6 +329,17 @@ function FormBaru({ soId }: { soId: string | null }) {
                 value={header.nama_penerima}
                 onChange={(e) => setHeader((h) => ({ ...h, nama_penerima: e.target.value }))}
               />
+              {so.pelanggan?.nama ? (
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={header.nama_penerima === so.pelanggan.nama}
+                    onChange={(e) => setHeader((h) => ({ ...h, nama_penerima: e.target.checked ? (so.pelanggan?.nama ?? '') : '' }))}
+                    className="h-3.5 w-3.5 rounded border-input"
+                  />
+                  {tt('Sama dengan nama pelanggan')}
+                </label>
+              ) : null}
             </div>
             <div className="space-y-1.5">
               <Label>Telepon/WA penerima</Label>
