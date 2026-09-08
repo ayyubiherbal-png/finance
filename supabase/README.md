@@ -432,6 +432,29 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Semua tabel bisa digeser pakai mouse (klik-tahan-tarik), bukan cuma
+scrollbar (murni frontend, 2026-09-08).** User di tab Pembeli
+Marketplace (tabelnya lebar -- banyak kolom + alamat tersensor
+panjang): "gak bisa di geser ke kanan nih kalau pakai mouse." Benar --
+`overflow-x-auto` browser cuma bisa discroll lewat scrollbar bawah/
+shift+scroll wheel/trackpad; mouse biasa tidak bisa "menyeret" konten
+seperti di touchscreen.
+
+Ditambah drag-to-scroll di komponen bersama `Table` (`ui.tsx`) --
+klik-tahan di atas teks tabel lalu tarik kiri/kanan, otomatis
+menggeser (`scrollLeft = mulaiScroll - deltaX`, listener mousemove/
+mouseup dipasang di `window` supaya tetap jalan walau kursor sempat
+keluar dari area tabel saat menyeret). Elemen interaktif (tombol/
+tautan/input/select) SENGAJA dikecualikan dari pemicu drag lewat
+`target.closest(...)` -- kalau tidak, mengeklik tombol "Hapus" dkk. di
+dalam tabel bisa malah dianggap awal drag dan klik-nya batal.
+Diverifikasi lewat simulasi event mouse langsung di browser: drag
+menggeser scroll dengan arah yang benar, berhenti tepat saat mouse
+dilepas, dan tidak terpicu kalau mulai dari atas tombol.
+
+Dipasang di komponen bersama (bukan per halaman) -- otomatis berlaku
+di SEMUA tabel aplikasi sekaligus, bukan cuma Pembeli Marketplace.
+
 **Pembeli Marketplace: tombol "Jadikan Pelanggan" -- promosikan ke
 Master Data (0028, 2026-09-08).** User: "saya ingin agar bisa
 memindahkan marketplace buyer yang sekiranya sudah lengkap nomor HP

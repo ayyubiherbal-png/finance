@@ -274,9 +274,49 @@ export function Badge({
 
 /* ----------------------------------------------------------------- Table */
 
+/**
+ * Geser-dengan-mouse (klik tahan + tarik) untuk tabel lebar yang perlu
+ * discroll ke samping. Bawaan browser cuma bisa discroll pakai scrollbar
+ * bawah/shift+scroll wheel/trackpad -- mouse biasa tidak bisa "diseret"
+ * di atas konten seperti touchscreen. User: "gak bisa di geser ke kanan
+ * nih kalau pakai mouse".
+ *
+ * Dipasang di komponen bersama `Table` (bukan per halaman) supaya semua
+ * tabel di aplikasi ikut kebagian sekali jalan. Elemen interaktif
+ * (tombol/tautan/input/select) DIKECUALIKAN dari pemicu drag -- kalau
+ * tidak, mengeklik tombol "Hapus" dkk. di dalam tabel bisa malah dianggap
+ * awal drag dan klik-nya batal.
+ */
 export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+  const seret = React.useRef({ aktif: false, mulaiX: 0, mulaiScroll: 0 })
+
+  function mulaiSeret(e: React.MouseEvent<HTMLDivElement>) {
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, select, textarea, [contenteditable]')) return
+    if (!scrollRef.current) return
+    seret.current = { aktif: true, mulaiX: e.clientX, mulaiScroll: scrollRef.current.scrollLeft }
+    e.preventDefault() // cegah teks ikut terseleksi biru saat menyeret
+  }
+
+  React.useEffect(() => {
+    function gerak(e: MouseEvent) {
+      if (!seret.current.aktif || !scrollRef.current) return
+      scrollRef.current.scrollLeft = seret.current.mulaiScroll - (e.clientX - seret.current.mulaiX)
+    }
+    function lepas() {
+      seret.current.aktif = false
+    }
+    window.addEventListener('mousemove', gerak)
+    window.addEventListener('mouseup', lepas)
+    return () => {
+      window.removeEventListener('mousemove', gerak)
+      window.removeEventListener('mouseup', lepas)
+    }
+  }, [])
+
   return (
-    <div className="w-full overflow-x-auto">
+    <div ref={scrollRef} onMouseDown={mulaiSeret} className="w-full cursor-grab overflow-x-auto active:cursor-grabbing">
       <table className={cn('w-full caption-bottom text-sm', className)} {...props} />
     </div>
   )
