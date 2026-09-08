@@ -408,7 +408,7 @@ function FormEdit({ returId }: { returId: string }) {
               {(!items || items.length === 0) && (
                 <Tr>
                   <Td colSpan={bisaEdit ? 6 : 5} className="py-6 text-center text-sm text-muted-foreground">
-                    Belum ada item.
+                    {tt("Belum ada item.")}
                   </Td>
                 </Tr>
               )}
@@ -466,7 +466,7 @@ function FormEdit({ returId }: { returId: string }) {
 
           <div className="flex justify-end border-t border-border p-3">
             <p className="text-base font-semibold">
-              Total: <span className="tabular">{rupiah(retur.total)}</span>
+              {tt('Total')}: <span className="tabular">{rupiah(retur.total)}</span>
             </p>
           </div>
         </CardContent>

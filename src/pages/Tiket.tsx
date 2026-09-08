@@ -175,7 +175,7 @@ export function Tiket() {
               </Table>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
-                  {data.length >= 100 ? 'Total 100 tiket teratas yang tampil' : `Total ${data.length} tiket`}
+                  {data.length >= 100 ? tt('Total 100 tiket teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('tiket')}`}
                 </span>
               </div>
             </>

@@ -85,7 +85,7 @@ export function LaporanLaba() {
               tab === t ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            Per {t}
+            {tt('Per')} {t}
           </button>
         ))}
       </div>

@@ -474,7 +474,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
               {(!items || items.length === 0) && (
                 <Tr>
                   <Td colSpan={bisaEdit ? 7 : 6} className="py-6 text-center text-sm text-muted-foreground">
-                    Belum ada item.
+                    {tt("Belum ada item.")}
                   </Td>
                 </Tr>
               )}
@@ -605,7 +605,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{tt(label)}</p>
       <p className="text-sm font-medium">{value}</p>
     </div>
   )

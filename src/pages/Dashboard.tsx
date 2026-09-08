@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { rupiah, angka, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { useI18n } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { GrafikBatang, GrafikDonut, GrafikKapsul } from '@/components/Charts'
 import { cn } from '@/lib/utils'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, KondisiKosong, PesanError, Spinner } from '@/components/ui'
@@ -139,7 +140,7 @@ function useRingkasan() {
         const d = new Date(hariIni.getFullYear(), hariIni.getMonth() - i, 1)
         const iso = tanggalISO(d)
         pelangganAktifPerBulan.push({
-          label: `${NAMA_BULAN_PENDEK[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`,
+          label: `${tt(NAMA_BULAN_PENDEK[d.getMonth()]!)} ${String(d.getFullYear()).slice(2)}`,
           nilai: Number(petaBulan.get(iso) ?? 0),
         })
       }

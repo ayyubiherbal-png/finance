@@ -155,7 +155,7 @@ export function AkunKasBankForm() {
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">{isBaru ? 'Akun Kas/Bank Baru' : form.nama || '...'}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{isBaru ? tt('Akun Kas/Bank Baru') : form.nama || '...'}</h1>
         </div>
         {!isBaru && saldo ? (
           <div className="text-right">
@@ -223,7 +223,7 @@ export function AkunKasBankForm() {
           {!isBaru ? (
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={aktif} onChange={(e) => ubahAktif(e.target.checked)} className="h-4 w-4 rounded border-input" />
-              Aktif
+              {tt('Aktif')}
             </label>
           ) : null}
 

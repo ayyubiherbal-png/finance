@@ -621,7 +621,7 @@ function FormEdit({ produkId }: { produkId: string }) {
               onChange={(e) => ubahAktif(e.target.checked)}
               className="h-4 w-4 rounded border-input"
             />
-            Aktif
+            {tt('Aktif')}
           </label>
 
           <div className="grid grid-cols-2 gap-4 rounded-md bg-muted/50 p-3 text-sm">
@@ -651,7 +651,7 @@ function FormEdit({ produkId }: { produkId: string }) {
             <Thead>
               <Tr>
                 <Th>Satuan</Th>
-                <Th className="text-right">Konversi (ke {satuanDasar?.kode ?? 'dasar'})</Th>
+                <Th className="text-right">{`${tt('Konversi ke')} ${satuanDasar?.kode ?? tt('dasar')}`}</Th>
                 <Th></Th>
               </Tr>
             </Thead>
@@ -739,7 +739,7 @@ function FormEdit({ produkId }: { produkId: string }) {
               {(hargaProduk ?? []).length === 0 ? (
                 <Tr>
                   <Td colSpan={6} className="py-6 text-center text-sm text-muted-foreground">
-                    Belum ada aturan harga. Tanpa ini, produk tidak akan muncul harganya otomatis di Sales Order.
+                    {tt("Belum ada aturan harga. Tanpa ini, produk tidak akan muncul harganya otomatis di Sales Order.")}
                   </Td>
                 </Tr>
               ) : null}

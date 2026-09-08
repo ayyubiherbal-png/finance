@@ -142,7 +142,7 @@ export function PenerimaanKas() {
               </Table>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
-                  {data.length >= 100 ? 'Total 100 penerimaan teratas yang tampil' : `Total ${data.length} penerimaan`}
+                  {data.length >= 100 ? tt('Total 100 penerimaan teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('penerimaan')}`}
                 </span>
                 <span className="tabular font-semibold">{rupiah(data.reduce((t, k) => t + k.jumlah, 0))}</span>
               </div>

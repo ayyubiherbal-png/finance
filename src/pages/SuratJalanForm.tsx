@@ -276,7 +276,7 @@ function FormBaru({ soId }: { soId: string | null }) {
               {baris.length === 0 ? (
                 <Tr>
                   <Td colSpan={4} className="py-6 text-center text-sm text-muted-foreground">
-                    Semua item pada SO ini sudah terkirim penuh.
+                    {tt("Semua item pada SO ini sudah terkirim penuh.")}
                   </Td>
                 </Tr>
               ) : null}
@@ -536,7 +536,7 @@ function FormDetail({ sjId }: { sjId: string }) {
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{tt(label)}</p>
       <p className="text-sm font-medium">{value}</p>
     </div>
   )

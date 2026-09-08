@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { tt } from '@/lib/i18nText'
 import { Input, Select } from '@/components/ui'
 import { tanggalISO } from '@/lib/format'
 
@@ -110,7 +111,7 @@ export function FilterPeriode({ onChange }: { onChange: (r: RentangTanggal) => v
       {preset === 'custom' ? (
         <>
           <Input type="date" className="w-full sm:w-40" value={dariCustom} onChange={(e) => ubahDariCustom(e.target.value)} />
-          <span className="text-sm text-muted-foreground">s/d</span>
+          <span className="text-sm text-muted-foreground">{tt('s/d')}</span>
           <Input type="date" className="w-full sm:w-40" value={sampaiCustom} onChange={(e) => ubahSampaiCustom(e.target.value)} />
         </>
       ) : null}

@@ -344,7 +344,7 @@ function FormEdit({ adjId }: { adjId: string }) {
         <div className="flex-1">
           <h1 className="font-mono text-lg font-semibold">{adj.nomor}</h1>
           <p className="text-sm text-muted-foreground">
-            {fmtTanggal(adj.tanggal)} &middot; {adj.gudang?.nama} &middot; {LABEL_JENIS[adj.jenis]}
+            {fmtTanggal(adj.tanggal)} &middot; {adj.gudang?.nama} &middot; {tt(LABEL_JENIS[adj.jenis])}
           </p>
         </div>
         <Badge variant={VARIAN_STATUS[adj.status]}>{LABEL_STATUS[adj.status]}</Badge>
@@ -390,7 +390,7 @@ function FormEdit({ adjId }: { adjId: string }) {
               {(!items || items.length === 0) && (
                 <Tr>
                   <Td colSpan={bisaEdit ? 5 : 4} className="py-6 text-center text-sm text-muted-foreground">
-                    Belum ada item.
+                    {tt("Belum ada item.")}
                   </Td>
                 </Tr>
               )}

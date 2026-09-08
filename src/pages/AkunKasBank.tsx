@@ -101,7 +101,7 @@ export function AkunKasBank() {
                         {a.nama}
                       </Link>
                     </Td>
-                    <Td className="text-muted-foreground">{LABEL_JENIS[a.jenis]}</Td>
+                    <Td className="text-muted-foreground">{tt(LABEL_JENIS[a.jenis])}</Td>
                     <Td className="text-muted-foreground">{a.nomor_rekening ?? '-'}</Td>
                     <Td className={`tabular text-right font-semibold ${a.saldo < 0 ? 'text-destructive' : ''}`}>
                       {rupiah(a.saldo)}

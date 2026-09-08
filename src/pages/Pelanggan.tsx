@@ -230,7 +230,7 @@ export function Pelanggan() {
                     {kolomAktif.has('telepon') ? <Td className="text-muted-foreground">{p.telepon || '-'}</Td> : null}
                     {kolomAktif.has('whatsapp') ? <Td className="text-muted-foreground">{p.whatsapp || '-'}</Td> : null}
                     {kolomAktif.has('email') ? <Td className="text-muted-foreground">{p.email || '-'}</Td> : null}
-                    {kolomAktif.has('sumber') ? <Td className="text-muted-foreground">{labelSumber(p)}</Td> : null}
+                    {kolomAktif.has('sumber') ? <Td className="text-muted-foreground">{tt(labelSumber(p))}</Td> : null}
                     {kolomAktif.has('tanggal_lahir') ? (
                       <Td className="text-muted-foreground">{p.tanggal_lahir ? fmtTanggal(p.tanggal_lahir) : '-'}</Td>
                     ) : null}

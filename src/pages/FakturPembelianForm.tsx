@@ -418,7 +418,7 @@ function FormDetail({ fakturId }: { fakturId: string }) {
 
       {pbTerkait && pbTerkait.length > 0 ? (
         <p className="text-sm text-muted-foreground">
-          Menagih:{' '}
+          {tt('Menagih')}:{' '}
           {pbTerkait.map((r, i) => (
             <span key={r.pb?.id ?? i} className="font-mono text-xs">
               {r.pb?.nomor}

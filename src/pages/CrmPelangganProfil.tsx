@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { tt } from '@/lib/i18nText'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, MessageCircle, Pencil } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -291,8 +292,8 @@ export function CrmPelangganProfil() {
                     <Td className="text-muted-foreground">{fmtTanggal(f.tanggal)}</Td>
                     <Td className="tabular text-right">{rupiah(f.total)}</Td>
                     <Td className="text-muted-foreground">
-                      {LABEL_BAYAR[f.status_bayar]}
-                      {f.sisa > 0 ? <span className="ml-1 text-xs">(sisa {rupiah(f.sisa)})</span> : null}
+                      {tt(LABEL_BAYAR[f.status_bayar])}
+                      {f.sisa > 0 ? <span className="ml-1 text-xs">({tt('sisa')} {rupiah(f.sisa)})</span> : null}
                     </Td>
                   </Tr>
                 ))}
@@ -306,7 +307,7 @@ export function CrmPelangganProfil() {
         <CardHeader>
           <CardTitle className="text-base">Riwayat tahap Follow-Up</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Semua tahap treatment yang pernah muncul untuk pelanggan ini, terlepas apakah sempat ditandai selesai.
+            {tt('Semua tahap treatment yang pernah muncul untuk pelanggan ini, terlepas apakah sempat ditandai selesai.')}
           </p>
         </CardHeader>
         <CardContent className="p-0 pb-2">
@@ -335,9 +336,9 @@ export function CrmPelangganProfil() {
                       <Td className="text-muted-foreground">{fmtTanggal(r.muncul_pertama_pada)}</Td>
                       <Td>
                         {selesaiPada ? (
-                          <span className="text-xs text-emerald-700 dark:text-emerald-400">Selesai -- {tanggalWaktu(selesaiPada)}</span>
+                          <span className="text-xs text-emerald-700 dark:text-emerald-400">{tt('Selesai')} -- {tanggalWaktu(selesaiPada)}</span>
                         ) : (
-                          <span className="text-xs text-muted-foreground">Belum ditandai selesai</span>
+                          <span className="text-xs text-muted-foreground">{tt('Belum ditandai selesai')}</span>
                         )}
                       </Td>
                     </Tr>
@@ -355,7 +356,7 @@ export function CrmPelangganProfil() {
 function Ringkas({ label, nilai, catatan }: { label: string; nilai: string; catatan?: string }) {
   return (
     <div className="rounded-lg border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{tt(label)}</p>
       <p className="text-lg font-semibold tabular">{nilai}</p>
       {catatan ? <p className="text-xs text-muted-foreground">{catatan}</p> : null}
     </div>
@@ -365,7 +366,7 @@ function Ringkas({ label, nilai, catatan }: { label: string; nilai: string; cata
 function Info({ label, nilai }: { label: string; nilai: string }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{tt(label)}</p>
       <p className="text-sm font-medium">{nilai}</p>
     </div>
   )

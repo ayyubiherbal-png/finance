@@ -271,7 +271,7 @@ function FormBaru({ poId }: { poId: string | null }) {
               {baris.length === 0 ? (
                 <Tr>
                   <Td colSpan={5} className="py-6 text-center text-sm text-muted-foreground">
-                    Semua item pada PO ini sudah diterima penuh.
+                    {tt("Semua item pada PO ini sudah diterima penuh.")}
                   </Td>
                 </Tr>
               ) : null}
@@ -509,7 +509,7 @@ function FormDetail({ pbId }: { pbId: string }) {
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{tt(label)}</p>
       <p className="text-sm font-medium">{value}</p>
     </div>
   )

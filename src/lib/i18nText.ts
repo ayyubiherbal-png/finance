@@ -840,6 +840,158 @@ export const TEKS: Record<string, string> = {
   'Tanpa nomor': 'No number',
   'Tidak ada tugas follow-up hari ini. Cek lagi besok.': 'No follow-up tasks today. Check again tomorrow.',
   'Tidak ada tugas di kategori ini.': 'No tasks in this category.',
+
+  // ===================================================================
+  // Sisir menyeluruh dwibahasa (2026-09-08) -- hasil audit AST seluruh
+  // src/: setiap teks yang lewat jalur terjemahan tapi BELUM punya
+  // padanan Inggris (diam-diam jatuh balik ke Indonesia saat mode EN).
+  // Lihat catatan di supabase/README.md.
+  // ===================================================================
+
+  // ---------- Judul kartu & bagian form ----------
+  Item: 'Items',
+  Detail: 'Details',
+  'Detail Order': 'Order Details',
+  'Harga Jual': 'Selling Price',
+  'Item dikirim': 'Items shipped',
+  'Item diterima': 'Items received',
+  'Barang yang dikirim': 'Goods to ship',
+  'Barang yang diterima': 'Goods received',
+  'Dialokasikan ke faktur': 'Allocated to invoices',
+  'Produk favorit': 'Favourite products',
+  'Riwayat transaksi': 'Transaction history',
+  'Riwayat tahap Follow-Up': 'Follow-Up stage history',
+  '1. Pembeli': '1. Buyer',
+  '2. Barang': '2. Items',
+  '3. Pembayaran': '3. Payment',
+  'Akun Kas/Bank Baru': 'New Cash/Bank Account',
+
+  // ---------- Label ringkas / info dokumen ----------
+  'Jumlah transaksi': 'Transaction count',
+  'Rata-rata belanja': 'Average spend',
+  'Pelanggan sejak': 'Customer since',
+  'Muncul pertama': 'First appeared',
+  'Belum ditandai selesai': 'Not marked done',
+  Ekspedisi: 'Courier',
+  Sopir: 'Driver',
+  'No. kendaraan': 'Vehicle no.',
+  'No. referensi': 'Reference no.',
+  'Biaya tambahan': 'Additional cost',
+  'Perkiraan kirim': 'Estimated delivery',
+  'Margin keseluruhan': 'Overall margin',
+  'Konversi ke': 'Conversion to',
+  dasar: 'base',
+  '(wajib)': '(required)',
+  '(opsional)': '(optional)',
+  Menagih: 'Billing',
+  Per: 'Per',
+  's/d': 'to',
+  'hari lalu': 'days ago',
+  sisa: 'remaining',
+  'dari faktur': 'from invoice',
+  'barang tidak masuk stok': 'goods not returned to stock',
+
+  // ---------- Kata satuan di footer daftar ----------
+  faktur: 'invoices',
+  tiket: 'tickets',
+  retur: 'returns',
+  penerimaan: 'receipts',
+  SO: 'SOs',
+  'Total 100 faktur teratas yang tampil': 'Showing top 100 invoices',
+  'Total 100 tiket teratas yang tampil': 'Showing top 100 tickets',
+  'Total 100 retur teratas yang tampil': 'Showing top 100 returns',
+  'Total 100 penerimaan teratas yang tampil': 'Showing top 100 receipts',
+  'Total 100 SO teratas yang tampil': 'Showing top 100 sales orders',
+
+  // ---------- Tombol lanjutan antar-dokumen ----------
+  'Ke Purchase Order': 'To Purchase Order',
+  'Ke Sales Order': 'To Sales Order',
+  'Buat Penerimaan Barang': 'Create Goods Receipt',
+  'Buat Surat Jalan': 'Create Delivery Note',
+  'Lanjut ke Faktur': 'Continue to Invoice',
+  'Lanjut ke Faktur Pembelian': 'Continue to Purchase Invoice',
+  'Muat Item dari Faktur': 'Load Items from Invoice',
+
+  // ---------- Pesan toast perubahan status dokumen ----------
+  'Sales Order disetujui.': 'Sales Order approved.',
+  'Sales Order dibuka lagi.': 'Sales Order reopened.',
+  'Sales Order dibatalkan.': 'Sales Order cancelled.',
+  'Purchase Order disetujui.': 'Purchase Order approved.',
+  'Purchase Order dibuka lagi.': 'Purchase Order reopened.',
+  'Purchase Order dibatalkan.': 'Purchase Order cancelled.',
+  'Surat Jalan terkirim.': 'Delivery Note shipped.',
+  'Surat Jalan diselesaikan.': 'Delivery Note completed.',
+  'Surat Jalan dibatalkan.': 'Delivery Note cancelled.',
+  'Draf Surat Jalan tersimpan.': 'Delivery Note draft saved.',
+  'Barang diterima.': 'Goods received.',
+  'Draf Penerimaan Barang tersimpan.': 'Goods Receipt draft saved.',
+  'Penerimaan Barang diselesaikan.': 'Goods Receipt completed.',
+  'Penerimaan Barang dibatalkan.': 'Goods Receipt cancelled.',
+  'Penyesuaian diposting.': 'Adjustment posted.',
+  'Penyesuaian dibatalkan.': 'Adjustment cancelled.',
+  'Retur diposting.': 'Return posted.',
+  'Retur dibatalkan.': 'Return cancelled.',
+  'Penjualan selesai. Surat Jalan, Faktur, dan pembayarannya sudah tercatat.':
+    'Sale completed. Delivery Note, Invoice, and payment have all been recorded.',
+  'Penjualan tercatat sebagai piutang. Faktur sudah dibuat.': 'Sale recorded as a receivable. Invoice has been created.',
+
+  // ---------- Validasi & placeholder Tahapan Treatment ----------
+  'Label tahap wajib diisi.': 'Stage label is required.',
+  'Pesan tahap wajib diisi.': 'Stage message is required.',
+  'Hari maksimum tidak boleh kurang dari hari minimum.': 'Maximum day cannot be less than minimum day.',
+  'mis. Sapa H+1': 'e.g. Greet Day+1',
+  'Gunakan {nama} untuk menyisipkan nama pembeli/pelanggan': 'Use {nama} to insert the buyer/customer name',
+
+  // ---------- Kondisi kosong & keterangan panjang ----------
+  'Belum ada data penjualan.': 'No sales data yet.',
+  'Belum ada tahap FU yang tercatat untuk pelanggan ini.': 'No follow-up stages recorded for this customer yet.',
+  'Belum ada aturan harga. Tanpa ini, produk tidak akan muncul harganya otomatis di Sales Order.':
+    'No price rules yet. Without them, this product will not get an automatic price in Sales Orders.',
+  'Belum ada data. Klik "Sinkronkan dari Pesanan" untuk menarik pembeli dari pesanan Shopee/TikTok yang sudah diimpor.':
+    'No data yet. Click "Sync from Orders" to pull buyers from the Shopee/TikTok orders you have imported.',
+  'Semua tahap treatment yang pernah muncul untuk pelanggan ini, terlepas apakah sempat ditandai selesai.':
+    'Every treatment stage that has ever appeared for this customer, whether or not it was marked done.',
+  'Tabel dan trigger di database sudah siap; tinggal antarmukanya.': 'The database tables and triggers are ready; only the interface is left.',
+  'Kosongkan kalau sama dengan telepon': 'Leave blank if same as phone',
+  'Barang kembali ke stok (matikan kalau barang rusak/dimusnahkan)': 'Return goods to stock (turn off if damaged/destroyed)',
+  'Catatan: 97% pembeli TikTok cuma belanja sekali (wajar untuk trafik iklan). Kalau ada "pesanan" berdekatan cuma 1-2 hari dari pembeli yang sama, itu kemungkinan besar SATU checkout yang dipecah platform jadi beberapa nomor pesanan -- bukan bukti kunjungan ulang yang asli.':
+    'Note: 97% of TikTok buyers order only once (normal for ad traffic). If one buyer has "orders" only 1-2 days apart, that is most likely ONE checkout split by the platform into several order numbers -- not a genuine repeat visit.',
+
+  // ---------- Nilai konstanta label (LABEL_*/INFO_*) ----------
+  // Nilainya tidak terlihat sebagai literal di JSX (dipakai lewat
+  // LABEL_X[baris.kolom]), jadi sempat luput dari sisir sebelumnya.
+  'Semua tanggal': 'All dates',
+  'Hari ini': 'Today',
+  Kemarin: 'Yesterday',
+  'Minggu ini': 'This week',
+  'Minggu lalu': 'Last week',
+  'Bulan ini': 'This month',
+  'Bulan lalu': 'Last month',
+  'Tanggal custom...': 'Custom date...',
+  'Per Bulan': 'Monthly',
+  'Per Kuartal': 'Quarterly',
+  'Per Tahun': 'Yearly',
+  Kas: 'Cash',
+  Sebagian: 'Partial',
+  'Saldo Awal': 'Opening balance',
+  Pembelian: 'Purchase',
+  Penjualan: 'Sale',
+  Penyesuaian: 'Adjustment',
+  'Transfer Masuk': 'Transfer in',
+  'Transfer Keluar': 'Transfer out',
+  Mitra: 'Partner',
+  Horeka: 'HoReCa',
+  Perusahaan: 'Company',
+  Relasi: 'Referral',
+  Sosmed: 'Social media',
+  Website: 'Website',
+  Custom: 'Custom',
+  'Custom...': 'Custom...',
+  // Nama bulan singkat -- dipakai sebagai label sumbu grafik
+  Mei: 'May',
+  Agu: 'Aug',
+  Okt: 'Oct',
+  Des: 'Dec',
 }
 
 

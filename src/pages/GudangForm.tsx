@@ -135,7 +135,7 @@ export function GudangForm() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">{isBaru ? 'Gudang Baru' : form.nama || '...'}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{isBaru ? tt('Gudang Baru') : form.nama || '...'}</h1>
       </div>
 
       <Card>
@@ -164,13 +164,13 @@ export function GudangForm() {
               onChange={(e) => ubah('utama', e.target.checked)}
               className="h-4 w-4 rounded border-input"
             />
-            Jadikan gudang utama
+            {tt('Jadikan gudang utama')}
           </label>
 
           {!isBaru ? (
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={aktif} onChange={(e) => ubahAktif(e.target.checked)} className="h-4 w-4 rounded border-input" />
-              Aktif
+              {tt('Aktif')}
             </label>
           ) : null}
 

@@ -234,7 +234,7 @@ function FormBaru() {
                       <div className="flex-1">
                         <p className="font-mono text-xs">{f.nomor}</p>
                         <p className="text-xs text-muted-foreground">
-                          {fmtTanggal(f.tanggal)} &middot; sisa {rupiah(f.sisa)}
+                          {fmtTanggal(f.tanggal)} &middot; {tt('sisa')} {rupiah(f.sisa)}
                         </p>
                       </div>
                       <InputAngka
@@ -324,7 +324,7 @@ function FormBaru() {
 
           <div className="flex items-center justify-between border-t border-border pt-3">
             <p className="text-sm">
-              Total: <span className="tabular font-semibold">{rupiah(totalJumlah)}</span>
+              {tt('Total')}: <span className="tabular font-semibold">{rupiah(totalJumlah)}</span>
             </p>
             <Button onClick={simpan} disabled={menyimpan || totalJumlah <= 0 || !header.akun_id}>
               {menyimpan ? <Spinner /> : null}
@@ -480,7 +480,7 @@ function FormDetail({ bayarId }: { bayarId: string }) {
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{tt(label)}</p>
       <p className="text-sm font-medium">{value}</p>
     </div>
   )

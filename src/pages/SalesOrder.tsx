@@ -189,7 +189,7 @@ export function SalesOrder() {
               </Table>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
-                  {data.length >= 100 ? 'Total 100 SO teratas yang tampil' : `Total ${data.length} SO`}
+                  {data.length >= 100 ? tt('Total 100 SO teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('SO')}`}
                 </span>
                 <span className="tabular font-semibold">{rupiah(data.reduce((t, so) => t + so.total, 0))}</span>
               </div>

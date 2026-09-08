@@ -422,7 +422,7 @@ function FormDetail({ fakturId }: { fakturId: string }) {
 
       {sjTerkait && sjTerkait.length > 0 ? (
         <p className="text-sm text-muted-foreground">
-          Menagih:{' '}
+          {tt('Menagih')}:{' '}
           {sjTerkait.map((r, i) => (
             <span key={r.sj?.id ?? i} className="font-mono text-xs">
               {r.sj?.nomor}

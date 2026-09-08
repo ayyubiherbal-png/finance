@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from 'react'
+import { tt } from '@/lib/i18nText'
 import { rupiah, tanggal } from '@/lib/format'
 
 /**
@@ -59,7 +60,7 @@ export function GrafikArea({
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center text-sm text-muted-foreground" style={{ height: tinggi }}>
-        Belum ada data penjualan.
+        {tt('Belum ada data penjualan.')}
       </div>
     )
   }
@@ -173,7 +174,7 @@ export function GrafikBatang({
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center text-sm text-muted-foreground" style={{ height: tinggi }}>
-        Belum ada data penjualan.
+        {tt('Belum ada data penjualan.')}
       </div>
     )
   }
@@ -259,7 +260,7 @@ export function GrafikKapsul({ data, tinggi = 160 }: { data: TitikTren[]; tinggi
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center text-sm text-muted-foreground" style={{ height: tinggi }}>
-        Belum ada data penjualan.
+        {tt('Belum ada data penjualan.')}
       </div>
     )
   }

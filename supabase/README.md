@@ -432,6 +432,54 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Sisir menyeluruh dwibahasa: 0 teks tertinggal (murni frontend,
+2026-09-08).** User: "Perpindahan bahasa inggris - indonesia ini masih
+banyak yang belum nih, cek lagi secara menyeluruh, satupun jangan
+terlewat." Sisir manual sebelumnya (per halaman, pakai grep) memang
+selalu menyisakan celah, jadi kali ini dipakai **audit berbasis AST
+TypeScript** atas SELURUH `src/` -- bukan regex.
+
+Auditnya membedakan 2 jenis bug yang selama ini tercampur:
+1. **TIDAK-DIBUNGKUS** -- teks mentah di elemen yang TIDAK menerjemahkan
+   otomatis (`<p>`, `<span>`, `<Td>`, `<label>`, `<h1>`), jadi tidak
+   pernah berganti bahasa sama sekali.
+2. **TANPA-KAMUS** -- teks yang sudah lewat jalur terjemahan (dibungkus
+   `tt()`, atau di dalam `Th`/`Label`/`Badge`/`Button`/`CardTitle`/
+   `option`/`KondisiKosong`/placeholder/`toast()`/`new Error()`) TAPI
+   belum punya entri di kamus `TEKS` -- `tt()` diam-diam jatuh balik ke
+   Bahasa Indonesia TANPA error. Ini penyebab utama keluhan user:
+   sebagian halaman ikut berganti, sebagian tidak, tanpa pola jelas.
+
+Hasil: 119 teks dibungkus `tt()`, ~150 entri kamus baru ditambahkan.
+Sekarang audit melaporkan **0** temuan untuk kedua jenis di seluruh
+halaman aktif (sisa 13 laporan adalah salah-deteksi: error developer
+`useAuth`, kunci `KAMUS` yang dipakai lewat `t()`, dan token
+`.replace('{n}')`).
+
+Tiga titik buta yang baru ketahuan lewat audit ini:
+- **Komponen presentasi lokal** (`InfoField`, `Ringkas`, `Info`,
+  `KartuAngka` di 8 file form/laporan) menerima label lewat prop lalu
+  merendernya mentah. Diperbaiki DI DALAM komponennya (`{tt(label)}`),
+  sekali edit menutup ~40 label sekaligus.
+- **Nilai konstanta label** (`LABEL_STATUS`, `LABEL_JENIS`,
+  `LABEL_PRESET`, `LABEL_MODE`, `LABEL_TIPE`, `LABEL_SUMBER`,
+  `NAMA_BULAN`) -- tidak terlihat sebagai literal di JSX karena dipakai
+  lewat `LABEL_X[baris.kolom]`, jadi luput dari sisir mana pun
+  sebelumnya. Dicek lewat audit AST kedua khusus konstanta; yang
+  dirender di jalur non-otomatis (`<Td>`, tombol biasa, label grafik
+  SVG) dibungkus `tt()`.
+- **Nama bulan di label grafik** -- `Mei/Agu/Okt/Des` beda di Inggris
+  (`May/Aug/Oct/Dec`) tapi dirender mentah di `<text>` SVG.
+
+Dokumen cetak (Faktur, Surat Jalan, Label pengiriman) SENGAJA tetap
+dikecualikan dari sisir ini -- ditujukan untuk pembeli/kurir Indonesia,
+sesuai keputusan lama di kepala `lib/i18nText.ts`.
+
+Diverifikasi: `tsc --noEmit` + `vite build` bersih; `tt()` diuji
+runtime di browser terhadap kamus sungguhan (28 sampel lintas-halaman,
+semuanya berganti ke Inggris); halaman Login dicek visual dalam mode
+EN. Halaman internal belum bisa dicek visual (sesi login kedaluwarsa).
+
 **Riwayat tahap per pelanggan -- jejak perjalanan FU (0037,
 2026-09-08).** User: "Apakah perlu kita buat tabel untuk FU?" --
 diperjelas maksudnya "Riwayat tahap per pelanggan": tahap H+1/H+7/H+14

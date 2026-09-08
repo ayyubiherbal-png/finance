@@ -465,7 +465,7 @@ export function PenjualanCepat() {
               {baris.length === 0 && !barisPending ? (
                 <Tr>
                   <Td colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
-                    Belum ada barang.
+                    {tt("Belum ada barang.")}
                   </Td>
                 </Tr>
               ) : null}
@@ -577,7 +577,7 @@ export function PenjualanCepat() {
               checked={langsungBayar}
               onChange={(e) => setLangsungBayar(e.target.checked)}
             />
-            Sudah dibayar sekarang
+            {tt('Sudah dibayar sekarang')}
           </label>
 
           {langsungBayar ? (
@@ -622,7 +622,7 @@ export function PenjualanCepat() {
 
       <div className="flex items-center justify-end gap-3 pb-4">
         <span className="text-sm text-muted-foreground">
-          Total <span className="tabular font-semibold text-foreground">{rupiah(total)}</span>
+          {tt('Total')} <span className="tabular font-semibold text-foreground">{rupiah(total)}</span>
         </span>
         <Button size="lg" onClick={proses} disabled={memproses}>
           {memproses ? <Spinner /> : null}

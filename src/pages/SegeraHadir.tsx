@@ -15,7 +15,7 @@ export function SegeraHadir({ judul, catatan }: { judul: string; catatan?: strin
           <Construction className="h-8 w-8 text-muted-foreground" />
           <p className="font-medium">{tt('Layar ini belum dibangun')}</p>
           <p className="max-w-md text-sm text-muted-foreground">
-            {catatan ?? 'Tabel dan trigger di database sudah siap; tinggal antarmukanya.'}
+            {tt(catatan ?? 'Tabel dan trigger di database sudah siap; tinggal antarmukanya.')}
           </p>
         </CardContent>
       </Card>

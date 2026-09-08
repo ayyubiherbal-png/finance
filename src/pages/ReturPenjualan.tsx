@@ -133,7 +133,7 @@ export function ReturPenjualan() {
               </Table>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
-                  {data.length >= 100 ? 'Total 100 retur teratas yang tampil' : `Total ${data.length} retur`}
+                  {data.length >= 100 ? tt('Total 100 retur teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('retur')}`}
                 </span>
                 <span className="tabular font-semibold">{rupiah(data.reduce((t, r) => t + r.total, 0))}</span>
               </div>

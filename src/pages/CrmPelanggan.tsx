@@ -168,7 +168,7 @@ export function CrmPelanggan() {
                               <>
                                 {fmtTanggal(p.terakhir_order)}
                                 {p.hari_sejak_order !== null ? (
-                                  <span className="ml-1 text-xs">({p.hari_sejak_order} hari lalu)</span>
+                                  <span className="ml-1 text-xs">({p.hari_sejak_order} {tt('hari lalu')})</span>
                                 ) : null}
                               </>
                             ) : (

@@ -186,7 +186,7 @@ export function SupplierForm() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">{isBaru ? 'Supplier Baru' : form.nama || '...'}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{isBaru ? tt('Supplier Baru') : form.nama || '...'}</h1>
       </div>
 
       <Card>
@@ -301,7 +301,7 @@ export function SupplierForm() {
           {!isBaru ? (
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={aktif} onChange={(e) => ubahAktif(e.target.checked)} className="h-4 w-4 rounded border-input" />
-              Aktif
+              {tt('Aktif')}
             </label>
           ) : null}
 

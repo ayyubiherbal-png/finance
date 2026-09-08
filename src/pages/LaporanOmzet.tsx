@@ -46,7 +46,7 @@ function kelompokkanPeriode(harian: BarisHarian[], mode: ModePeriode): BarisPeri
     let label: string
     if (mode === 'bulan') {
       kunci = `${tahun}-${String(bulan + 1).padStart(2, '0')}`
-      label = `${NAMA_BULAN[bulan]} ${String(tahun).slice(2)}`
+      label = `${tt(NAMA_BULAN[bulan]!)} ${String(tahun).slice(2)}`
     } else if (mode === 'kuartal') {
       const q = Math.floor(bulan / 3) + 1
       kunci = `${tahun}-Q${q}`
@@ -119,7 +119,7 @@ export function LaporanOmzet() {
               mode === m ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            {LABEL_MODE[m]}
+            {tt(LABEL_MODE[m])}
           </button>
         ))}
       </div>
@@ -149,7 +149,7 @@ export function LaporanOmzet() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Omzet {LABEL_MODE[mode].toLowerCase()}</CardTitle>
+              <CardTitle className="text-base">{`${tt('Omzet')} ${tt(LABEL_MODE[mode]).toLowerCase()}`}</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <GrafikBatang data={kelompok.map((k) => ({ label: k.label, nilai: k.omzet }))} />
@@ -224,7 +224,7 @@ function KartuAngka({
   return (
     <Card>
       <CardContent className="p-3">
-        <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">{judul}</p>
+        <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">{tt(judul)}</p>
         <p className="tabular mt-1 text-lg font-semibold">{nilai}</p>
         {delta !== undefined && delta !== null ? (
           <span

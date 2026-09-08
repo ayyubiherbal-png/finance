@@ -241,7 +241,7 @@ function FormBaru() {
               onChange={(e) => setHeader((h) => ({ ...h, masuk_stok: e.target.checked }))}
               className="h-4 w-4 rounded border-input"
             />
-            Barang kembali ke stok (matikan kalau barang rusak/dimusnahkan)
+            {tt('Barang kembali ke stok (matikan kalau barang rusak/dimusnahkan)')}
           </label>
 
           <div className="space-y-1.5">
@@ -457,8 +457,8 @@ function FormEdit({ returId }: { returId: string }) {
           <h1 className="font-mono text-lg font-semibold">{retur.nomor}</h1>
           <p className="text-sm text-muted-foreground">
             {fmtTanggal(retur.tanggal)} &middot; {retur.pelanggan?.nama ?? '-'}
-            {retur.faktur ? ` · dari faktur ${retur.faktur.nomor}` : ''}
-            {!retur.masuk_stok ? ' · barang tidak masuk stok' : ''}
+            {retur.faktur ? ` · ${tt('dari faktur')} ${retur.faktur.nomor}` : ''}
+            {!retur.masuk_stok ? ` · ${tt('barang tidak masuk stok')}` : ''}
           </p>
         </div>
         <Badge variant={VARIAN_STATUS[retur.status]}>{LABEL_STATUS[retur.status]}</Badge>
@@ -509,7 +509,7 @@ function FormEdit({ returId }: { returId: string }) {
               {(!items || items.length === 0) && (
                 <Tr>
                   <Td colSpan={bisaEdit ? 6 : 5} className="py-6 text-center text-sm text-muted-foreground">
-                    Belum ada item.
+                    {tt("Belum ada item.")}
                   </Td>
                 </Tr>
               )}
@@ -567,7 +567,7 @@ function FormEdit({ returId }: { returId: string }) {
 
           <div className="flex justify-end border-t border-border p-3">
             <p className="text-base font-semibold">
-              Total: <span className="tabular">{rupiah(retur.total)}</span>
+              {tt('Total')}: <span className="tabular">{rupiah(retur.total)}</span>
             </p>
           </div>
         </CardContent>

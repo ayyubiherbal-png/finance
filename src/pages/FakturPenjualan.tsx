@@ -191,7 +191,7 @@ export function FakturPenjualan() {
               </Table>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
-                  {data.length >= 100 ? 'Total 100 faktur teratas yang tampil' : `Total ${data.length} faktur`}
+                  {data.length >= 100 ? tt('Total 100 faktur teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('faktur')}`}
                 </span>
                 <span className="tabular font-semibold">{rupiah(data.reduce((t, f) => t + f.total, 0))}</span>
               </div>
