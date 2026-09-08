@@ -193,14 +193,14 @@ export function PembeliMarketplace() {
               <button
                 key={s.kunci}
                 type="button"
-                title={s.jelas}
+                title={tt(s.jelas)}
                 onClick={() => setSegmenAktif(aktif ? null : s.kunci)}
                 className={cn(
                   'cursor-pointer rounded-lg border p-3 text-left transition-colors',
                   aktif ? 'border-primary bg-primary/10' : 'border-border hover:bg-accent',
                 )}
               >
-                <p className="text-xs text-muted-foreground">{s.label}</p>
+                <p className="text-xs text-muted-foreground">{tt(s.label)}</p>
                 <p className="text-xl font-semibold">{s.jumlah}</p>
               </button>
             )
@@ -221,8 +221,8 @@ export function PembeliMarketplace() {
 
       {segmenAktif ? (
         <p className="text-sm text-muted-foreground">
-          {tt('Menampilkan segmen')} <span className="font-medium text-foreground">{INFO_SEGMEN[segmenAktif].label}</span> --{' '}
-          {INFO_SEGMEN[segmenAktif].jelas}.{' '}
+          {tt('Menampilkan segmen')} <span className="font-medium text-foreground">{tt(INFO_SEGMEN[segmenAktif].label)}</span> --{' '}
+          {tt(INFO_SEGMEN[segmenAktif].jelas)}.{' '}
           <button type="button" className="cursor-pointer text-primary underline" onClick={() => setSegmenAktif(null)}>
             {tt('Tampilkan semua')}
           </button>

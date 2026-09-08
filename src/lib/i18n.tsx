@@ -551,6 +551,16 @@ const TEKS: Record<string, string> = {
     'orders whose status is updated to Selesai/Completed will also be marked Paid into this account.',
   'status berhasil diperbarui': 'statuses updated successfully',
   'CRM Pelanggan': 'Customer Segments',
+  'Segmentasi otomatis dari riwayat belanja -- klik segmen untuk menyaring':
+    'Automatic segmentation from purchase history -- click a segment to filter',
+  '3+ transaksi, masih aktif belanja': '3+ orders, still actively buying',
+  '2 transaksi, masih aktif belanja': '2 orders, still actively buying',
+  'Baru 1x belanja': 'Bought once so far',
+  '2-4 bulan tidak belanja -- perlu dihubungi': "2-4 months without an order -- needs a follow-up",
+  'Lebih dari 4 bulan tidak belanja': 'More than 4 months without an order',
+  'Terdaftar tapi belum pernah belanja': 'Registered but never ordered',
+  'Dibuat dari Sales Order yang sudah disetujui. Untuk membuat baru, buka SO-nya dan klik "Buat Surat Jalan". Centang beberapa baris untuk mencetak banyak label pengiriman sekaligus.':
+    'Created from an approved Sales Order. To create a new one, open the SO and click "Create Delivery Note". Check several rows to print multiple shipping labels at once.',
 }
 
 interface I18nCtx {

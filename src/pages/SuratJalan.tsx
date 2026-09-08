@@ -89,8 +89,7 @@ export function SuratJalan() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{tt('Surat Jalan')}</h1>
         <p className="text-sm text-muted-foreground">
-          Dibuat dari Sales Order yang sudah disetujui. Untuk membuat baru, buka SO-nya dan klik "Buat Surat Jalan".
-          Centang beberapa baris untuk mencetak banyak label pengiriman sekaligus.
+          {tt('Dibuat dari Sales Order yang sudah disetujui. Untuk membuat baru, buka SO-nya dan klik "Buat Surat Jalan". Centang beberapa baris untuk mencetak banyak label pengiriman sekaligus.')}
         </p>
       </div>
 

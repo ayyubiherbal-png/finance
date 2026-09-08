@@ -432,6 +432,42 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Kamus dwibahasa lanjutan: teks yang RENDER TANPA `tt()` sama sekali
+(murni frontend, 2026-09-08).** Setelah 36 teks di atas ditambahkan,
+user masih lihat "Customer Segments" (h1, sudah benar) tapi subjudul
+& kartu segmen (Juara/Setia/dst.) di bawahnya TETAP Indonesia: "masih
+belum nih". Beda akar masalah dari yang di atas -- di sini teksnya
+BUKAN cuma kurang entri kamus, tapi memang tidak pernah dibungkus
+`tt()` sama sekali di kode `CrmPelanggan.tsx` (halaman lama, dari sesi
+sebelum dwibahasa ada) dan `PembeliMarketplace.tsx` (ikut mencontoh pola
+yang sama tanpa sadar copy bug-nya): `<p>{s.label}</p>` dan
+`title={s.jelas}` langsung dari array `SEGMEN`, bukan lewat `tt(s.label)`
+-- beda dari badge di tabelnya yang otomatis diterjemahkan lewat
+komponen `Badge` (makanya kelihatan tertukar: badge di tabel benar,
+tapi kartu ringkasan & tooltip-nya salah).
+
+Diperbaiki di KEDUA file (`CrmPelanggan.tsx` & `PembeliMarketplace.tsx`):
+subjudul halaman, `s.label`/`s.jelas` di kartu segmen, dan
+`INFO_SEGMEN[segmenAktif].label`/`.jelas` di teks "Menampilkan segmen"
+sekarang semua lewat `tt()`. Ditambah 2 gap serupa yang ketemu sambil
+menyisir: subjudul `SuratJalan.tsx` dan judul "Pelanggan Baru" +
+catatan prefill di `PelangganForm.tsx` (halaman ini bahkan belum
+pernah `import tt` sama sekali). Semua diverifikasi ulang lewat browser
+dengan `localStorage` bahasa di-set 'en'.
+
+**Temuan tambahan, BELUM diperbaiki (di luar cakupan sesi ini):** pola
+`<p className="text-sm text-muted-foreground">TEKS MENTAH</p>` yang
+sama juga ada di banyak halaman LAIN yang tidak disentuh sesi ini --
+`AkunKasBank.tsx`, `LaporanOmzet.tsx`, `PenerimaanBarang.tsx`,
+`PenerimaanBarangForm.tsx`, `Produk.tsx`, `SuratJalanForm.tsx`, dan
+beberapa lagi (~20 file, ditemukan lewat `awk` menyisir semua
+`src/pages/*.tsx`). Ini gap dari rollout dwibahasa TAHAP 1 yang memang
+sengaja dibatasi ke "chrome" aplikasi (lihat catatan di kepala file
+`i18n.tsx`) -- bukan regresi baru, tapi tetap PR yang sama: subjudul
+tidak diterjemahkan. Sengaja tidak ikut disapu di sini karena di luar
+apa yang diminta user (halaman Pembeli Marketplace/CRM) -- ditunggu
+konfirmasi kalau mau sekalian dibereskan.
+
 **Kamus dwibahasa: 36 teks baru yang sempat terlewat (murni frontend,
 2026-09-08).** User di tab Pembeli Marketplace (toggle bahasa di EN):
 "untu bahasan sebagian halaman masih belum bener-benar di terapkan."

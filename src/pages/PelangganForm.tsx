@@ -11,6 +11,7 @@ import {
   buatCariWilayah,
 } from '@/lib/queries'
 import { pesanKesalahan } from '@/lib/format'
+import { tt } from '@/lib/i18n'
 import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
 import { Combobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
@@ -294,10 +295,10 @@ export function PelangganForm() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{isBaru ? 'Pelanggan Baru' : form.nama || '...'}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{isBaru ? tt('Pelanggan Baru') : form.nama || '...'}</h1>
           {prefill ? (
             <p className="text-xs text-muted-foreground">
-              Diisi otomatis dari data Pembeli Marketplace -- periksa dulu, lengkapi wilayah/tier harga kalau perlu, lalu Simpan.
+              {tt('Diisi otomatis dari data Pembeli Marketplace -- periksa dulu, lengkapi wilayah/tier harga kalau perlu, lalu Simpan.')}
             </p>
           ) : null}
         </div>
