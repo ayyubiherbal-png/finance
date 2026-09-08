@@ -77,6 +77,7 @@ function FormBaru({ soId }: { soId: string | null }) {
     nama_penerima: '',
     telepon_penerima: '',
     ekspedisi: '',
+    no_resi: '',
     nomor_kendaraan: '',
     nama_sopir: '',
     catatan: '',
@@ -187,6 +188,7 @@ function FormBaru({ soId }: { soId: string | null }) {
           nama_penerima: header.nama_penerima || null,
           telepon_penerima: header.telepon_penerima || null,
           ekspedisi: header.ekspedisi || null,
+          no_resi: header.no_resi || null,
           nomor_kendaraan: header.nomor_kendaraan || null,
           nama_sopir: header.nama_sopir || null,
           catatan: header.catatan || null,
@@ -306,6 +308,14 @@ function FormBaru({ soId }: { soId: string | null }) {
             </div>
           </div>
           <div className="space-y-1.5">
+            <Label>No. resi (opsional, bisa diisi belakangan)</Label>
+            <Input
+              placeholder="Isi kalau sudah dapat dari kurir"
+              value={header.no_resi}
+              onChange={(e) => setHeader((h) => ({ ...h, no_resi: e.target.value }))}
+            />
+          </div>
+          <div className="space-y-1.5">
             <Label>Alamat kirim</Label>
             <Input
               value={header.alamat_kirim}
@@ -363,6 +373,7 @@ interface SJDetail {
   nama_penerima: string | null
   telepon_penerima: string | null
   ekspedisi: string | null
+  no_resi: string | null
   nomor_kendaraan: string | null
   nama_sopir: string | null
   catatan: string | null
@@ -384,6 +395,8 @@ function FormDetail({ sjId }: { sjId: string }) {
   const queryClient = useQueryClient()
   const [error, setError] = useState<unknown>(null)
   const [memproses, setMemproses] = useState(false)
+  const [resi, setResi] = useState('')
+  const [menyimpanResi, setMenyimpanResi] = useState(false)
 
   const { data: sj, isLoading, error: errorMuat } = useQuery({
     queryKey: ['surat-jalan-detail', sjId],
@@ -391,7 +404,7 @@ function FormDetail({ sjId }: { sjId: string }) {
       const { data, error } = await supabase
         .from('surat_jalan')
         .select(
-          'id, nomor, tanggal, status, so_id, pelanggan_id, alamat_kirim, nama_penerima, telepon_penerima, ekspedisi, nomor_kendaraan, nama_sopir, catatan, pelanggan:pelanggan_id(nama), gudang:gudang_id(nama), so:so_id(nomor)',
+          'id, nomor, tanggal, status, so_id, pelanggan_id, alamat_kirim, nama_penerima, telepon_penerima, ekspedisi, no_resi, nomor_kendaraan, nama_sopir, catatan, pelanggan:pelanggan_id(nama), gudang:gudang_id(nama), so:so_id(nomor)',
         )
         .eq('id', sjId)
         .single()
@@ -412,6 +425,25 @@ function FormDetail({ sjId }: { sjId: string }) {
     },
     enabled: !!sj,
   })
+
+  useEffect(() => {
+    if (sj) setResi(sj.no_resi ?? '')
+  }, [sj])
+
+  async function simpanResi() {
+    setMenyimpanResi(true)
+    setError(null)
+    try {
+      const { error: err } = await supabase.from('surat_jalan').update({ no_resi: resi.trim() || null }).eq('id', sjId)
+      if (err) throw err
+      toast('No. resi tersimpan.')
+      queryClient.invalidateQueries({ queryKey: ['surat-jalan-detail', sjId] })
+    } catch (e) {
+      setError(e)
+    } finally {
+      setMenyimpanResi(false)
+    }
+  }
 
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
     if (statusBaru === 'dibatalkan' && !window.confirm(tt('Batalkan Surat Jalan ini? Stok yang sudah terkirim akan dikembalikan.'))) {
@@ -471,6 +503,18 @@ function FormDetail({ sjId }: { sjId: string }) {
           {sj.so ? <InfoField label="Dari SO" value={sj.so.nomor} /> : null}
           <InfoField label="Gudang" value={sj.gudang?.nama ?? '-'} />
           {sj.ekspedisi ? <InfoField label="Ekspedisi" value={sj.ekspedisi} /> : null}
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">No. resi</Label>
+            <div className="flex gap-1.5">
+              <Input placeholder="Belum diisi" value={resi} onChange={(e) => setResi(e.target.value)} />
+              {resi !== (sj.no_resi ?? '') ? (
+                <Button size="sm" onClick={simpanResi} disabled={menyimpanResi}>
+                  {menyimpanResi ? <Spinner className="h-3.5 w-3.5" /> : null}
+                  {tt('Simpan')}
+                </Button>
+              ) : null}
+            </div>
+          </div>
           {sj.nomor_kendaraan ? <InfoField label="No. kendaraan" value={sj.nomor_kendaraan} /> : null}
           {sj.nama_sopir ? <InfoField label="Sopir" value={sj.nama_sopir} /> : null}
           {sj.nama_penerima ? <InfoField label="Nama penerima" value={sj.nama_penerima} /> : null}

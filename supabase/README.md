@@ -432,6 +432,22 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Nomor resi pengiriman di Surat Jalan (0038, 2026-09-09).** User
+minta semua 7 celah customer journey dikerjakan sekaligus (Tahap 1
+Onboarding, Tahap 3-5 Evaluasi/Retensi/Advokasi). Yang pertama: Surat
+Jalan sudah punya `ekspedisi` (nama kurir) sejak 0004 tapi tidak ada
+nomor resi -- padahal itu yang sebenarnya dipakai pelanggan melacak
+paketnya sendiri.
+
+Kolom baru `surat_jalan.no_resi`, nullable -- SENGAJA opsional di
+form pembuatan (`Surat Jalan Baru`) karena kenyataannya resi baru
+didapat SETELAH paket diserahkan ke kurir, bukan saat SJ dibuat.
+Ditambah kontrol isi/ubah resi yang SELALU aktif di halaman detail SJ
+(bukan tombol "Edit" dulu) -- alasan sama, field ini realistis diisi
+belakangan kapan saja, bukan sekali di awal. Ditampilkan juga di label
+pengiriman (`LabelSuratJalan.tsx`, dipakai baik cetak satuan maupun
+massal) supaya kurir & pelanggan bisa lihat langsung di paket.
+
 **Sisir menyeluruh dwibahasa: 0 teks tertinggal (murni frontend,
 2026-09-08).** User: "Perpindahan bahasa inggris - indonesia ini masih
 banyak yang belum nih, cek lagi secara menyeluruh, satupun jangan

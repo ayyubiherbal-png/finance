@@ -1007,6 +1007,13 @@ export const TEKS: Record<string, string> = {
   Shopee: 'Shopee',
   TikTok: 'TikTok',
   'TikTok Shop': 'TikTok Shop',
+
+  // ---------- Nomor resi Surat Jalan (0038) ----------
+  'No. resi (opsional, bisa diisi belakangan)': 'Tracking no. (optional, can be filled in later)',
+  'Isi kalau sudah dapat dari kurir': 'Fill in once you get it from the courier',
+  'No. resi tersimpan.': 'Tracking number saved.',
+  'No. resi': 'Tracking no.',
+  'Belum diisi': 'Not filled in yet',
 }
 
 

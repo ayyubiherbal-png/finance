@@ -14,7 +14,7 @@ export function SuratJalanCetak() {
       const { data, error } = await supabase
         .from('surat_jalan')
         .select(
-          'id, nomor, tanggal, alamat_kirim, nama_penerima, telepon_penerima, ekspedisi, nomor_kendaraan, nama_sopir, catatan, ' +
+          'id, nomor, tanggal, alamat_kirim, nama_penerima, telepon_penerima, ekspedisi, no_resi, nomor_kendaraan, nama_sopir, catatan, ' +
             'pelanggan:pelanggan_id(nama, kode, telepon, whatsapp)',
         )
         .eq('id', id as string)

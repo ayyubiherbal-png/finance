@@ -25,6 +25,7 @@ export interface SJCetakDetail {
   nama_penerima: string | null
   telepon_penerima: string | null
   ekspedisi: string | null
+  no_resi: string | null
   nomor_kendaraan: string | null
   nama_sopir: string | null
   catatan: string | null
@@ -58,6 +59,13 @@ export function LabelSuratJalan({ sj, items }: { sj: SJCetakDetail; items: SJCet
           <p className="text-[16px] font-bold uppercase tracking-wide">{sj.ekspedisi || 'Ekspedisi'}</p>
         )}
       </div>
+
+      {sj.no_resi ? (
+        <div className="border-b-2 border-black px-3 py-1 text-center">
+          <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-gray-500">No. Resi</p>
+          <p className="font-mono text-[13px] font-bold tracking-wide">{sj.no_resi}</p>
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between bg-black px-3 py-1 text-white">
         <span className="font-mono text-[12px] font-bold tracking-wide">{sj.nomor}</span>
