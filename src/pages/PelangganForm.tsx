@@ -112,6 +112,35 @@ function useDaftarSales() {
   })
 }
 
+/**
+ * Saran ID berikutnya per prefix (CST-/MTR-/HRK-/B2B-) -- user tanya cara
+ * tahu ID terakhir supaya yang baru berurutan, jadi dicarikan otomatis
+ * lewat kode yang SUDAH ADA di database, bukan diminta diingat manual.
+ *
+ * Ambil SEMUA kode berawalan prefix ini (bukan cuma yang terbesar lewat
+ * `order` teks -- urutan teks "CST-9" > "CST-10", jadi tidak bisa
+ * diandalkan), cari akhiran angkanya, ambil yang terbesar +1. Kalau ada
+ * yang formatnya beda (mis. diedit manual jadi bukan angka murni di
+ * belakang), baris itu dilewati saja -- tidak menggagalkan yang lain.
+ */
+function useKodeBerikutnya(prefix: string, aktif: boolean) {
+  return useQuery({
+    queryKey: ['kode-pelanggan-berikutnya', prefix],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('pelanggan').select('kode').ilike('kode', `${prefix}%`)
+      if (error) throw error
+      let maks = 0
+      for (const row of data ?? []) {
+        const cocok = row.kode.slice(prefix.length).match(/^(\d+)$/)
+        if (cocok) maks = Math.max(maks, Number(cocok[1]))
+      }
+      return prefix + String(maks + 1).padStart(5, '0')
+    },
+    enabled: aktif && !!prefix,
+    staleTime: 0, // selalu cek ulang -- kode terakhir bisa berubah sejak form dibuka
+  })
+}
+
 export function PelangganForm() {
   const { id } = useParams<{ id: string }>()
   const isBaru = !id || id === 'baru'
@@ -135,6 +164,17 @@ export function PelangganForm() {
   const [aktif, setAktif] = useState(true)
   const [menyimpan, setMenyimpan] = useState(false)
   const [error, setError] = useState<unknown>(null)
+
+  // Saran ID berikutnya, berurutan dari yang sudah ada -- lihat
+  // useKodeBerikutnya(). Cuma dipasang otomatis kalau user BELUM mengetik
+  // apa pun (ID masih persis sama dengan prefix polos), supaya tidak
+  // menimpa ID yang sedang diketik manual.
+  const prefixAktif = PREFIX_TIPE[form.tipe]
+  const { data: kodeSaran } = useKodeBerikutnya(prefixAktif, isBaru)
+  useEffect(() => {
+    if (!isBaru || !kodeSaran || !kodeSaran.startsWith(prefixAktif)) return
+    setForm((f) => (f.kode === '' || f.kode === prefixAktif ? { ...f, kode: kodeSaran } : f))
+  }, [isBaru, kodeSaran, prefixAktif])
 
   // Kontak (nama PIC) & Telepon cuma relevan buat badan usaha -- Customer/Mitra
   // (kebanyakan B2C perorangan) cukup WhatsApp.

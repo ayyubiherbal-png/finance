@@ -432,6 +432,28 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Pelanggan Baru: ID berikutnya disarankan otomatis, berurutan (murni
+frontend, 2026-09-08).** User: "saya perlu tahu kode yang sebelumnya
+itu apa" -- form "Pelanggan Baru" cuma pre-isi prefix polos ("CST-"),
+sisanya diketik manual, jadi user harus buka daftar Pelanggan dulu buat
+tahu nomor terakhir supaya yang baru berurutan.
+
+`useKodeBerikutnya()` baru: ambil SEMUA kode berawalan prefix tipe yang
+dipilih (`ilike('kode', 'CST-%')`), cari akhiran angkanya, pakai yang
+terbesar +1 -- SENGAJA bukan `order('kode', {ascending:false}).limit(1)`
+di database, karena urutan TEKS salah untuk angka ("CST-9" > "CST-10"
+secara leksikografis, padahal 10 > 9). Baris dengan format aneh (mis.
+sudah pernah diedit manual jadi bukan angka murni di belakang) dilewati
+tanpa menggagalkan yang lain.
+
+Saran ini otomatis mengisi field ID -- TAPI cuma kalau user belum
+mengetik apa pun (ID masih persis prefix polos), supaya tidak menimpa
+ID yang sedang diketik manual. Ganti Tipe pelanggan (beda prefix: CST-/
+MTR-/HRK-/B2B-) otomatis memicu saran baru untuk prefix itu. Diverifikasi
+lewat browser: logika hitung-angka-terbesar diuji dengan beberapa kasus
+(urutan acak, format aneh diselingi, prefix berbeda tidak ikut
+kehitung), dan query `ilike` asli dicoba langsung ke Supabase.
+
 **Bug nyata ditemukan lewat keluhan berulang: `i18n.tsx` bikin HMR
 cascade ke seluruh app -- dipecah jadi `i18nText.ts` (murni frontend,
 2026-09-08).** User laporan fitur drag-scroll tabel (yang sebelumnya
