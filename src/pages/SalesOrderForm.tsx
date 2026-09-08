@@ -640,7 +640,7 @@ function FormEdit({ soId, queryClient }: { soId: string; queryClient: ReturnType
   const tautanKonfirmasi = items && items.length > 0 ? tautanWa(so.telepon_penerima, pesanKonfirmasiOrder(so, items)) : null
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
+    <div className="mx-auto max-w-5xl space-y-4">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild>
           <Link to="/sales-order">
