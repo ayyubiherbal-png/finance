@@ -431,6 +431,16 @@ export interface VPelangganAktifBulanan {
   jumlah_pelanggan_aktif: number
 }
 
+/** Riwayat otomatis dari kolom `catatan` yang berubah -- lihat 0032. entitas_id polymorphic (bukan FK). */
+export interface CatatanRiwayat {
+  id: string
+  entitas_tipe: 'pelanggan' | 'pembeli_marketplace'
+  entitas_id: string
+  isi: string
+  dibuat_oleh: string | null
+  created_at: string
+}
+
 export interface VLabaProduk {
   produk_id: string
   kode_produk: string

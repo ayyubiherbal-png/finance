@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { tt } from '@/lib/i18nText'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, MessageCircle, RefreshCw, Search, UserPlus } from 'lucide-react'
+import { CheckCircle2, History, MessageCircle, RefreshCw, Search, UserPlus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal as fmtTanggal } from '@/lib/format'
+import { rupiah, tanggal as fmtTanggal, tanggalWaktu } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import { toast } from '@/components/Toast'
 import { cn } from '@/lib/utils'
@@ -25,7 +25,7 @@ import {
   Tr,
 } from '@/components/ui'
 import { INFO_SEGMEN } from '@/pages/CrmPelanggan'
-import type { PembeliMarketplace as BarisPembeli, SegmenPelanggan } from '@/types/db'
+import type { CatatanRiwayat, PembeliMarketplace as BarisPembeli, SegmenPelanggan } from '@/types/db'
 
 const LABEL_KANAL: Record<BarisPembeli['kanal'], string> = { shopee: 'Shopee', tiktok: 'TikTok Shop' }
 
@@ -73,6 +73,25 @@ function usePembeliMarketplace(cari: string) {
   })
 }
 
+/** Riwayat catatan (0032) -- diisi otomatis oleh trigger tiap kali `catatan` berubah, dibaca on-demand saat toggle dibuka. */
+function useCatatanRiwayat(pembeliId: string | null) {
+  return useQuery({
+    queryKey: ['catatan-riwayat', 'pembeli_marketplace', pembeliId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('catatan_riwayat')
+        .select('*, profil:dibuat_oleh(nama)')
+        .eq('entitas_tipe', 'pembeli_marketplace')
+        .eq('entitas_id', pembeliId as string)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      if (error) throw error
+      return (data ?? []) as (CatatanRiwayat & { profil: { nama: string } | null })[]
+    },
+    enabled: !!pembeliId,
+  })
+}
+
 interface FormEdit {
   nama: string
   telepon: string
@@ -102,6 +121,8 @@ export function PembeliMarketplace() {
   const [sedangEdit, setSedangEdit] = useState<string | null>(null)
   const [formEdit, setFormEdit] = useState<FormEdit>({ nama: '', telepon: '', alamat: '', catatan: '' })
   const [menyimpan, setMenyimpan] = useState(false)
+  const [riwayatTerbuka, setRiwayatTerbuka] = useState<string | null>(null)
+  const { data: riwayatCatatan, isLoading: riwayatMemuat } = useCatatanRiwayat(riwayatTerbuka)
 
   function muatUlang() {
     queryClient.invalidateQueries({ queryKey: ['pembeli-marketplace'] })
@@ -126,6 +147,7 @@ export function PembeliMarketplace() {
     setSedangEdit(p.id)
     setFormEdit({ nama: p.nama ?? '', telepon: p.telepon ?? '', alamat: p.alamat ?? '', catatan: p.catatan ?? '' })
     setErrorAksi(null)
+    setRiwayatTerbuka(null)
   }
 
   async function simpanEdit(id: string) {
@@ -145,6 +167,7 @@ export function PembeliMarketplace() {
       if (err) throw err
       setSedangEdit(null)
       muatUlang()
+      queryClient.invalidateQueries({ queryKey: ['catatan-riwayat', 'pembeli_marketplace', id] })
     } catch (err) {
       setErrorAksi(err)
     } finally {
@@ -308,11 +331,46 @@ export function PembeliMarketplace() {
                       <Td className="tabular text-right">{p.jumlah_pesanan}</Td>
                       <Td className="tabular text-right">{rupiah(p.total_belanja)}</Td>
                       <Td className="text-muted-foreground">{p.pesanan_terakhir ? fmtTanggal(p.pesanan_terakhir) : '-'}</Td>
-                      <Td className={editing ? 'min-w-[10rem]' : 'max-w-[10rem] truncate text-muted-foreground'} title={editing ? undefined : (p.catatan ?? undefined)}>
+                      <Td className={editing ? 'min-w-[10rem]' : 'max-w-[10rem] text-muted-foreground'}>
                         {editing ? (
                           <Input value={formEdit.catatan} onChange={(e) => setFormEdit((f) => ({ ...f, catatan: e.target.value }))} placeholder="mis. sudah dihubungi..." />
                         ) : (
-                          p.catatan || '-'
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <span className="truncate" title={p.catatan ?? undefined}>
+                                {p.catatan || '-'}
+                              </span>
+                              <button
+                                type="button"
+                                className="shrink-0 cursor-pointer text-muted-foreground hover:text-foreground"
+                                title={tt('Riwayat catatan')}
+                                onClick={() => setRiwayatTerbuka((r) => (r === p.id ? null : p.id))}
+                              >
+                                <History className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            {riwayatTerbuka === p.id ? (
+                              <div className="w-56 max-w-[16rem] rounded-md border border-border bg-card p-2 text-xs shadow-sm">
+                                {riwayatMemuat ? (
+                                  <Spinner className="h-3.5 w-3.5" />
+                                ) : !riwayatCatatan || riwayatCatatan.length === 0 ? (
+                                  <p className="text-muted-foreground">{tt('Belum ada riwayat.')}</p>
+                                ) : (
+                                  <ul className="max-h-32 space-y-1.5 overflow-y-auto">
+                                    {riwayatCatatan.map((r) => (
+                                      <li key={r.id} className="border-b border-border/50 pb-1 last:border-0 last:pb-0">
+                                        <p className="text-foreground">{r.isi}</p>
+                                        <p className="text-muted-foreground">
+                                          {tanggalWaktu(r.created_at)}
+                                          {r.profil?.nama ? ` -- ${r.profil.nama}` : ''}
+                                        </p>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ) : null}
+                          </div>
                         )}
                       </Td>
                       <Td>

@@ -811,6 +811,10 @@ export const TEKS: Record<string, string> = {
   'Ringkasan singkat keluhan/permintaan': 'Brief summary of the complaint/request',
   'Deskripsi': 'Description',
   'Belum ditugaskan': 'Unassigned',
+
+  // ---------- Riwayat catatan (0032, fitur #4 "Kerjakan berurut") ----------
+  'Riwayat catatan': 'Note history',
+  'Belum ada riwayat.': 'No history yet.',
   'Tanpa nomor': 'No number',
   'Tidak ada tugas follow-up hari ini. Cek lagi besok.': 'No follow-up tasks today. Check again tomorrow.',
   'Tidak ada tugas di kategori ini.': 'No tasks in this category.',

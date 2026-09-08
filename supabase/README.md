@@ -432,6 +432,44 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Catatan FU jadi riwayat multi-entry (0032, 2026-09-08).** Fitur #4
+dari 5 -- lanjutan "Kerjakan berurut" setelah fitur #3 (Tiket, 0031,
+entri di bawah). Masalah nyata: kolom `pembeli_marketplace.catatan`
+cuma satu baris teks bebas -- tiap kali diedit, isi lamanya HILANG,
+tidak ada jejak "apa yang pernah dicatat sebelumnya, kapan, oleh
+siapa". Untuk follow-up itu masalah nyata: sales berikutnya yang
+pegang akun ini kehilangan konteks percakapan sebelumnya.
+
+Desain yang dipilih SENGAJA tidak mengubah cara sales mengedit
+catatan sama sekali -- tetap satu kolom `catatan`, tetap diedit lewat
+form inline yang sudah ada. Perubahan murni di belakang layar lewat
+trigger baru (`fn_catatan_riwayat_pembeli_mp`, AFTER UPDATE): setiap
+kali `catatan` berubah nilainya (dan tidak kosong), nilai BARU
+otomatis disalin jadi satu baris baru di tabel `catatan_riwayat`.
+Sales tidak perlu belajar UI baru -- riwayatnya terkumpul otomatis
+dari kebiasaan kerja yang sudah ada. Catatan lama yang sudah ada
+sebelum migrasi ini di-backfill jadi entri riwayat pertama.
+
+`entitas_tipe`/`entitas_id` polymorphic mengikuti pola yang sama
+dengan `riwayat_follow_up` (0029) -- disiapkan untuk `pelanggan` juga,
+walau trigger yang aktif sekarang baru untuk `pembeli_marketplace`
+(satu-satunya tempat kolom `catatan` benar-benar dipakai user lewat UI
+saat ini -- `pelanggan.catatan` ada di skema tapi belum pernah
+disurfacekan ke UI mana pun).
+
+Frontend: ikon jam kecil di sebelah teks catatan (kolom "Catatan FU",
+Pembeli Marketplace) membuka panel kecil berisi riwayat -- isi, kapan
+(tanggal+jam lewat formatter baru `tanggalWaktu()` di `format.ts`), dan
+siapa yang mengubahnya (join `profil`) -- dimuat on-demand (baru fetch
+saat ikon diklik, bukan sekaligus untuk semua baris) supaya tidak
+menambah beban query saat tabel berisi ratusan pembeli.
+
+**Belum diverifikasi lewat browser di sesi ini** -- sesi login yang
+dipakai untuk uji coba sebelumnya sudah kedaluwarsa. Sudah lolos
+`tsc --noEmit` dan `vite build`; mohon dicek: edit catatan pembeli 2x
+dengan isi berbeda, lalu klik ikon riwayat -- harus muncul kedua isi
+lama & baru dengan waktu yang tepat.
+
 **Tiket -- lacak komplain/pertanyaan/retur pelanggan sampai tuntas
 (0031, 2026-09-08).** Fitur #3 dari 5 -- lanjutan "Kerjakan berurut"
 setelah fitur #2 (Grafik Pelanggan Aktif per Bulan, 0030, entri di

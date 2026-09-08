@@ -15,6 +15,14 @@ const tanggalFormatter = new Intl.DateTimeFormat('id-ID', {
   year: 'numeric',
 })
 
+const tanggalWaktuFormatter = new Intl.DateTimeFormat('id-ID', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
 /** Rp 1.250.000 */
 export function rupiah(nilai: number | string | null | undefined): string {
   const n = Number(nilai ?? 0)
@@ -32,6 +40,13 @@ export function tanggal(nilai: string | Date | null | undefined): string {
   if (!nilai) return '-'
   const d = typeof nilai === 'string' ? new Date(nilai) : nilai
   return Number.isNaN(d.getTime()) ? '-' : tanggalFormatter.format(d)
+}
+
+/** 04 Sep 2026 14.30 -- dipakai untuk timestamptz (kapan tepatnya, bukan cuma tanggal). */
+export function tanggalWaktu(nilai: string | Date | null | undefined): string {
+  if (!nilai) return '-'
+  const d = typeof nilai === 'string' ? new Date(nilai) : nilai
+  return Number.isNaN(d.getTime()) ? '-' : tanggalWaktuFormatter.format(d)
 }
 
 /** Untuk input type="date" dan kolom date Postgres: 2026-09-04 */
