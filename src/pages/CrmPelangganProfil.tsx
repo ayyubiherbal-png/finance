@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { tt } from '@/lib/i18nText'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, MessageCircle, Pencil } from 'lucide-react'
+import { ArrowLeft, MessageCircle, Pencil, Star } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
+import { NAMA_TOKO } from '@/lib/identitasToko'
 import { angka, rupiah, tanggal as fmtTanggal, tanggalWaktu } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import { cn } from '@/lib/utils'
@@ -75,6 +77,9 @@ interface RiwayatFaktur {
 
 export function CrmPelangganProfil() {
   const { id } = useParams<{ id: string }>()
+  const { profil } = useAuth()
+  const [mengirimUmpanBalik, setMengirimUmpanBalik] = useState(false)
+  const [errorUmpanBalik, setErrorUmpanBalik] = useState<unknown>(null)
 
   const { data: crm, isLoading, error } = useQuery({
     queryKey: ['crm-pelanggan-detail', id],
@@ -259,6 +264,30 @@ export function CrmPelangganProfil() {
     }
   }
 
+  async function mintaUmpanBalik() {
+    if (!crm) return
+    setErrorUmpanBalik(null)
+    setMengirimUmpanBalik(true)
+    try {
+      const { data, error: err } = await supabase
+        .from('link_umpan_balik')
+        .insert({ entitas_tipe: 'pelanggan', entitas_id: crm.pelanggan_id, nama: crm.nama, dibuat_oleh: profil?.id ?? null })
+        .select('token')
+        .single()
+      if (err) throw err
+
+      const url = `${window.location.origin}/u/${data.token}`
+      const pesan = `Halo ${crm.nama}, boleh minta waktu sebentar? Kami di ${NAMA_TOKO} ingin dengar pendapat Anda soal belanja kemarin lewat tautan ini: ${url}`
+      const wa = tautanWa(crm.whatsapp ?? crm.telepon, pesan)
+      if (wa) window.open(wa, '_blank')
+      else toast(`Tautan umpan balik dibuat: ${url}`)
+    } catch (e) {
+      setErrorUmpanBalik(e)
+    } finally {
+      setMengirimUmpanBalik(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-16">
@@ -303,6 +332,10 @@ export function CrmPelangganProfil() {
             </a>
           </Button>
         ) : null}
+        <Button variant="outline" size="sm" onClick={mintaUmpanBalik} disabled={mengirimUmpanBalik}>
+          {mengirimUmpanBalik ? <Spinner className="h-3.5 w-3.5" /> : <Star className="h-4 w-4" />}
+          {tt('Minta Umpan Balik')}
+        </Button>
         <Button variant="outline" size="sm" asChild>
           <Link to={`/pelanggan/${crm.pelanggan_id}`}>
             <Pencil className="h-4 w-4" />
@@ -310,6 +343,7 @@ export function CrmPelangganProfil() {
           </Link>
         </Button>
       </div>
+      {errorUmpanBalik ? <PesanError error={errorUmpanBalik} /> : null}
 
       <div className="grid gap-3 sm:grid-cols-4">
         <Ringkas label="Total belanja" nilai={rupiah(crm.total_belanja)} />

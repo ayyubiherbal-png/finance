@@ -517,6 +517,29 @@ export interface ReferralPemakaian {
   dipakai_pada: string
 }
 
+/** Tautan publik (tanpa login) untuk minta umpan balik pelanggan -- lihat 0042. */
+export interface LinkUmpanBalik {
+  id: string
+  token: string
+  entitas_tipe: 'pelanggan' | 'pembeli_marketplace'
+  entitas_id: string
+  faktur_id: string | null
+  nama: string | null
+  sudah_diisi: boolean
+  dibuat_oleh: string | null
+  dibuat_pada: string
+}
+
+/** Isian umpan balik (skor CSAT 1-5 dan/atau testimoni teks) -- lihat 0042. */
+export interface UmpanBalik {
+  id: string
+  link_id: string
+  skor: number | null
+  testimoni: string | null
+  boleh_dipublikasikan: boolean
+  dibuat_pada: string
+}
+
 export interface VLabaProduk {
   produk_id: string
   kode_produk: string

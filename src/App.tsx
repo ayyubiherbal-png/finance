@@ -20,6 +20,8 @@ import { CrmPelanggan } from '@/pages/CrmPelanggan'
 import { CrmPelangganProfil } from '@/pages/CrmPelangganProfil'
 import { TugasFollowUp } from '@/pages/TugasFollowUp'
 import { TahapanTreatmentFu } from '@/pages/TahapanTreatmentFu'
+import { UmpanBalikPublik } from '@/pages/UmpanBalikPublik'
+import { UmpanBalik } from '@/pages/UmpanBalik'
 import { RiwayatFollowUp } from '@/pages/RiwayatFollowUp'
 import { Tiket } from '@/pages/Tiket'
 import { TiketForm } from '@/pages/TiketForm'
@@ -105,6 +107,7 @@ function Rute() {
         <Route path="riwayat-follow-up" element={<RiwayatFollowUp />} />
         <Route path="tiket" element={<Tiket />} />
         <Route path="tiket/:id" element={<TiketForm />} />
+        <Route path="umpan-balik" element={<UmpanBalik />} />
         <Route path="stok" element={<Stok />} />
         <Route path="kartu-stok" element={<KartuStok />} />
         <Route path="kas-bank" element={<AkunKasBank />} />
@@ -145,14 +148,31 @@ function Rute() {
   )
 }
 
+/**
+ * `/u/:token` (Umpan Balik Pelanggan, 0042) SENGAJA di luar AuthProvider
+ * -- pelanggan tidak punya akun/login di aplikasi ini sama sekali,
+ * jadi halaman itu tidak boleh ikut kena gerbang sesi seperti semua
+ * rute lain (yang dicek di dalam `Rute()` lewat `if (!session) return
+ * <Login/>`). Rute publik lain di masa depan taruh di sini juga, bukan
+ * di dalam `Rute()`.
+ */
+function AutentikasiDanRute() {
+  return (
+    <AuthProvider>
+      <Rute />
+    </AuthProvider>
+  )
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <I18nProvider>
-          <AuthProvider>
-            <Rute />
-          </AuthProvider>
+          <Routes>
+            <Route path="/u/:token" element={<UmpanBalikPublik />} />
+            <Route path="/*" element={<AutentikasiDanRute />} />
+          </Routes>
           <Toaster />
         </I18nProvider>
       </BrowserRouter>

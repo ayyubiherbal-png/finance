@@ -77,6 +77,7 @@ export const KAMUS = {
   'menu.tugasFollowUp': { id: 'Tugas Follow-Up', en: 'Follow-Up Tasks' },
   'menu.riwayatFollowUp': { id: 'Riwayat Follow-Up', en: 'Follow-Up History' },
   'menu.tiket': { id: 'Tiket', en: 'Tickets' },
+  'menu.umpanBalik': { id: 'Umpan Balik', en: 'Feedback' },
   'menu.supplier': { id: 'Supplier', en: 'Suppliers' },
   'menu.gudang': { id: 'Gudang', en: 'Warehouse' },
   'menu.omzet': { id: 'Omzet', en: 'Revenue' },
@@ -1047,6 +1048,28 @@ export const TEKS: Record<string, string> = {
   'Kode referral (opsional)': 'Referral code (optional)',
   'mis. REFCUST0001, kalau dirujuk pelanggan lain': 'e.g. REFCUST0001, if referred by another customer',
   'Pelanggan tersimpan, tapi kode referral gagal dipakai: {pesan}': 'Customer saved, but the referral code failed: {pesan}',
+
+  // ---------- Umpan Balik Pelanggan (0042, celah customer journey #6 & #7) ----------
+  'Minta Umpan Balik': 'Request Feedback',
+  'Umpan Balik Pelanggan': 'Customer Feedback',
+  'Skor kepuasan & testimoni yang masuk lewat tautan "Minta Umpan Balik" di profil pelanggan.':
+    'Satisfaction scores & testimonials submitted via the "Request Feedback" link on customer profiles.',
+  'Rata-rata Skor': 'Average Score',
+  'Total Isian': 'Total Responses',
+  'Boleh Dipublikasikan': 'Publishable',
+  'Semua skor': 'All scores',
+  bintang: 'stars',
+  'Belum ada umpan balik yang masuk.': 'No feedback received yet.',
+  Skor: 'Score',
+  Testimoni: 'Testimonial',
+  Publikasi: 'Publish',
+  Boleh: 'Yes',
+  Tidak: 'No',
+  'Pilih dulu berapa bintang.': 'Pick a star rating first.',
+  'Tautan tidak ditemukan atau sudah kedaluwarsa.': 'This link was not found or has expired.',
+  'Terima kasih atas masukannya!': 'Thank you for your feedback!',
+  'Cerita singkat pengalaman Anda (opsional)...': 'A short note about your experience (optional)...',
+  Kirim: 'Submit',
 }
 
 

@@ -20,19 +20,16 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0038_surat_jalan_resi.sql`,
-> `0039_tingkat_fu_selesai.sql`, `0040_poin_loyalitas.sql`, dan
-> `0041_kode_referral.sql`**
-> — 0038 murni tambah 1 kolom (`surat_jalan.no_resi`, nullable). 0039
-> menambah view `v_tingkat_fu_selesai` supaya kartu statistik di
-> halaman Riwayat Follow-Up tidak error. 0040 menambah program
-> loyalitas poin (tabel `poin_pelanggan`/`riwayat_poin` + trigger
-> akrual otomatis saat faktur lunas + RPC `tukar_poin()`) supaya kartu
-> "Poin Loyalitas" di profil pelanggan (CRM) tidak error. 0041
-> menambah sistem kode referral sungguhan (tabel `kode_referral`/
-> `referral_pemakaian` + trigger bonus poin otomatis) -- **jalankan
-> SETELAH 0040**, karena triggernya menulis ke tabel poin dari 0040.
-> (0020-0037 terkonfirmasi sudah jalan.)
+> ⏳ **Belum dijalankan: `0038` s.d. `0042` (jalankan BERURUTAN sesuai
+> nomor)**
+> — `0038_surat_jalan_resi.sql`: tambah 1 kolom `surat_jalan.no_resi`.
+> `0039_tingkat_fu_selesai.sql`: view `v_tingkat_fu_selesai` untuk
+> kartu statistik di Riwayat Follow-Up. `0040_poin_loyalitas.sql`:
+> program poin (tabel + trigger akrual + RPC `tukar_poin()`).
+> `0041_kode_referral.sql`: kode referral sungguhan (**butuh 0040**
+> duluan, triggernya menulis ke tabel poin). `0042_umpan_balik_pelanggan.sql`:
+> survei kepuasan + testimoni lewat tautan publik `/u/:token` (tabel +
+> 2 RPC + halaman publik baru). (0020-0037 terkonfirmasi sudah jalan.)
 > (0020-0034 terkonfirmasi sudah jalan.)
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
@@ -97,6 +94,7 @@ supabase/migrations/0038_surat_jalan_resi.sql
 supabase/migrations/0039_tingkat_fu_selesai.sql
 supabase/migrations/0040_poin_loyalitas.sql
 supabase/migrations/0041_kode_referral.sql
+supabase/migrations/0042_umpan_balik_pelanggan.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

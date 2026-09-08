@@ -118,6 +118,7 @@ const MENU: Grup[] = [
           { ke: '/tugas-follow-up', label: 'menu.tugasFollowUp' },
           { ke: '/riwayat-follow-up', label: 'menu.riwayatFollowUp' },
           { ke: '/tiket', label: 'menu.tiket' },
+          { ke: '/umpan-balik', label: 'menu.umpanBalik' },
         ],
       },
       {

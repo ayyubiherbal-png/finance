@@ -432,6 +432,53 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Umpan balik pelanggan -- survei kepuasan + minta testimoni sekaligus
+(0042, 2026-09-09).** Celah #6 DAN #7 dari 7 -- SEKALIGUS, yang
+terakhir dari daftar customer journey. Keduanya butuh infrastruktur
+yang SAMA: pelanggan tidak punya akun/login di aplikasi ini sama
+sekali, jadi satu-satunya cara menangkap jawaban mereka adalah lewat
+tautan publik tanpa login. Satu formulir menangkap skor kepuasan
+(CSAT 1-5, celah #6) DAN testimoni teks opsional + izin publikasi
+(celah #7) -- bukan dua sistem terpisah untuk hal yang sama-sama
+"minta pelanggan isi sesuatu lewat link".
+
+**Desain keamanan penting:** tabel `link_umpan_balik`/`umpan_balik`
+TIDAK PUNYA policy RLS select/insert untuk `anon` sama sekali -- kalau
+ada, `token` acak jadi percuma (anon bisa `select *` tanpa filter dan
+lihat SEMUA link/nama/isian orang lain). Jalur publik SATU-SATUNYA
+lewat 2 RPC SECURITY DEFINER (`ambil_link_umpan_balik`/
+`kirim_umpan_balik`) yang keduanya mensyaratkan tahu `token` PERSIS
+(32 karakter hex acak, `encode(gen_random_bytes(16),'hex')`) -- pola
+"magic link" umum untuk akses tanpa akun.
+
+**Perubahan arsitektur routing:** halaman publik `/u/:token` HARUS di
+luar `AuthProvider` (App.tsx direstrukturisasi -- route ini sekarang
+dicek SEBELUM masuk ke `Rute()` yang isinya `if (!session) return
+<Login/>`) supaya pelanggan tidak ikut kena gerbang login yang berlaku
+untuk semua rute internal lain.
+
+Frontend:
+- `UmpanBalikPublik.tsx` (BARU, publik) -- bintang 1-5 + textarea
+  testimoni opsional + checkbox izin publikasi, gaya visual meniru
+  Login.tsx (logo, panel kaca) tapi branding "Ayyubi Food" (bukan
+  "Ayyubi Finance" -- ini halaman customer-facing).
+- Tombol "Minta Umpan Balik" baru di profil pelanggan (CRM) -- buat
+  baris `link_umpan_balik`, lalu kirim tautannya ke pelanggan lewat WA
+  (fallback: toast berisi tautannya kalau nomor tidak valid).
+- `UmpanBalik.tsx` (BARU, admin, menu CRM) -- daftar semua isian yang
+  masuk lintas pelanggan, kartu ringkasan (rata-rata skor, total
+  isian, berapa yang boleh dipublikasikan), filter per skor -- berguna
+  untuk menyisir testimoni bagus buat dipakai di marketing.
+
+**Belum diverifikasi penuh lewat browser** (sesi login internal masih
+kedaluwarsa untuk sisi admin), TAPI halaman publik `/u/:token` SUDAH
+dicek langsung -- render benar tanpa login, toggle ID/EN jalan, pesan
+"tautan tidak ditemukan" muncul benar untuk token tidak valid (migrasi
+belum jalan di database live saat pengecekan ini). Sudah lolos
+`tsc`/`build`/`npm run cek:bahasa`. Mohon dicek sisi admin: klik
+"Minta Umpan Balik" di profil pelanggan, buka link yang dihasilkan,
+isi formulirnya, cek muncul di halaman "Umpan Balik".
+
 **Sistem kode referral sungguhan (0041, 2026-09-09).** Celah #5 dari 7
 (customer journey Tahap 5, Advokasi). Pesan WA di tahap "Aktivasi
 Referral" (0034/0035) cuma teks chat -- "mau saya kirimkan kodenya?" --
