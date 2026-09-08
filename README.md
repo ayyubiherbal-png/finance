@@ -20,15 +20,12 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0034_tahapan_treatment_fu.sql`**
-> — mengganti 0033 (baru dijalankan sehari sebelumnya) dengan model
-> treatment yang lebih lengkap: beberapa titik sentuh H+N per kategori
-> dengan pesan WA yang bisa diedit sendiri, bukan cuma satu jendela
-> hari. Migrasi ini akan MENGHAPUS tabel `pengaturan_tugas_fu` (0033)
-> dan menggantinya dengan `tahapan_treatment_fu` -- aman, isinya masih
-> nilai default seed, belum ada yang benar-benar mengedit. Dibutuhkan
-> supaya tombol "Tahapan Treatment" di Tugas Follow-Up (admin/owner)
-> tidak error. (0020-0033 terkonfirmasi sudah jalan.)
+> ⏳ **Belum dijalankan: `0035_tahapan_treatment_lanjutan.sql`**
+> — murni tambah DATA (bukan skema baru): draf tahap treatment lanjutan
+> per kategori (mis. "baru" dapat tambahan H+7 & H+14, bukan cuma H+1)
+> supaya perjalanan pelanggan menuju Juara bertahap, tidak cuma 1x FU.
+> Kata-katanya silakan diedit lewat panel "Tahapan Treatment" kalau
+> kurang pas. (0020-0034 terkonfirmasi sudah jalan.)
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
 Editor Supabase, dan setiap file aman dijalankan berkali-kali
@@ -85,6 +82,7 @@ supabase/migrations/0031_tiket.sql
 supabase/migrations/0032_catatan_riwayat.sql
 supabase/migrations/0033_pengaturan_tugas_fu.sql
 supabase/migrations/0034_tahapan_treatment_fu.sql
+supabase/migrations/0035_tahapan_treatment_lanjutan.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

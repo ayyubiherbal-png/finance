@@ -432,6 +432,39 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Draf tahap treatment lanjutan -- nurture menuju Juara (0035,
+2026-09-08).** Setelah 0034 dijalankan, user lihat panel Tahapan
+Treatment isinya cuma 1 tahap per kategori (persis migrasi dari
+kondisi lama): "setiap tahapan customer menjadi champions, itu pasti
+gak dalam 1 kali FU mereka langsung jadi champions." Benar -- satu
+sapaan H+1 tidak realistis membawa pembeli baru sampai jadi Juara (3x
+order). Ditanya user mau isi sendiri atau dibuatkan draf dulu --
+pilih dibuatkan draf, tinggal dikoreksi kalau kurang pas.
+
+Migrasi ini MURNI TAMBAH DATA (insert baris baru ke `tahapan_treatment_fu`
+yang sudah ada dari 0034, tidak ada perubahan skema) -- guard
+`not exists` per kategori+label supaya aman dijalankan ulang dan
+TIDAK menimpa tahap yang sudah sempat diedit user sendiri. Tahap
+lanjutan yang ditambahkan (semua kata-katanya draf, silakan diedit
+lewat panel kalau kurang pas):
+
+- **baru**: H+1 sapa (sudah ada) → **H+7 cek pemakaian** → **H+14 ajak
+  order lagi** selagi momentum pemakaian masih terasa.
+- **naik_setia**: H+0 ucapan (sudah ada) → **H+20 ajak jadi pelanggan
+  reguler/langganan bulanan**, dorongan menuju order ke-3.
+- **naik_juara**: H+0 ucapan (sudah ada) → **H+20 aktivasi kode
+  referral** -- menjaga hubungan setelah jadi Juara, sekalian buka
+  jalur akuisisi pelanggan baru dari word of mouth.
+- **mulai_hilang**: H+61 check-in (sudah ada) → **H+70 tindak lanjut**
+  kalau check-in pertama belum direspons/order.
+- **tidur**: H+121 tarik balik (sudah ada) → **H+150 penawaran
+  terakhir** dengan insentif lebih kuat (voucher).
+
+Semua jendela hari baru SENGAJA tidak tumpang tindih dengan tahap yang
+sudah ada di kategori yang sama (ada jeda beberapa hari di antaranya)
+supaya tidak muncul 2 tugas sekaligus untuk pelanggan yang sama di hari
+yang sama.
+
 **Tahapan treatment Follow-Up -- mengganti Aturan Jendela FU (0034,
 2026-09-08).** Setelah 5 fitur "Kerjakan berurut" selesai dan user
 mencoba langsung: "CRM saya masih belum puas ... timeline untuk FU
