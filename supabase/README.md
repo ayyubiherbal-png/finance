@@ -432,6 +432,36 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Program loyalitas -- poin pelanggan (0040, 2026-09-09).** Celah #4
+dari 7 (customer journey Tahap 4, Retensi). `tier_harga` yang ada di
+skema itu murni harga grosir B2B yang ditentukan STAF -- tidak ada
+program poin/loyalitas otomatis dari perilaku beli sama sekali.
+
+Aturan akrual SEDERHANA (mudah diubah lewat SQL kalau perlu): 1 poin
+per Rp10.000 dari total faktur, diberikan begitu faktur berstatus
+`lunas` (bukan saat dibuat -- supaya tidak memberi poin untuk transaksi
+yang belum benar-benar dibayar). Trigger `fn_akrual_poin_faktur()` juga
+menarik balik poin otomatis kalau faktur yang sudah lunas kemudian
+dibatalkan (jurnal balik, bukan hapus baris -- konsisten dengan
+prinsip stok_mutasi append-only di 0006).
+
+Tabel `poin_pelanggan` (saldo) + `riwayat_poin` (jejak tiap perubahan)
+SENGAJA tidak punya policy insert/update untuk klien -- satu-satunya
+jalan mengubah saldo adalah trigger di atas (akrual/tarik balik
+otomatis) atau RPC `tukar_poin()` (SECURITY DEFINER, `boleh_sales()`
+saja yang boleh panggil) untuk penukaran manual oleh staf. Ini
+menghindari saldo & riwayat jadi tidak sinkron kalau ditulis langsung
+dari 2 tempat berbeda, dan mencegah saldo jadi negatif.
+
+Frontend: kartu baru "Poin Loyalitas" di halaman profil pelanggan
+(CRM) -- saldo, riwayat 20 transaksi terakhir, dan form kecil "Tukar
+Poin" (jumlah + alasan) yang manggil RPC tersebut.
+
+**Belum diverifikasi lewat browser** -- sudah lolos `tsc`/`build`/
+`npm run cek:bahasa`. Mohon dicek: lunas-kan satu faktur, cek saldo
+poin pelanggannya naik sesuai (`floor(total/10000)`); coba tukar poin
+lebih dari saldo -- harus ditolak dengan pesan error.
+
 **Konfirmasi order H+0 (murni frontend, 2026-09-09).** Celah #3 dari 7.
 Tahap 1 (Onboarding) di customer journey butuh konfirmasi order segera
 setelah dibuat -- sebelum ini tidak ada satu pun WA otomatis/draf yang

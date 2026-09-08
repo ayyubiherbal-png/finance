@@ -1021,6 +1021,17 @@ export const TEKS: Record<string, string> = {
 
   // ---------- Konfirmasi order H+0 (celah customer journey #3) ----------
   'Kirim Konfirmasi': 'Send Confirmation',
+
+  // ---------- Poin Loyalitas (0040, celah customer journey #4) ----------
+  'Poin Loyalitas': 'Loyalty Points',
+  '1 poin per Rp10.000 belanja, diberikan begitu faktur lunas.': '1 point per Rp10,000 spent, awarded once the invoice is paid in full.',
+  'Tukar poin': 'Redeem points',
+  'mis. Potongan pembelian, hadiah': 'e.g. Purchase discount, gift',
+  Tukar: 'Redeem',
+  'Belum ada riwayat poin.': 'No points history yet.',
+  Perubahan: 'Change',
+  'Jumlah poin harus lebih dari 0.': 'Point amount must be greater than 0.',
+  'Poin berhasil ditukar.': 'Points redeemed successfully.',
 }
 
 

@@ -20,12 +20,15 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0038_surat_jalan_resi.sql` dan
-> `0039_tingkat_fu_selesai.sql`**
+> ⏳ **Belum dijalankan: `0038_surat_jalan_resi.sql`,
+> `0039_tingkat_fu_selesai.sql`, dan `0040_poin_loyalitas.sql`**
 > — 0038 murni tambah 1 kolom (`surat_jalan.no_resi`, nullable). 0039
 > menambah view `v_tingkat_fu_selesai` supaya kartu statistik di
-> halaman Riwayat Follow-Up tidak error. (0020-0037 terkonfirmasi
-> sudah jalan.)
+> halaman Riwayat Follow-Up tidak error. 0040 menambah program
+> loyalitas poin (tabel `poin_pelanggan`/`riwayat_poin` + trigger
+> akrual otomatis saat faktur lunas + RPC `tukar_poin()`) supaya kartu
+> "Poin Loyalitas" di profil pelanggan (CRM) tidak error. (0020-0037
+> terkonfirmasi sudah jalan.)
 > (0020-0034 terkonfirmasi sudah jalan.)
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
@@ -88,6 +91,7 @@ supabase/migrations/0036_tahapan_evaluasi_dan_ulang_tahun.sql
 supabase/migrations/0037_riwayat_tahap_pelanggan.sql
 supabase/migrations/0038_surat_jalan_resi.sql
 supabase/migrations/0039_tingkat_fu_selesai.sql
+supabase/migrations/0040_poin_loyalitas.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

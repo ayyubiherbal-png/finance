@@ -52,14 +52,18 @@ function blokObjek(namaConst) {
 
 function kunciDariBlok(body) {
   const set = new Set()
+  const dup = []
   for (const m of body.matchAll(/^\s{2}(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|([A-Za-z_$][\w$]*)):/gm)) {
-    set.add((m[1] ?? m[2] ?? m[3]).replace(/\\'/g, "'").replace(/\\"/g, '"'))
+    const k = (m[1] ?? m[2] ?? m[3]).replace(/\\'/g, "'").replace(/\\"/g, '"')
+    if (set.has(k)) dup.push(k)
+    set.add(k)
   }
-  return set
+  return { set, dup }
 }
 
-const teksKeys = kunciDariBlok(blokObjek('TEKS'))
-const kamusKeys = kunciDariBlok(blokObjek('KAMUS'))
+const { set: teksKeys, dup: dupTeks } = kunciDariBlok(blokObjek('TEKS'))
+const { set: kamusKeys, dup: dupKamus } = kunciDariBlok(blokObjek('KAMUS'))
+const kunciGanda = [...dupTeks.map((k) => `TEKS: ${k}`), ...dupKamus.map((k) => `KAMUS: ${k}`)]
 
 // ---------- komponen/atribut yang MENERJEMAHKAN otomatis (lihat components/ui.tsx) ----------
 const ANAK_AUTO = new Set(['Th', 'Label', 'Badge', 'Button', 'CardTitle', 'option'])
@@ -310,6 +314,13 @@ const aktif = temuanJsx.filter((x) => !x.cetak)
 const konstanta = auditKonstanta()
 
 let adaMasalah = false
+
+if (kunciGanda.length > 0) {
+  adaMasalah = true
+  console.log(`\n########## KUNCI GANDA di i18nText.ts (${kunciGanda.length}) ##########`)
+  console.log('(tsc akan gagal build kalau ini tidak diperbaiki -- objek literal tidak boleh punya properti nama sama)')
+  for (const k of kunciGanda) console.log(`  ${k}`)
+}
 
 for (const status of ['TIDAK-DIBUNGKUS', 'TANPA-KAMUS']) {
   const arr = aktif.filter((x) => x.status === status)

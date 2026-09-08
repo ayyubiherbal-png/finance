@@ -480,6 +480,25 @@ export interface VTingkatFuSelesai {
   persen_selesai: number | null
 }
 
+/** Saldo poin loyalitas pelanggan -- lihat 0040. Cuma diubah lewat trigger/RPC, tidak ada insert/update langsung dari klien. */
+export interface PoinPelanggan {
+  pelanggan_id: string
+  saldo_poin: number
+  updated_at: string
+}
+
+/** Jejak setiap perubahan poin (akrual otomatis atau penukaran manual) -- lihat 0040. */
+export interface RiwayatPoin {
+  id: string
+  pelanggan_id: string
+  perubahan: number
+  alasan: string
+  referensi_tipe: string | null
+  referensi_id: string | null
+  dibuat_oleh: string | null
+  dibuat_pada: string
+}
+
 export interface VLabaProduk {
   produk_id: string
   kode_produk: string

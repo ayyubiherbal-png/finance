@@ -1,10 +1,13 @@
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { tt } from '@/lib/i18nText'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, MessageCircle, Pencil } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { angka, rupiah, tanggal as fmtTanggal, tanggalWaktu } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
+import { cn } from '@/lib/utils'
+import { toast } from '@/components/Toast'
 import {
   Badge,
   Button,
@@ -12,7 +15,9 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Input,
   KondisiKosong,
+  Label,
   PesanError,
   Spinner,
   Table,
@@ -23,7 +28,7 @@ import {
   Tr,
 } from '@/components/ui'
 import { INFO_KATEGORI, type Kategori } from '@/pages/TugasFollowUp'
-import type { RiwayatTahapPelanggan, SegmenPelanggan, StatusBayar, VPelangganCrm, VProdukFavoritPelanggan } from '@/types/db'
+import type { PoinPelanggan, RiwayatPoin, RiwayatTahapPelanggan, SegmenPelanggan, StatusBayar, VPelangganCrm, VProdukFavoritPelanggan } from '@/types/db'
 
 const LABEL_SEGMEN: Record<SegmenPelanggan, { label: string; varian: 'sukses' | 'default' | 'peringatan' | 'bahaya' | 'netral' }> = {
   juara: { label: 'Juara', varian: 'sukses' },
@@ -158,6 +163,65 @@ export function CrmPelangganProfil() {
     },
     enabled: !!crm,
   })
+
+  // Poin loyalitas (0040) -- saldo & riwayat cuma dibaca di sini, satu-satunya
+  // jalan mengubahnya ada di RPC tukar_poin() (lihat simpanTukarPoin di bawah).
+  const queryClient = useQueryClient()
+  const { data: poin } = useQuery({
+    queryKey: ['crm-poin', id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('poin_pelanggan').select('*').eq('pelanggan_id', id as string).maybeSingle()
+      if (error) throw error
+      return data as PoinPelanggan | null
+    },
+    enabled: !!crm,
+  })
+
+  const { data: riwayatPoin } = useQuery({
+    queryKey: ['crm-riwayat-poin', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('riwayat_poin')
+        .select('*')
+        .eq('pelanggan_id', id as string)
+        .order('dibuat_pada', { ascending: false })
+        .limit(20)
+        .returns<RiwayatPoin[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    enabled: !!crm,
+  })
+
+  const [formTukar, setFormTukar] = useState({ jumlah: '', alasan: '' })
+  const [menukar, setMenukar] = useState(false)
+  const [errorTukar, setErrorTukar] = useState<unknown>(null)
+
+  async function simpanTukarPoin() {
+    setErrorTukar(null)
+    const jumlah = Number(formTukar.jumlah)
+    if (!jumlah || jumlah <= 0) {
+      setErrorTukar(new Error('Jumlah poin harus lebih dari 0.'))
+      return
+    }
+    setMenukar(true)
+    try {
+      const { error: err } = await supabase.rpc('tukar_poin', {
+        p_pelanggan_id: id as string,
+        p_jumlah: jumlah,
+        p_alasan: formTukar.alasan.trim(),
+      })
+      if (err) throw err
+      toast('Poin berhasil ditukar.')
+      setFormTukar({ jumlah: '', alasan: '' })
+      queryClient.invalidateQueries({ queryKey: ['crm-poin', id] })
+      queryClient.invalidateQueries({ queryKey: ['crm-riwayat-poin', id] })
+    } catch (e) {
+      setErrorTukar(e)
+    } finally {
+      setMenukar(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -344,6 +408,75 @@ export function CrmPelangganProfil() {
                     </Tr>
                   )
                 })}
+              </Tbody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base">Poin Loyalitas</CardTitle>
+              <p className="text-sm text-muted-foreground">{tt('1 poin per Rp10.000 belanja, diberikan begitu faktur lunas.')}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">{tt('Saldo')}</p>
+              <p className="text-2xl font-bold tabular">{angka(poin?.saldo_poin ?? 0)}</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-0">
+          <div className="flex flex-wrap items-end gap-2 rounded-md border border-border p-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Tukar poin</Label>
+              <Input
+                type="number"
+                min={1}
+                className="w-28"
+                placeholder="Jumlah"
+                value={formTukar.jumlah}
+                onChange={(e) => setFormTukar((f) => ({ ...f, jumlah: e.target.value }))}
+              />
+            </div>
+            <div className="flex-1 space-y-1">
+              <Label className="text-xs">Alasan</Label>
+              <Input
+                placeholder="mis. Potongan pembelian, hadiah"
+                value={formTukar.alasan}
+                onChange={(e) => setFormTukar((f) => ({ ...f, alasan: e.target.value }))}
+              />
+            </div>
+            <Button size="sm" onClick={simpanTukarPoin} disabled={menukar || !formTukar.jumlah}>
+              {menukar ? <Spinner className="h-3.5 w-3.5" /> : null}
+              {tt('Tukar')}
+            </Button>
+          </div>
+          {errorTukar ? <PesanError error={errorTukar} /> : null}
+
+          {!riwayatPoin || riwayatPoin.length === 0 ? (
+            <KondisiKosong pesan="Belum ada riwayat poin." />
+          ) : (
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Tanggal</Th>
+                  <Th>Alasan</Th>
+                  <Th className="text-right">Perubahan</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {riwayatPoin.map((r) => (
+                  <Tr key={r.id}>
+                    <Td className="text-muted-foreground">{tanggalWaktu(r.dibuat_pada)}</Td>
+                    <Td>{r.alasan}</Td>
+                    <Td className={cn('tabular text-right font-medium', r.perubahan > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive')}>
+                      {r.perubahan > 0 ? '+' : ''}
+                      {angka(r.perubahan)}
+                    </Td>
+                  </Tr>
+                ))}
               </Tbody>
             </Table>
           )}
