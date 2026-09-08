@@ -386,6 +386,8 @@ export interface PembeliMarketplace {
   total_belanja: number
   pesanan_terakhir: string | null
   catatan: string | null
+  /** Diisi begitu "dijadikan Pelanggan" di Master Data -- lihat 0028. Baris jadi read-only kalau ini terisi. */
+  pelanggan_id: string | null
   created_at: string
   updated_at: string
 }

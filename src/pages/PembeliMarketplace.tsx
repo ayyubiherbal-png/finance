@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { tt } from '@/lib/i18n'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { MessageCircle, RefreshCw, Search } from 'lucide-react'
+import { CheckCircle2, MessageCircle, RefreshCw, Search, UserPlus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal as fmtTanggal } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
@@ -79,7 +80,13 @@ interface FormEdit {
   catatan: string
 }
 
+/** Nama+telepon+alamat lengkap -- syarat minimal yang disepakati user sebelum bisa "Jadikan Pelanggan". */
+function siapDijadikanPelanggan(p: BarisPembeli): boolean {
+  return !!(p.nama?.trim() && p.telepon?.trim() && p.alamat?.trim())
+}
+
 export function PembeliMarketplace() {
+  const navigate = useNavigate()
   const [cari, setCari] = useState('')
   const { data, isLoading, error, isFetching } = usePembeliMarketplace(cari)
   const queryClient = useQueryClient()
@@ -143,6 +150,18 @@ export function PembeliMarketplace() {
     } finally {
       setMenyimpan(false)
     }
+  }
+
+  function jadikanPelanggan(p: BarisPembeli) {
+    navigate('/pelanggan/baru', {
+      state: {
+        dariPembeliMarketplaceId: p.id,
+        nama: p.nama ?? '',
+        whatsapp: p.telepon ?? '',
+        alamat: p.alamat ?? '',
+        sumber: p.kanal,
+      },
+    })
   }
 
   async function hapus(p: BarisPembeli) {
@@ -295,7 +314,12 @@ export function PembeliMarketplace() {
                         )}
                       </Td>
                       <Td>
-                        {editing ? (
+                        {p.pelanggan_id ? (
+                          <Link to={`/pelanggan/${p.pelanggan_id}`} className="flex items-center gap-1 whitespace-nowrap text-sm text-primary hover:underline">
+                            <CheckCircle2 className="h-4 w-4" />
+                            {tt('Sudah jadi Pelanggan')}
+                          </Link>
+                        ) : editing ? (
                           <div className="flex gap-1.5 whitespace-nowrap">
                             <Button onClick={() => simpanEdit(p.id)} disabled={menyimpan}>
                               {menyimpan ? <Spinner className="h-3.5 w-3.5" /> : null}
@@ -321,6 +345,12 @@ export function PembeliMarketplace() {
                             <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => hapus(p)}>
                               {tt('Hapus')}
                             </Button>
+                            {siapDijadikanPelanggan(p) ? (
+                              <Button size="sm" onClick={() => jadikanPelanggan(p)}>
+                                <UserPlus className="h-4 w-4" />
+                                {tt('Jadikan Pelanggan')}
+                              </Button>
+                            ) : null}
                           </div>
                         )}
                       </Td>

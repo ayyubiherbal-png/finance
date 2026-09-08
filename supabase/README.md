@@ -432,6 +432,38 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Pembeli Marketplace: tombol "Jadikan Pelanggan" -- promosikan ke
+Master Data (0028, 2026-09-08).** User: "saya ingin agar bisa
+memindahkan marketplace buyer yang sekiranya sudah lengkap nomor HP
+dan alamat ke Master data. agar kedepannya transaksi bisa dipindahkan
+melalui WA." Didiskusikan dulu desainnya sebelum dibuat (user setuju
+pendapat berikut):
+
+1. **Tidak bikin jalur insert baru ke `pelanggan`** -- tombol "Jadikan
+   Pelanggan" (aktif kalau Nama+Telepon+Alamat lengkap, lihat
+   `siapDijadikanPelanggan()`) navigasi ke form "Pelanggan Baru" yang
+   SUDAH ADA (`PelangganForm.tsx`), dipre-isi lewat `location.state`
+   react-router (Nama -> Nama, Telepon -> **WhatsApp** [bukan Telepon --
+   field itu tersembunyi untuk tipe "customer", cuma dipakai
+   horeka/perusahaan], Alamat -> Alamat, kanal -> Sumber). User tetap
+   sempat meninjau/melengkapi (wilayah, tier harga, sales) sebelum
+   Simpan -- bukan langsung tercatat diam-diam.
+2. **Riwayat transaksi lama TIDAK dipindah/ditulis ulang** -- Sales
+   Order/Faktur yang sudah ada tetap di bawah akun agregat marketplace
+   (data keuangan final, mengubahnya berisiko & tidak perlu). Pelanggan
+   baru ini murni untuk transaksi ke depan lewat WA.
+3. **Baris di Pembeli Marketplace TIDAK dihapus setelah dipromosikan**
+   -- kolom baru `pelanggan_id` (0028) menautkannya. Begitu tertaut,
+   Aksi-nya berubah jadi link read-only "✓ Sudah jadi Pelanggan" (bukan
+   Edit/Hapus/Chat lagi) -- riwayat jumlah pesanan & total belanja era
+   marketplace-nya tetap kelihatan sebagai referensi, sekaligus mencegah
+   satu orang punya 2 record aktif (satu di sini, satu di Master Data).
+
+Setelah `pelanggan` baru berhasil dibuat, `PelangganForm.tsx` langsung
+meng-update `pembeli_marketplace.pelanggan_id` (best-effort -- kalau
+gagal, pelanggan tetap tersimpan, cuma toast peringatan, tidak
+membatalkan penyimpanan).
+
 **Pembeli Marketplace: telepon bisa diedit + tombol Chat, tampilan
 disamakan CRM Pelanggan (0027, 2026-09-08).** User koreksi: "Sepertinya
 kamu belum paham maksud saya... saya akan mencari nomor HP, Nama dan

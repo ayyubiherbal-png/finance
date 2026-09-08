@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -10,10 +10,21 @@ import {
   useWilayahKelurahan,
   buatCariWilayah,
 } from '@/lib/queries'
+import { pesanKesalahan } from '@/lib/format'
 import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
 import { Combobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
 import type { Pelanggan, SumberPelanggan, TipePelanggan } from '@/types/db'
+
+/** Dikirim lewat navigate(..., { state }) dari tombol "Jadikan Pelanggan"
+ * di halaman Pembeli Marketplace -- lihat PembeliMarketplace.tsx & 0028. */
+interface PrefillDariPembeliMarketplace {
+  dariPembeliMarketplaceId: string
+  nama: string
+  whatsapp: string
+  alamat: string
+  sumber: Extract<SumberPelanggan, 'shopee' | 'tiktok'>
+}
 
 interface FormState {
   kode: string
@@ -104,10 +115,18 @@ export function PelangganForm() {
   const { id } = useParams<{ id: string }>()
   const isBaru = !id || id === 'baru'
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
   const { data: salesList } = useDaftarSales()
 
-  const [form, setForm] = useState<FormState>(KOSONG)
+  // Cuma relevan untuk pelanggan BARU yang dibuka lewat tombol "Jadikan
+  // Pelanggan" -- lihat catatan di 0028. Dibaca sekali (useState
+  // initializer), state ini tidak berubah selama halaman "baru" ini hidup.
+  const [prefill] = useState<PrefillDariPembeliMarketplace | null>(() => (isBaru ? (location.state as PrefillDariPembeliMarketplace | null) : null))
+
+  const [form, setForm] = useState<FormState>(() =>
+    prefill ? { ...KOSONG, nama: prefill.nama, whatsapp: prefill.whatsapp, alamat: prefill.alamat, sumber: prefill.sumber } : KOSONG,
+  )
   const { data: provinsiList } = useWilayahProvinsi()
   const { data: kabupatenList } = useWilayahKabupatenKota(form.provinsi_kode || null)
   const { data: kecamatanList } = useWilayahKecamatan(form.kabupaten_kode || null)
@@ -220,6 +239,15 @@ export function PelangganForm() {
       if (isBaru) {
         const { data, error } = await supabase.from('pelanggan').insert(payload).select('id').single()
         if (error) throw error
+
+        if (prefill) {
+          const { error: errTaut } = await supabase
+            .from('pembeli_marketplace')
+            .update({ pelanggan_id: data.id })
+            .eq('id', prefill.dariPembeliMarketplaceId)
+          if (errTaut) toast(`Pelanggan tersimpan, tapi gagal menandai baris Pembeli Marketplace: ${pesanKesalahan(errTaut)}`)
+        }
+
         toast('Pelanggan tersimpan.')
         navigate(`/pelanggan/${data.id}`, { replace: true })
       } else {
@@ -265,7 +293,14 @@ export function PelangganForm() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">{isBaru ? 'Pelanggan Baru' : form.nama || '...'}</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{isBaru ? 'Pelanggan Baru' : form.nama || '...'}</h1>
+          {prefill ? (
+            <p className="text-xs text-muted-foreground">
+              Diisi otomatis dari data Pembeli Marketplace -- periksa dulu, lengkapi wilayah/tier harga kalau perlu, lalu Simpan.
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <Card>
