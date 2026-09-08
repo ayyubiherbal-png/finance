@@ -472,6 +472,14 @@ export interface RiwayatTahapPelanggan {
   muncul_pertama_pada: string
 }
 
+/** Rasio tugas FU yang ditandai selesai vs yang pernah muncul, per kategori -- lihat 0039. */
+export interface VTingkatFuSelesai {
+  kategori: string
+  jumlah_muncul: number
+  jumlah_selesai: number
+  persen_selesai: number | null
+}
+
 export interface VLabaProduk {
   produk_id: string
   kode_produk: string

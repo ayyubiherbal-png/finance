@@ -432,6 +432,26 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Tingkat Follow-Up Selesai -- akhirnya bisa dihitung (0039,
+2026-09-09).** Celah #2 dari 7. Sejak 0029 dibuat, metrik ini SENGAJA
+ditunda -- catatan lama di kepala `RiwayatFollowUp.tsx` bilang tidak
+ada baseline "total tugas yang PERNAH muncul" (tugas yang tidak
+ditandai selesai tidak pernah tersimpan). 0037 menutup itu lewat
+`riwayat_tahap_pelanggan` (catatan kemunculan) -- sekarang tinggal
+di-`left join` ke `riwayat_follow_up` (catatan penyelesaian) lewat
+`tugas_id` yang sama.
+
+View baru `v_tingkat_fu_selesai`: per kategori, `jumlah_muncul` /
+`jumlah_selesai` / `persen_selesai`. Ditampilkan di halaman Riwayat
+Follow-Up sebagai kartu statistik -- 1 kartu "keseluruhan" + 1 kartu
+per kategori (baru/naik_setia/naik_juara/mulai_hilang/tidur/
+ulang_tahun/jadikan_pelanggan).
+
+**Belum diverifikasi lewat browser** -- sudah lolos `tsc`/`build`/
+`npm run cek:bahasa`. Mohon dicek: angka di kartu masuk akal (mis.
+kalau ada 10 kemunculan "Sapa Pembeli Baru" dan 3 sudah ditandai
+selesai, kartunya harus baca "30%, 3/10").
+
 **Nomor resi pengiriman di Surat Jalan (0038, 2026-09-09).** User
 minta semua 7 celah customer journey dikerjakan sekaligus (Tahap 1
 Onboarding, Tahap 3-5 Evaluasi/Retensi/Advokasi). Yang pertama: Surat

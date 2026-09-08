@@ -3,17 +3,18 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { tanggal as fmtTanggal } from '@/lib/format'
 import { Badge, Card, CardContent, KondisiKosong, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
-import type { RiwayatFollowUp as BarisRiwayat } from '@/types/db'
+import type { RiwayatFollowUp as BarisRiwayat, VTingkatFuSelesai } from '@/types/db'
 
 /**
  * Log "Tandai Selesai" dari Tugas Follow-Up (0029) -- fitur #1 dari 5
- * yang disepakati user, 2026-09-08. Belum ada perhitungan "Tingkat
- * Follow-Up Selesai" di sini (itu fitur terpisah, butuh dibandingkan
- * dengan total tugas yang PERNAH muncul -- tugas yang tidak ditandai
- * selesai tidak pernah tersimpan di mana pun, cuma dihitung ulang tiap
- * hari, jadi baseline "total tugas historis" itu sendiri belum ada).
- * Untuk sekarang murni daftar riwayat -- siapa sudah dihubungi, kapan,
- * kategori apa, catatan hasilnya apa.
+ * yang disepakati user, 2026-09-08.
+ *
+ * "Tingkat Follow-Up Selesai" (0039, 2026-09-09) -- sempat tidak bisa
+ * dihitung karena tidak ada baseline "total tugas yang PERNAH muncul"
+ * (tugas yang tidak ditandai selesai tidak pernah tersimpan). Sejak
+ * 0037 mencatat setiap KEMUNCULAN tahap ke `riwayat_tahap_pelanggan`,
+ * baseline itu sudah ada -- lihat `v_tingkat_fu_selesai` (join ke
+ * `riwayat_follow_up` lewat `tugas_id` yang sama).
  */
 
 const LABEL_KATEGORI: Record<string, string> = {
@@ -34,6 +35,17 @@ const VARIAN_KATEGORI: Record<string, 'sukses' | 'default' | 'peringatan' | 'bah
   jadikan_pelanggan: 'netral',
 }
 
+function useTingkatFuSelesai() {
+  return useQuery({
+    queryKey: ['tingkat-fu-selesai'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('v_tingkat_fu_selesai').select('*').returns<VTingkatFuSelesai[]>()
+      if (error) throw error
+      return data ?? []
+    },
+  })
+}
+
 function useRiwayatFollowUp() {
   return useQuery({
     queryKey: ['riwayat-follow-up'],
@@ -51,6 +63,11 @@ function useRiwayatFollowUp() {
 
 export function RiwayatFollowUp() {
   const { data, isLoading, error } = useRiwayatFollowUp()
+  const { data: tingkat } = useTingkatFuSelesai()
+
+  const totalMuncul = tingkat?.reduce((t, k) => t + k.jumlah_muncul, 0) ?? 0
+  const totalSelesai = tingkat?.reduce((t, k) => t + k.jumlah_selesai, 0) ?? 0
+  const persenKeseluruhan = totalMuncul > 0 ? Math.round((totalSelesai / totalMuncul) * 1000) / 10 : null
 
   return (
     <div className="space-y-4">
@@ -58,6 +75,29 @@ export function RiwayatFollowUp() {
         <h1 className="text-2xl font-bold tracking-tight">{tt('Riwayat Follow-Up')}</h1>
         <p className="text-sm text-muted-foreground">{tt('Catatan tugas follow-up yang sudah ditandai selesai -- siapa, kapan, dan hasilnya apa.')}</p>
       </div>
+
+      {tingkat && tingkat.length > 0 ? (
+        <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">{tt('Tingkat Selesai Keseluruhan')}</p>
+            <p className="text-xl font-semibold tabular">{persenKeseluruhan ?? '-'}%</p>
+            <p className="text-xs text-muted-foreground">
+              {totalSelesai}/{totalMuncul} {tt('tugas')}
+            </p>
+          </div>
+          {tingkat.map((k) => (
+            <div key={k.kategori} className="rounded-lg border border-border p-3">
+              <p className="truncate text-xs text-muted-foreground" title={tt(LABEL_KATEGORI[k.kategori] ?? k.kategori)}>
+                {tt(LABEL_KATEGORI[k.kategori] ?? k.kategori)}
+              </p>
+              <p className="text-xl font-semibold tabular">{k.persen_selesai ?? '-'}%</p>
+              <p className="text-xs text-muted-foreground">
+                {k.jumlah_selesai}/{k.jumlah_muncul}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <Card>
         <CardContent className="p-0 pb-2">

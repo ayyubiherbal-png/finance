@@ -1014,6 +1014,10 @@ export const TEKS: Record<string, string> = {
   'No. resi tersimpan.': 'Tracking number saved.',
   'No. resi': 'Tracking no.',
   'Belum diisi': 'Not filled in yet',
+
+  // ---------- Tingkat Follow-Up Selesai (0039) ----------
+  'Tingkat Selesai Keseluruhan': 'Overall Completion Rate',
+  tugas: 'tasks',
 }
 
 
