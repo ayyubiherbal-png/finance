@@ -21,8 +21,8 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 bukan ada yang hilang.)
 
 > ⏳ **Belum dijalankan: `0029_riwayat_follow_up.sql`,
-> `0030_pelanggan_aktif_bulanan.sql`, `0031_tiket.sql`, dan
-> `0032_catatan_riwayat.sql`**
+> `0030_pelanggan_aktif_bulanan.sql`, `0031_tiket.sql`,
+> `0032_catatan_riwayat.sql`, dan `0033_pengaturan_tugas_fu.sql`**
 > — 0029 dibutuhkan supaya tombol "Tandai Selesai" di halaman Tugas
 > Follow-Up berfungsi (tabel baru `riwayat_follow_up`, log siapa/kapan/
 > catatan hasil FU). 0030 dibutuhkan supaya grafik "Pelanggan Aktif per
@@ -30,7 +30,9 @@ bukan ada yang hilang.)
 > 0031 dibutuhkan supaya menu "Tiket" (CRM) berfungsi (tabel baru
 > `tiket`, penomoran otomatis prefix TKT). 0032 dibutuhkan supaya ikon
 > riwayat di kolom "Catatan FU" (Pembeli Marketplace) tidak error
-> (tabel baru `catatan_riwayat` + trigger otomatis). (0020-0028
+> (tabel baru `catatan_riwayat` + trigger otomatis). 0033 dibutuhkan
+> supaya tombol "Aturan Jendela FU" di Tugas Follow-Up (admin/owner)
+> tidak error (tabel baru `pengaturan_tugas_fu`). (0020-0028
 > terkonfirmasi sudah jalan.)
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
@@ -86,6 +88,7 @@ supabase/migrations/0029_riwayat_follow_up.sql
 supabase/migrations/0030_pelanggan_aktif_bulanan.sql
 supabase/migrations/0031_tiket.sql
 supabase/migrations/0032_catatan_riwayat.sql
+supabase/migrations/0033_pengaturan_tugas_fu.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

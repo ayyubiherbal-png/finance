@@ -441,6 +441,17 @@ export interface CatatanRiwayat {
   created_at: string
 }
 
+export type KategoriJendelaFu = 'baru' | 'naik_kelas' | 'mulai_hilang' | 'tidur'
+
+/** Jendela hari-sejak-transaksi yang menentukan cadence Tugas Follow-Up -- lihat 0033. */
+export interface PengaturanTugasFu {
+  kategori: KategoriJendelaFu
+  hari_min: number
+  hari_max: number
+  updated_at: string
+  updated_oleh: string | null
+}
+
 export interface VLabaProduk {
   produk_id: string
   kode_produk: string

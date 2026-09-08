@@ -432,6 +432,43 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Aturan Tugas Follow-Up bisa diatur sendiri (0033, 2026-09-08).**
+Fitur #5 -- TERAKHIR dari 5 yang disepakati "Kerjakan berurut",
+lanjutan fitur #4 (Catatan FU jadi riwayat, 0032, entri di bawah).
+Sebelumnya 4 jendela hari-sejak-transaksi yang menentukan kapan
+seorang pelanggan/pembeli marketplace masuk daftar Tugas Follow-Up
+(`JENDELA_BARU`/`JENDELA_NAIK_KELAS`/`JENDELA_MULAI_HILANG`/
+`JENDELA_TIDUR` di `TugasFollowUp.tsx`) HARDCODE di kode -- mengubah
+cadence FU (mis. "mulai_hilang" dari 60 hari jadi 45 hari) butuh
+deploy baru, padahal itu murni keputusan bisnis, bukan keputusan
+teknis.
+
+Tabel baru `pengaturan_tugas_fu`: satu baris per kategori jendela
+(baru/naik_kelas/mulai_hilang/tidur), kolom `hari_min`/`hari_max`,
+di-seed dengan angka yang SAMA PERSIS dengan konstanta lama -- migrasi
+ini murni "memindahkan tempat penyimpanan", tidak mengubah perilaku
+apa pun sampai ada yang benar-benar mengedit lewat UI. `JENDELA_DEFAULT`
+di frontend tetap disimpan sebagai FALLBACK (dipakai sebelum data
+pengaturan selesai dimuat), bukan lagi sumber kebenaran.
+
+RLS: semua yang aktif boleh BACA (jendelanya dipakai untuk menyusun
+daftar tugas yang dilihat semua sales), tapi MENGUBAH dibatasi
+admin/owner saja (`is_admin()`, sama seperti pembatasan master data
+lain di 0008) -- cadence follow-up adalah keputusan kebijakan, bukan
+sesuatu yang harusnya bisa diubah sales biasa.
+
+Frontend: tombol "Aturan Jendela FU" (cuma tampil untuk admin/owner)
+di halaman Tugas Follow-Up membuka panel 4 kartu kecil -- Input angka
+hari min/maks per kategori, satu tombol Simpan yang meng-update
+keempatnya sekaligus.
+
+**Belum diverifikasi lewat browser di sesi ini** -- sesi login yang
+dipakai untuk uji coba sebelumnya sudah kedaluwarsa. Sudah lolos
+`tsc --noEmit` dan `vite build`; mohon dicek sebagai admin/owner:
+ubah salah satu jendela (mis. "Mulai Hilang" dari 61-65 jadi 30-35),
+Simpan, lalu cek daftar Tugas Follow-Up ikut berubah sesuai jendela
+baru.
+
 **Catatan FU jadi riwayat multi-entry (0032, 2026-09-08).** Fitur #4
 dari 5 -- lanjutan "Kerjakan berurut" setelah fitur #3 (Tiket, 0031,
 entri di bawah). Masalah nyata: kolom `pembeli_marketplace.catatan`

@@ -1,15 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { tt } from '@/lib/i18nText'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, MessageCircle } from 'lucide-react'
+import { CheckCircle2, MessageCircle, Settings2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggal as fmtTanggal } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/components/Toast'
-import { Badge, Button, Card, CardContent, Input, KondisiKosong, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
-import type { PembeliMarketplace, VPelangganCrm } from '@/types/db'
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, KondisiKosong, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import type { KategoriJendelaFu, PembeliMarketplace, PengaturanTugasFu, VPelangganCrm } from '@/types/db'
 
 /**
  * Fase 2 dari framework CRM (lihat PDF yang dikirim ke user 2026-09-08):
@@ -40,11 +41,46 @@ const INFO_KATEGORI: Record<Kategori, { label: string; varian: 'sukses' | 'defau
 }
 const URUTAN_KATEGORI: Kategori[] = ['jadikan_pelanggan', 'baru', 'naik_setia', 'naik_juara', 'mulai_hilang', 'tidur']
 
-/** Jendela hari-sejak-transaksi-terakhir per kategori -- lihat catatan di atas kenapa sempit. */
-const JENDELA_BARU: [number, number] = [1, 4]
-const JENDELA_NAIK_KELAS: [number, number] = [0, 3]
-const JENDELA_MULAI_HILANG: [number, number] = [61, 65]
-const JENDELA_TIDUR: [number, number] = [121, 125]
+/**
+ * Jendela hari-sejak-transaksi-terakhir per kategori -- SEJAK 0033 diatur
+ * lewat tabel `pengaturan_tugas_fu` (bisa diubah admin/owner lewat UI di
+ * bawah), bukan hardcode lagi. Nilai di bawah cuma FALLBACK dipakai
+ * sebelum data pengaturan selesai dimuat (atau kalau baris kategorinya
+ * entah kenapa hilang) -- SAMA PERSIS dengan angka lama sebelum 0033,
+ * supaya perilaku tidak berubah sampai ada yang benar-benar mengedit.
+ */
+const JENDELA_DEFAULT: Record<KategoriJendelaFu, [number, number]> = {
+  baru: [1, 4],
+  naik_kelas: [0, 3],
+  mulai_hilang: [61, 65],
+  tidur: [121, 125],
+}
+
+const LABEL_JENDELA: Record<KategoriJendelaFu, string> = {
+  baru: 'Sapa Pembeli Baru',
+  naik_kelas: 'Baru Jadi Setia/Juara',
+  mulai_hilang: 'Mulai Hilang',
+  tidur: 'Berisiko Tidur',
+}
+
+function usePengaturanTugasFu() {
+  return useQuery({
+    queryKey: ['pengaturan-tugas-fu'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('pengaturan_tugas_fu').select('*').returns<PengaturanTugasFu[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 60_000,
+  })
+}
+
+/** Gabungkan hasil query ke bentuk map lengkap -- fallback ke default per-kategori kalau baris tsb belum ada. */
+function jendelaMap(rows: PengaturanTugasFu[] | undefined): Record<KategoriJendelaFu, [number, number]> {
+  const hasil = { ...JENDELA_DEFAULT }
+  for (const r of rows ?? []) hasil[r.kategori] = [r.hari_min, r.hari_max]
+  return hasil
+}
 
 function diJendela(hari: number | null, [min, max]: [number, number]): boolean {
   return hari !== null && hari >= min && hari <= max
@@ -150,17 +186,17 @@ function useTugasSelesai() {
   })
 }
 
-function susunTugas(pelanggan: VPelangganCrm[], pembeli: PembeliMarketplace[]): Tugas[] {
+function susunTugas(pelanggan: VPelangganCrm[], pembeli: PembeliMarketplace[], jendela: Record<KategoriJendelaFu, [number, number]>): Tugas[] {
   const hasil: Tugas[] = []
 
   for (const p of pelanggan) {
     const hari = p.hari_sejak_order
     let kategori: Kategori | null = null
-    if (p.jumlah_transaksi === 1 && diJendela(hari, JENDELA_BARU)) kategori = 'baru'
-    else if (p.jumlah_transaksi === 2 && diJendela(hari, JENDELA_NAIK_KELAS)) kategori = 'naik_setia'
-    else if (p.jumlah_transaksi === 3 && diJendela(hari, JENDELA_NAIK_KELAS)) kategori = 'naik_juara'
-    else if (diJendela(hari, JENDELA_MULAI_HILANG)) kategori = 'mulai_hilang'
-    else if (diJendela(hari, JENDELA_TIDUR)) kategori = 'tidur'
+    if (p.jumlah_transaksi === 1 && diJendela(hari, jendela.baru)) kategori = 'baru'
+    else if (p.jumlah_transaksi === 2 && diJendela(hari, jendela.naik_kelas)) kategori = 'naik_setia'
+    else if (p.jumlah_transaksi === 3 && diJendela(hari, jendela.naik_kelas)) kategori = 'naik_juara'
+    else if (diJendela(hari, jendela.mulai_hilang)) kategori = 'mulai_hilang'
+    else if (diJendela(hari, jendela.tidur)) kategori = 'tidur'
     if (!kategori) continue
 
     hasil.push({
@@ -196,11 +232,11 @@ function susunTugas(pelanggan: VPelangganCrm[], pembeli: PembeliMarketplace[]): 
     if (!p.pesanan_terakhir) continue
     const hari = hariSejak(p.pesanan_terakhir)
     let kategori: Kategori | null = null
-    if (p.jumlah_pesanan === 1 && diJendela(hari, JENDELA_BARU)) kategori = 'baru'
-    else if (p.jumlah_pesanan === 2 && diJendela(hari, JENDELA_NAIK_KELAS)) kategori = 'naik_setia'
-    else if (p.jumlah_pesanan === 3 && diJendela(hari, JENDELA_NAIK_KELAS)) kategori = 'naik_juara'
-    else if (diJendela(hari, JENDELA_MULAI_HILANG)) kategori = 'mulai_hilang'
-    else if (diJendela(hari, JENDELA_TIDUR)) kategori = 'tidur'
+    if (p.jumlah_pesanan === 1 && diJendela(hari, jendela.baru)) kategori = 'baru'
+    else if (p.jumlah_pesanan === 2 && diJendela(hari, jendela.naik_kelas)) kategori = 'naik_setia'
+    else if (p.jumlah_pesanan === 3 && diJendela(hari, jendela.naik_kelas)) kategori = 'naik_juara'
+    else if (diJendela(hari, jendela.mulai_hilang)) kategori = 'mulai_hilang'
+    else if (diJendela(hari, jendela.tidur)) kategori = 'tidur'
     if (!kategori) continue
     // Belum punya telepon (mayoritas pembeli TikTok, lihat 0025) -- tidak ada cara menghubungi, lewati.
     if (!p.telepon) continue
@@ -223,9 +259,13 @@ function susunTugas(pelanggan: VPelangganCrm[], pembeli: PembeliMarketplace[]): 
 }
 
 export function TugasFollowUp() {
+  const { profil } = useAuth()
+  const bolehAturJendela = profil?.peran === 'owner' || profil?.peran === 'admin'
+
   const { data: pelanggan, isLoading: loadingPelanggan, error: errorPelanggan } = usePelangganUntukTugas()
   const { data: pembeli, isLoading: loadingPembeli, error: errorPembeli } = usePembeliUntukTugas()
   const { data: sudahSelesai, isLoading: loadingSelesai } = useTugasSelesai()
+  const { data: pengaturan } = usePengaturanTugasFu()
   const queryClient = useQueryClient()
   const [kategoriAktif, setKategoriAktif] = useState<Kategori | null>(null)
 
@@ -233,10 +273,12 @@ export function TugasFollowUp() {
   const [catatanTandai, setCatatanTandai] = useState('')
   const [menyimpan, setMenyimpan] = useState(false)
   const [errorAksi, setErrorAksi] = useState<unknown>(null)
+  const [pengaturanTerbuka, setPengaturanTerbuka] = useState(false)
 
+  const jendela = jendelaMap(pengaturan)
   const isLoading = loadingPelanggan || loadingPembeli || loadingSelesai
   const error = errorPelanggan || errorPembeli
-  const semuaTugas = isLoading || error ? [] : susunTugas(pelanggan ?? [], pembeli ?? [])
+  const semuaTugas = isLoading || error ? [] : susunTugas(pelanggan ?? [], pembeli ?? [], jendela)
   const semua = semuaTugas.filter((t) => !sudahSelesai?.has(t.id))
   const hitungan = URUTAN_KATEGORI.map((k) => ({ kunci: k, ...INFO_KATEGORI[k], jumlah: semua.filter((t) => t.kategori === k).length }))
   const tersaring = kategoriAktif ? semua.filter((t) => t.kategori === kategoriAktif) : semua
@@ -267,12 +309,22 @@ export function TugasFollowUp() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('Tugas Follow-Up')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {tt('Disusun otomatis tiap hari dari riwayat transaksi -- tinggal ditinjau, klik Chat untuk kirim manual. Bukan pengiriman otomatis (lihat catatan di framework CRM).')}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Tugas Follow-Up')}</h1>
+          <p className="text-sm text-muted-foreground">
+            {tt('Disusun otomatis tiap hari dari riwayat transaksi -- tinggal ditinjau, klik Chat untuk kirim manual. Bukan pengiriman otomatis (lihat catatan di framework CRM).')}
+          </p>
+        </div>
+        {bolehAturJendela ? (
+          <Button variant="outline" size="sm" onClick={() => setPengaturanTerbuka((v) => !v)}>
+            <Settings2 className="h-4 w-4" />
+            {tt('Aturan Jendela FU')}
+          </Button>
+        ) : null}
       </div>
+
+      {bolehAturJendela && pengaturanTerbuka ? <PanelPengaturanJendela pengaturan={pengaturan} queryClient={queryClient} /> : null}
 
       {!isLoading && !error ? (
         <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -412,5 +464,104 @@ export function TugasFollowUp() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+const URUTAN_JENDELA: KategoriJendelaFu[] = ['baru', 'naik_kelas', 'mulai_hilang', 'tidur']
+
+/** Sunting 4 jendela hari-sejak-transaksi (0033) -- admin/owner saja, lihat RLS policy `ubah`. */
+function PanelPengaturanJendela({
+  pengaturan,
+  queryClient,
+}: {
+  pengaturan: PengaturanTugasFu[] | undefined
+  queryClient: ReturnType<typeof useQueryClient>
+}) {
+  const [form, setForm] = useState<Record<KategoriJendelaFu, [number, number]>>(JENDELA_DEFAULT)
+  const [menyimpan, setMenyimpan] = useState(false)
+  const [error, setError] = useState<unknown>(null)
+
+  useEffect(() => {
+    if (pengaturan) setForm(jendelaMap(pengaturan))
+  }, [pengaturan])
+
+  function ubah(kategori: KategoriJendelaFu, indeks: 0 | 1, nilai: number) {
+    setForm((f) => {
+      const jendela: [number, number] = [...f[kategori]]
+      jendela[indeks] = nilai
+      return { ...f, [kategori]: jendela }
+    })
+  }
+
+  async function simpan() {
+    setError(null)
+    for (const k of URUTAN_JENDELA) {
+      const [min, max] = form[k]
+      if (max < min) {
+        setError(new Error(`${tt(LABEL_JENDELA[k])}: hari maksimum tidak boleh kurang dari hari minimum.`))
+        return
+      }
+    }
+    setMenyimpan(true)
+    try {
+      await Promise.all(
+        URUTAN_JENDELA.map(async (k) => {
+          const [hari_min, hari_max] = form[k]
+          const { error: err } = await supabase.from('pengaturan_tugas_fu').update({ hari_min, hari_max }).eq('kategori', k)
+          if (err) throw err
+        }),
+      )
+      toast('Aturan jendela FU tersimpan.')
+      queryClient.invalidateQueries({ queryKey: ['pengaturan-tugas-fu'] })
+    } catch (err) {
+      setError(err)
+    } finally {
+      setMenyimpan(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{tt('Aturan Jendela FU')}</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          {tt('Berapa hari sejak transaksi terakhir sebuah kategori tugas muncul di daftar. Cuma admin/owner yang boleh mengubah.')}
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {URUTAN_JENDELA.map((k) => (
+            <div key={k} className="space-y-1.5 rounded-md border border-border p-3">
+              <p className="text-xs font-medium text-muted-foreground">{tt(LABEL_JENDELA[k])}</p>
+              <div className="flex items-center gap-1.5">
+                <Input
+                  type="number"
+                  min={0}
+                  className="w-16"
+                  value={form[k][0]}
+                  onChange={(e) => ubah(k, 0, Number(e.target.value))}
+                />
+                <span className="text-xs text-muted-foreground">{tt('s/d')}</span>
+                <Input
+                  type="number"
+                  min={0}
+                  className="w-16"
+                  value={form[k][1]}
+                  onChange={(e) => ubah(k, 1, Number(e.target.value))}
+                />
+                <span className="text-xs text-muted-foreground">{tt('hari')}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        {error ? <PesanError error={error} /> : null}
+        <div className="flex justify-end">
+          <Button size="sm" onClick={simpan} disabled={menyimpan}>
+            {menyimpan ? <Spinner className="h-3.5 w-3.5" /> : null}
+            {tt('Simpan')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
