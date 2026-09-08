@@ -992,6 +992,21 @@ export const TEKS: Record<string, string> = {
   Agu: 'Aug',
   Okt: 'Oct',
   Des: 'Dec',
+  // Sama persis di kedua bahasa (merek/istilah), didaftarkan eksplisit
+  // supaya `npm run cek:bahasa` tidak terus melaporkannya sebagai celah.
+  Jan: 'Jan',
+  Feb: 'Feb',
+  Mar: 'Mar',
+  Apr: 'Apr',
+  Jun: 'Jun',
+  Jul: 'Jul',
+  Sep: 'Sep',
+  Nov: 'Nov',
+  Customer: 'Customer',
+  Tokopedia: 'Tokopedia',
+  Shopee: 'Shopee',
+  TikTok: 'TikTok',
+  'TikTok Shop': 'TikTok Shop',
 }
 
 
