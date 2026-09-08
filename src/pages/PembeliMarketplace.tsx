@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { tt } from '@/lib/i18n'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { RefreshCw, Search } from 'lucide-react'
+import { MessageCircle, RefreshCw, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal as fmtTanggal } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
@@ -74,6 +74,7 @@ function usePembeliMarketplace(cari: string) {
 
 interface FormEdit {
   nama: string
+  telepon: string
   alamat: string
   catatan: string
 }
@@ -92,7 +93,7 @@ export function PembeliMarketplace() {
   const [errorAksi, setErrorAksi] = useState<unknown>(null)
 
   const [sedangEdit, setSedangEdit] = useState<string | null>(null)
-  const [formEdit, setFormEdit] = useState<FormEdit>({ nama: '', alamat: '', catatan: '' })
+  const [formEdit, setFormEdit] = useState<FormEdit>({ nama: '', telepon: '', alamat: '', catatan: '' })
   const [menyimpan, setMenyimpan] = useState(false)
 
   function muatUlang() {
@@ -116,7 +117,7 @@ export function PembeliMarketplace() {
 
   function mulaiEdit(p: BarisPembeli) {
     setSedangEdit(p.id)
-    setFormEdit({ nama: p.nama ?? '', alamat: p.alamat ?? '', catatan: p.catatan ?? '' })
+    setFormEdit({ nama: p.nama ?? '', telepon: p.telepon ?? '', alamat: p.alamat ?? '', catatan: p.catatan ?? '' })
     setErrorAksi(null)
   }
 
@@ -126,7 +127,13 @@ export function PembeliMarketplace() {
     try {
       const { error: err } = await supabase
         .from('pembeli_marketplace')
-        .update({ nama: formEdit.nama.trim() || null, alamat: formEdit.alamat.trim() || null, catatan: formEdit.catatan.trim() || null, diedit_manual: true })
+        .update({
+          nama: formEdit.nama.trim() || null,
+          telepon: formEdit.telepon.trim() || null,
+          alamat: formEdit.alamat.trim() || null,
+          catatan: formEdit.catatan.trim() || null,
+          diedit_manual: true,
+        })
         .eq('id', id)
       if (err) throw err
       setSedangEdit(null)
@@ -152,33 +159,12 @@ export function PembeliMarketplace() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{tt('Pembeli Marketplace')}</h1>
-          <p className="text-sm text-muted-foreground">
-            {tt('Daftar kerja untuk follow-up manual -- bukan data transaksi. Bisa diedit & dihapus bebas, tidak memengaruhi Faktur/Surat Jalan yang sudah ada.')}
-          </p>
-        </div>
-
-        <div className="flex flex-1 flex-wrap justify-end gap-2 sm:flex-none">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-8" placeholder="Cari nama, telepon, catatan..." value={cari} onChange={(e) => setCari(e.target.value)} />
-          </div>
-          <Button variant="outline" onClick={sinkronkan} disabled={menyinkronkan}>
-            {menyinkronkan ? <Spinner className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
-            {tt('Sinkronkan dari Pesanan')}
-          </Button>
-        </div>
-      </div>
-
-      {semua.length > 0 ? (
-        <p className="text-xs text-muted-foreground">
-          {tt(
-            'Catatan: 97% pembeli TikTok cuma belanja sekali (wajar untuk trafik iklan). Kalau ada "pesanan" berdekatan cuma 1-2 hari dari pembeli yang sama, itu kemungkinan besar SATU checkout yang dipecah platform jadi beberapa nomor pesanan -- bukan bukti kunjungan ulang yang asli.',
-          )}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">{tt('Pembeli Marketplace')}</h1>
+        <p className="text-sm text-muted-foreground">
+          {tt('Segmentasi otomatis dari riwayat pesanan -- klik segmen untuk menyaring. Bisa diedit & dihapus bebas, tidak memengaruhi Faktur/Surat Jalan yang sudah ada.')}
         </p>
-      ) : null}
+      </div>
 
       {semua.length > 0 ? (
         <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -203,6 +189,17 @@ export function PembeliMarketplace() {
         </div>
       ) : null}
 
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input className="pl-8" placeholder="Cari nama, telepon, catatan..." value={cari} onChange={(e) => setCari(e.target.value)} />
+        </div>
+        <Button variant="outline" onClick={sinkronkan} disabled={menyinkronkan}>
+          {menyinkronkan ? <Spinner className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
+          {tt('Sinkronkan dari Pesanan')}
+        </Button>
+      </div>
+
       {segmenAktif ? (
         <p className="text-sm text-muted-foreground">
           {tt('Menampilkan segmen')} <span className="font-medium text-foreground">{INFO_SEGMEN[segmenAktif].label}</span> --{' '}
@@ -210,6 +207,14 @@ export function PembeliMarketplace() {
           <button type="button" className="cursor-pointer text-primary underline" onClick={() => setSegmenAktif(null)}>
             {tt('Tampilkan semua')}
           </button>
+        </p>
+      ) : null}
+
+      {semua.length > 0 ? (
+        <p className="text-xs text-muted-foreground">
+          {tt(
+            'Catatan: 97% pembeli TikTok cuma belanja sekali (wajar untuk trafik iklan). Kalau ada "pesanan" berdekatan cuma 1-2 hari dari pembeli yang sama, itu kemungkinan besar SATU checkout yang dipecah platform jadi beberapa nomor pesanan -- bukan bukti kunjungan ulang yang asli.',
+          )}
         </p>
       ) : null}
 
@@ -261,8 +266,10 @@ export function PembeliMarketplace() {
                       <Td title={segmen.jelas}>
                         <Badge variant={segmen.varian}>{segmen.label}</Badge>
                       </Td>
-                      <Td className="font-mono text-xs">
-                        {tautan ? (
+                      <Td className={cn('font-mono text-xs', editing && 'min-w-[10rem]')}>
+                        {editing ? (
+                          <Input value={formEdit.telepon} onChange={(e) => setFormEdit((f) => ({ ...f, telepon: e.target.value }))} placeholder="0812..." />
+                        ) : tautan ? (
                           <a href={tautan} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                             {p.telepon}
                           </a>
@@ -300,10 +307,18 @@ export function PembeliMarketplace() {
                           </div>
                         ) : (
                           <div className="flex gap-1.5 whitespace-nowrap">
-                            <Button variant="outline" onClick={() => mulaiEdit(p)}>
+                            {tautan ? (
+                              <Button variant="outline" size="sm" asChild>
+                                <a href={tautan} target="_blank" rel="noreferrer">
+                                  <MessageCircle className="h-4 w-4" />
+                                  {tt('Chat')}
+                                </a>
+                              </Button>
+                            ) : null}
+                            <Button variant="outline" size="sm" onClick={() => mulaiEdit(p)}>
                               {tt('Edit')}
                             </Button>
-                            <Button variant="outline" className="text-destructive hover:bg-destructive/10" onClick={() => hapus(p)}>
+                            <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => hapus(p)}>
                               {tt('Hapus')}
                             </Button>
                           </div>

@@ -20,9 +20,11 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0026_pembeli_marketplace_nama_junk.sql`** —
-> dibutuhkan supaya sinkronisasi Pembeli Marketplace tidak lagi
-> menghasilkan baris dengan "Nama" = angka polos ("100", "1400" dst.).
+> ⏳ **Belum dijalankan: `0026_pembeli_marketplace_nama_junk.sql`** dan
+> `0027_pembeli_marketplace_telepon_manual.sql`** — 0026 supaya
+> sinkronisasi tidak lagi menghasilkan baris "Nama" = angka polos
+> ("100", "1400" dst.); 0027 supaya nomor telepon yang Anda isi manual
+> di tab Pembeli Marketplace tidak ketimpa sinkronisasi berikutnya.
 > (0020-0025 terkonfirmasi sudah jalan.)
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
@@ -72,6 +74,7 @@ supabase/migrations/0023_perbarui_status_impor.sql
 supabase/migrations/0024_pembeli_marketplace.sql
 supabase/migrations/0025_pembeli_marketplace_kunci_fallback.sql
 supabase/migrations/0026_pembeli_marketplace_nama_junk.sql
+supabase/migrations/0027_pembeli_marketplace_telepon_manual.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

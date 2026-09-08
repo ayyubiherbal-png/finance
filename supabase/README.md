@@ -432,6 +432,25 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Pembeli Marketplace: telepon bisa diedit + tombol Chat, tampilan
+disamakan CRM Pelanggan (0027, 2026-09-08).** User koreksi: "Sepertinya
+kamu belum paham maksud saya... saya akan mencari nomor HP, Nama dan
+alamatnya agar bisa di FU" -- alasan utama tab ini dibuat justru supaya
+`telepon` bisa DICARI & DIISI manual (karena TikTok tidak
+menyertakannya di export, lihat 0025), bukan malah dikunci dari
+editing seperti keputusan awal di 0024. User juga minta tampilannya
+disamakan CRM Pelanggan, termasuk tombol Chat.
+
+Diperbaiki: kolom Telepon sekarang bisa diedit sama seperti Nama/
+Alamat/Catatan (ikut ditandai `diedit_manual` biar tidak ketimpa
+sinkronisasi berikutnya -- proteksi yang sama sudah ada utk nama/alamat,
+belum konsisten dipasang di telepon). Tombol "Chat" (gaya sama persis
+seperti `CrmPelanggan.tsx` -- ikon `MessageCircle`, `variant="outline"
+size="sm"`) muncul di kolom Aksi begitu telepon terisi & valid. Urutan
+elemen halaman disamakan CRM Pelanggan: Judul -> kartu segmen -> cari
+-> catatan penyaring -> tabel (sebelumnya field pencarian+Sinkronkan
+ditaruh di baris judul, beda dari pola CRM).
+
 **Validasi ambang 60/120 hari di CRM -- KEPUTUSAN: tetap dipakai, sudah
 dicek ke data nyata (murni analisis, tidak ada kode berubah selain 1
 catatan UI, 2026-09-08).** User tanya jujur soal ambang 60/120
