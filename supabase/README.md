@@ -432,6 +432,47 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Framework CRM Fase 2: halaman "Tugas Follow-Up" (murni frontend,
+2026-09-08).** Sebelumnya dikirim dokumen PDF "Framework CRM Ayyubi
+Food" (di luar repo) berisi peta siklus pelanggan (Belum Kenal -> Baru
+-> Setia -> Juara, dengan cabang risiko Mulai Hilang -> Tidur) dan 3
+fase implementasi. User: "jalankan fase yang 1 dan fase 2, fase ke 3
+setelah customer sudah banyak saja." Fase 1 (segmentasi otomatis,
+tombol Chat, Jadikan Pelanggan) sudah ada dari sesi-sesi sebelumnya --
+ini Fase 2.
+
+Fase 2 SENGAJA bukan pengiriman otomatis (itu Fase 3, butuh WhatsApp
+Business API -- lihat PDF untuk alasannya: verifikasi bisnis, template
+disetujui Meta, biaya per pesan). Fase 2 cuma MENGUMPULKAN otomatis:
+halaman baru `TugasFollowUp.tsx` (tab ketiga di menu CRM) menyusun
+daftar "siapa perlu di-FU hari ini" dari `v_pelanggan_crm` +
+`pembeli_marketplace`, lengkap dengan draf pesan siap kirim lewat
+`tautanWa(telepon, pesan)` -- tinggal ditinjau, klik Chat.
+
+6 kategori tugas, masing-masing dengan jendela hari SEMPIT (3-5 hari)
+supaya tugas otomatis "hilang sendiri" dari daftar setelah lewat waktu
+(tidak ada tabel "sudah di-FU atau belum" -- disengaja, MVP, lihat
+komentar di kode):
+- **Sapa Pembeli Baru**: 1x transaksi, 1-4 hari sejak order
+- **Baru Jadi Setia**: TEPAT 2x transaksi (bukan >=2, supaya tidak
+  berulang tiap kali order lagi), 0-3 hari
+- **Baru Jadi Juara**: TEPAT 3x transaksi, 0-3 hari
+- **Mulai Hilang**: 61-65 hari sejak transaksi terakhir (berapa pun
+  jumlah transaksinya)
+- **Berisiko Tidur**: 121-125 hari
+- **Siap Dijadikan Pelanggan**: pembeli marketplace dengan nama+telepon+
+  alamat lengkap tapi belum tertaut `pelanggan_id` -- TIDAK dibatasi
+  jendela hari (tugas berdiri sampai ditindaklanjuti)
+
+Jendela hari untuk pembeli marketplace dihitung di JS dari
+`pesanan_terakhir` (logika SAMA PERSIS dengan `segmenPembeli()` di
+`PembeliMarketplace.tsx`) karena tabel itu tidak punya kolom "hari
+sejak order" siap pakai seperti `v_pelanggan_crm`. Diverifikasi lewat
+browser: 8 kasus kategorisasi dicoba (termasuk kasus jebakan "5x
+transaksi, 2 hari lalu" yang harus TIDAK masuk kategori manapun, karena
+bukan transisi baru), dan `tautanWa()` dicoba dengan draf pesan
+sungguhan -- ter-encode benar jadi URL `wa.me`.
+
 **Pelanggan Baru: ID berikutnya disarankan otomatis, berurutan (murni
 frontend, 2026-09-08).** User: "saya perlu tahu kode yang sebelumnya
 itu apa" -- form "Pelanggan Baru" cuma pre-isi prefix polos ("CST-"),

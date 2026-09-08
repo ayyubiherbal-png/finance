@@ -74,6 +74,7 @@ export const KAMUS = {
   'menu.produk': { id: 'Produk', en: 'Products' },
   'menu.pelanggan': { id: 'Pelanggan', en: 'Customers' },
   'menu.pembeliMarketplace': { id: 'Pembeli Marketplace', en: 'Marketplace Buyers' },
+  'menu.tugasFollowUp': { id: 'Tugas Follow-Up', en: 'Follow-Up Tasks' },
   'menu.supplier': { id: 'Supplier', en: 'Suppliers' },
   'menu.gudang': { id: 'Gudang', en: 'Warehouse' },
   'menu.omzet': { id: 'Omzet', en: 'Revenue' },
@@ -759,6 +760,27 @@ export const TEKS: Record<string, string> = {
     'Some orders with Selesai/Completed status will be marked Paid -- pick the destination cash/bank account first.',
   'Ada pesanan yang statusnya berubah jadi Selesai/Completed dan akan ditandai Lunas -- pilih akun kas/bank tujuannya dulu.':
     'Some orders changed to Selesai/Completed and will be marked Paid -- pick the destination cash/bank account first.',
+
+  // ---------- Tugas Follow-Up -- Fase 2 framework CRM (2026-09-08) ----------
+  'Tugas Follow-Up': 'Follow-Up Tasks',
+  'Disusun otomatis tiap hari dari riwayat transaksi -- tinggal ditinjau, klik Chat untuk kirim manual. Bukan pengiriman otomatis (lihat catatan di framework CRM).':
+    "Compiled automatically every day from transaction history -- just review it and click Chat to send manually. This doesn't send automatically (see the note in the CRM framework).",
+  'Sapa Pembeli Baru': 'Greet New Buyer',
+  'Baru Jadi Setia': 'Just Became Loyal',
+  'Baru Jadi Juara': 'Just Became Champion',
+  'Berisiko Tidur': 'At Risk of Dormant',
+  'Siap Dijadikan Pelanggan': 'Ready to Become a Customer',
+  'Baru 1x transaksi -- saatnya menyapa & edukasi pemakaian': 'Just 1 order so far -- time to say hi & explain how to use it',
+  'Baru saja order ke-2 -- ucapkan terima kasih': 'Just placed their 2nd order -- say thank you',
+  'Baru saja order ke-3 -- buka jalur referral': 'Just placed their 3rd order -- open a referral opportunity',
+  'Baru lewat 60 hari tanpa order -- check-in ringan': "Just passed 60 days with no order -- a light check-in",
+  'Baru lewat 120 hari tanpa order -- coba tarik balik': 'Just passed 120 days with no order -- try to win them back',
+  'Data marketplace sudah lengkap, siap dipindah ke Master Data': 'Marketplace data is complete, ready to move to master data',
+  Menampilkan: 'Showing',
+  Konteks: 'Context',
+  'Tanpa nomor': 'No number',
+  'Tidak ada tugas follow-up hari ini. Cek lagi besok.': 'No follow-up tasks today. Check again tomorrow.',
+  'Tidak ada tugas di kategori ini.': 'No tasks in this category.',
 }
 
 
