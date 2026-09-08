@@ -432,6 +432,34 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Tahapan Treatment jadi halaman tersendiri, tampilan dirapikan (murni
+frontend, 2026-09-08).** User setelah lihat panel Tahapan Treatment
+makin ramai isinya (0036 menambah kategori & tahap baru): "bagian ini
+di buatkan Halaman sendiri dan tampilannya di perbaiki." Benar --
+tabel rata satu kolom "Message" yang kepotong bikin susah dibaca begitu
+tahapnya banyak per kategori.
+
+Dipindah dari panel inline di `TugasFollowUp.tsx` (toggle tombol) jadi
+halaman baru `/tahapan-treatment` (`TahapanTreatmentFu.tsx`), diakses
+lewat tombol "Tahapan Treatment" yang sekarang navigasi (bukan toggle).
+Tampilan diubah dari 1 tabel rata jadi **1 kartu per kategori** (aksen
+warna kiri kartu menyamakan warna Badge kategori supaya konsisten
+dengan tabel Tugas Follow-Up), tahap di dalamnya ditampilkan sebagai
+daftar "H+N" berurutan dengan **pesan WA ditampilkan penuh** (tidak
+dipotong `truncate` lagi seperti sebelumnya) -- supaya kategori mana
+mendapat treatment apa langsung kelihatan sekilas, dan admin tidak
+perlu hover/klik cuma untuk baca isi pesannya.
+
+`INFO_KATEGORI`, `useTahapanTreatment()`, `kelompokTahapan()` diekspor
+dari `TugasFollowUp.tsx` dan dipakai ulang di halaman baru -- pola yang
+sama seperti `LABEL_STATUS`/`VARIAN_STATUS` (SalesOrder.tsx) atau
+`LABEL_PRIORITAS` (Tiket.tsx) yang diekspor untuk dipakai halaman
+form-nya. Halaman baru ini juga menutup satu celah kecil: kalau
+seseorang tanpa peran admin/owner mengetik URL `/tahapan-treatment`
+langsung, sebelumnya (waktu masih panel) tombolnya memang tersembunyi
+tapi tidak ada penjagaan di level halaman -- sekarang ada pesan "cuma
+bisa diubah admin/owner" di level halaman itu sendiri.
+
 **Tutup 2 lubang customer journey: jendela evaluasi + kategori Ulang
 Tahun (0036, 2026-09-08).** User membagikan framework customer journey
 5 tahap (Onboarding -> Adopsi -> Evaluasi -> Retensi -> Advokasi) dari

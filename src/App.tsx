@@ -19,6 +19,7 @@ import { GudangForm } from '@/pages/GudangForm'
 import { CrmPelanggan } from '@/pages/CrmPelanggan'
 import { CrmPelangganProfil } from '@/pages/CrmPelangganProfil'
 import { TugasFollowUp } from '@/pages/TugasFollowUp'
+import { TahapanTreatmentFu } from '@/pages/TahapanTreatmentFu'
 import { RiwayatFollowUp } from '@/pages/RiwayatFollowUp'
 import { Tiket } from '@/pages/Tiket'
 import { TiketForm } from '@/pages/TiketForm'
@@ -100,6 +101,7 @@ function Rute() {
         <Route path="crm" element={<CrmPelanggan />} />
         <Route path="crm/pelanggan/:id" element={<CrmPelangganProfil />} />
         <Route path="tugas-follow-up" element={<TugasFollowUp />} />
+        <Route path="tahapan-treatment" element={<TahapanTreatmentFu />} />
         <Route path="riwayat-follow-up" element={<RiwayatFollowUp />} />
         <Route path="tiket" element={<Tiket />} />
         <Route path="tiket/:id" element={<TiketForm />} />

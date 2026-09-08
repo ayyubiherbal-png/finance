@@ -2,34 +2,14 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { tt } from '@/lib/i18nText'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, MessageCircle, Plus, Settings2, Trash2 } from 'lucide-react'
+import { CheckCircle2, MessageCircle, Settings2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggal as fmtTanggal } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/components/Toast'
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Input,
-  KondisiKosong,
-  Label,
-  PesanError,
-  Select,
-  Spinner,
-  Table,
-  Tbody,
-  Td,
-  Textarea,
-  Th,
-  Thead,
-  Tr,
-} from '@/components/ui'
+import { Badge, Button, Card, CardContent, Input, KondisiKosong, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
 import type { KategoriTreatmentFu, PembeliMarketplace, TahapanTreatmentFu, VPelangganCrm } from '@/types/db'
 
 /**
@@ -48,10 +28,10 @@ import type { KategoriTreatmentFu, PembeliMarketplace, TahapanTreatmentFu, VPela
  * unik per KEJADIAN (bukan cuma per orang, karena satu pelanggan bisa
  * lewat lebih dari satu kategori sepanjang waktu).
  */
-type Kategori = 'baru' | 'naik_setia' | 'naik_juara' | 'mulai_hilang' | 'tidur' | 'jadikan_pelanggan' | 'ulang_tahun'
+export type Kategori = 'baru' | 'naik_setia' | 'naik_juara' | 'mulai_hilang' | 'tidur' | 'jadikan_pelanggan' | 'ulang_tahun'
 type EntitasTipe = 'pelanggan' | 'pembeli_marketplace'
 
-const INFO_KATEGORI: Record<Kategori, { label: string; varian: 'sukses' | 'default' | 'peringatan' | 'bahaya' | 'netral'; jelas: string }> = {
+export const INFO_KATEGORI: Record<Kategori, { label: string; varian: 'sukses' | 'default' | 'peringatan' | 'bahaya' | 'netral'; jelas: string }> = {
   baru: { label: 'Sapa Pembeli Baru', varian: 'default', jelas: 'Baru 1x transaksi -- saatnya menyapa & edukasi pemakaian' },
   naik_setia: { label: 'Baru Jadi Setia', varian: 'default', jelas: 'Baru saja order ke-2 -- ucapkan terima kasih' },
   naik_juara: { label: 'Baru Jadi Juara', varian: 'sukses', jelas: 'Baru saja order ke-3 -- buka jalur referral' },
@@ -66,11 +46,11 @@ const URUTAN_KATEGORI: Kategori[] = ['jadikan_pelanggan', 'baru', 'naik_setia', 
  * Tahapan treatment (0034) -- pengganti "Aturan Jendela FU" (0033).
  * Bukan lagi SATU jendela hari per kategori, tapi SERANGKAIAN tahap
  * (H+1, H+3, H+7, dst.) dengan pesan WA masing-masing, diatur admin/
- * owner lewat panel di bawah (`PanelTahapanTreatment`). `jadikan_pelanggan`
- * sengaja TIDAK termasuk di sini -- pemicunya kelengkapan data kontak,
- * bukan jendela hari (lihat `pesanUntuk`).
+ * owner lewat halaman tersendiri `TahapanTreatmentFu.tsx`.
+ * `jadikan_pelanggan` sengaja TIDAK termasuk di sini -- pemicunya
+ * kelengkapan data kontak, bukan jendela hari (lihat `pesanJadikanPelanggan`).
  */
-function useTahapanTreatment() {
+export function useTahapanTreatment() {
   return useQuery({
     queryKey: ['tahapan-treatment-fu'],
     queryFn: async () => {
@@ -83,7 +63,7 @@ function useTahapanTreatment() {
 }
 
 /** Kelompokkan baris flat hasil query per kategori -- urutannya sudah dari query (order by urutan). */
-function kelompokTahapan(rows: TahapanTreatmentFu[] | undefined): Record<KategoriTreatmentFu, TahapanTreatmentFu[]> {
+export function kelompokTahapan(rows: TahapanTreatmentFu[] | undefined): Record<KategoriTreatmentFu, TahapanTreatmentFu[]> {
   const hasil: Record<KategoriTreatmentFu, TahapanTreatmentFu[]> = { baru: [], naik_setia: [], naik_juara: [], mulai_hilang: [], tidur: [], ulang_tahun: [] }
   for (const r of rows ?? []) hasil[r.kategori].push(r)
   return hasil
@@ -397,7 +377,6 @@ export function TugasFollowUp() {
   const [catatanTandai, setCatatanTandai] = useState('')
   const [menyimpan, setMenyimpan] = useState(false)
   const [errorAksi, setErrorAksi] = useState<unknown>(null)
-  const [pengaturanTerbuka, setPengaturanTerbuka] = useState(false)
 
   const tahapanPerKategori = kelompokTahapan(tahapan)
   const isLoading = loadingPelanggan || loadingPembeli || loadingSelesai
@@ -441,14 +420,14 @@ export function TugasFollowUp() {
           </p>
         </div>
         {bolehAturTreatment ? (
-          <Button variant="outline" size="sm" onClick={() => setPengaturanTerbuka((v) => !v)}>
-            <Settings2 className="h-4 w-4" />
-            {tt('Tahapan Treatment')}
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/tahapan-treatment">
+              <Settings2 className="h-4 w-4" />
+              {tt('Tahapan Treatment')}
+            </Link>
           </Button>
         ) : null}
       </div>
-
-      {bolehAturTreatment && pengaturanTerbuka ? <PanelTahapanTreatment tahapan={tahapan} queryClient={queryClient} /> : null}
 
       {!isLoading && !error ? (
         <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -593,278 +572,3 @@ export function TugasFollowUp() {
   )
 }
 
-const URUTAN_KATEGORI_TREATMENT: KategoriTreatmentFu[] = ['baru', 'naik_setia', 'naik_juara', 'mulai_hilang', 'tidur', 'ulang_tahun']
-
-interface FormTahap {
-  kategori: KategoriTreatmentFu
-  label: string
-  hari_min: number
-  hari_max: number
-  pesan_template: string
-  urutan: number
-  aktif: boolean
-}
-
-const TAHAP_KOSONG: FormTahap = { kategori: 'baru', label: '', hari_min: 0, hari_max: 0, pesan_template: '', urutan: 0, aktif: true }
-
-/** Kelola tahapan treatment (0034) -- tambah/edit/hapus tahap H+N & pesan per kategori, admin/owner saja. */
-function PanelTahapanTreatment({ tahapan, queryClient }: { tahapan: TahapanTreatmentFu[] | undefined; queryClient: ReturnType<typeof useQueryClient> }) {
-  const [sedangEdit, setSedangEdit] = useState<string | null>(null)
-  const [form, setForm] = useState<FormTahap>(TAHAP_KOSONG)
-  const [menyimpan, setMenyimpan] = useState(false)
-  const [error, setError] = useState<unknown>(null)
-
-  const semua = tahapan ?? []
-
-  function ubah<K extends keyof FormTahap>(kunci: K, nilai: FormTahap[K]) {
-    setForm((f) => ({ ...f, [kunci]: nilai }))
-  }
-
-  function mulaiTambah() {
-    setForm(TAHAP_KOSONG)
-    setError(null)
-    setSedangEdit('baru')
-  }
-
-  function mulaiEdit(t: TahapanTreatmentFu) {
-    setForm({ kategori: t.kategori, label: t.label, hari_min: t.hari_min, hari_max: t.hari_max, pesan_template: t.pesan_template, urutan: t.urutan, aktif: t.aktif })
-    setError(null)
-    setSedangEdit(t.id)
-  }
-
-  function batal() {
-    setSedangEdit(null)
-    setError(null)
-  }
-
-  async function simpan() {
-    setError(null)
-    if (!form.label.trim()) {
-      setError(new Error('Label tahap wajib diisi.'))
-      return
-    }
-    if (!form.pesan_template.trim()) {
-      setError(new Error('Pesan tahap wajib diisi.'))
-      return
-    }
-    if (form.hari_max < form.hari_min) {
-      setError(new Error('Hari maksimum tidak boleh kurang dari hari minimum.'))
-      return
-    }
-    const payload = {
-      kategori: form.kategori,
-      label: form.label.trim(),
-      hari_min: form.hari_min,
-      hari_max: form.hari_max,
-      pesan_template: form.pesan_template.trim(),
-      urutan: form.urutan,
-      aktif: form.aktif,
-    }
-    setMenyimpan(true)
-    try {
-      if (sedangEdit === 'baru') {
-        const { error: err } = await supabase.from('tahapan_treatment_fu').insert(payload)
-        if (err) throw err
-        toast('Tahap ditambahkan.')
-      } else {
-        const { error: err } = await supabase.from('tahapan_treatment_fu').update(payload).eq('id', sedangEdit)
-        if (err) throw err
-        toast('Tahap tersimpan.')
-      }
-      setSedangEdit(null)
-      queryClient.invalidateQueries({ queryKey: ['tahapan-treatment-fu'] })
-    } catch (err) {
-      setError(err)
-    } finally {
-      setMenyimpan(false)
-    }
-  }
-
-  async function hapus(t: TahapanTreatmentFu) {
-    if (!window.confirm(`Hapus tahap "${t.label}"?`)) return
-    const { error: err } = await supabase.from('tahapan_treatment_fu').delete().eq('id', t.id)
-    if (err) {
-      setError(err)
-    } else {
-      toast('Tahap dihapus.')
-      queryClient.invalidateQueries({ queryKey: ['tahapan-treatment-fu'] })
-    }
-  }
-
-  async function toggleAktif(t: TahapanTreatmentFu) {
-    const { error: err } = await supabase.from('tahapan_treatment_fu').update({ aktif: !t.aktif }).eq('id', t.id)
-    if (err) setError(err)
-    else queryClient.invalidateQueries({ queryKey: ['tahapan-treatment-fu'] })
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <CardTitle className="text-base">{tt('Tahapan Treatment')}</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {tt('Titik sentuh (H+N) dan pesan WA per kategori -- satu kategori bisa punya beberapa tahap. Cuma admin/owner yang boleh mengubah.')}
-            </p>
-          </div>
-          {sedangEdit === null ? (
-            <Button size="sm" onClick={mulaiTambah}>
-              <Plus className="h-4 w-4" />
-              {tt('Tambah Tahap')}
-            </Button>
-          ) : null}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3 pt-0">
-        {sedangEdit === 'baru' ? (
-          <FormTahapKartu form={form} ubah={ubah} onSimpan={simpan} onBatal={batal} menyimpan={menyimpan} />
-        ) : null}
-
-        {error ? <PesanError error={error} /> : null}
-
-        {semua.length === 0 && sedangEdit !== 'baru' ? (
-          <KondisiKosong pesan="Belum ada tahap treatment." />
-        ) : (
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>{tt('Kategori')}</Th>
-                <Th>{tt('Label')}</Th>
-                <Th>{tt('Hari')}</Th>
-                <Th>{tt('Pesan')}</Th>
-                <Th>{tt('Aktif')}</Th>
-                <Th></Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {semua.map((t) =>
-                sedangEdit === t.id ? (
-                  <FormTahapBaris key={t.id} form={form} ubah={ubah} onSimpan={simpan} onBatal={batal} menyimpan={menyimpan} />
-                ) : (
-                  <Tr key={t.id}>
-                    <Td>
-                      <Badge variant={INFO_KATEGORI[t.kategori].varian}>{tt(INFO_KATEGORI[t.kategori].label)}</Badge>
-                    </Td>
-                    <Td className="font-medium">{t.label}</Td>
-                    <Td className="whitespace-nowrap text-xs text-muted-foreground">
-                      H+{t.hari_min}
-                      {t.hari_min !== t.hari_max ? `..${t.hari_max}` : ''}
-                    </Td>
-                    <Td className="max-w-sm truncate text-xs text-muted-foreground" title={t.pesan_template}>
-                      {t.pesan_template}
-                    </Td>
-                    <Td>
-                      <button type="button" className="cursor-pointer" onClick={() => toggleAktif(t)}>
-                        <Badge variant={t.aktif ? 'sukses' : 'netral'}>{t.aktif ? tt('Aktif') : tt('Nonaktif')}</Badge>
-                      </button>
-                    </Td>
-                    <Td className="text-right">
-                      <div className="flex justify-end gap-1.5 whitespace-nowrap">
-                        <Button variant="outline" size="sm" onClick={() => mulaiEdit(t)}>
-                          {tt('Edit')}
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => hapus(t)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </Td>
-                  </Tr>
-                ),
-              )}
-            </Tbody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-interface FormTahapProps {
-  form: FormTahap
-  ubah: <K extends keyof FormTahap>(kunci: K, nilai: FormTahap[K]) => void
-  onSimpan: () => void
-  onBatal: () => void
-  menyimpan: boolean
-}
-
-/** Form "tambah tahap baru" -- kartu berdiri sendiri di atas tabel (bukan baris, karena belum ada baris tabelnya). */
-function FormTahapKartu({ form, ubah, onSimpan, onBatal, menyimpan }: FormTahapProps) {
-  return (
-    <div className="space-y-3 rounded-md border border-border p-3">
-      <IsiFormTahap form={form} ubah={ubah} />
-      <div className="flex justify-end gap-1.5">
-        <Button variant="outline" size="sm" onClick={onBatal} disabled={menyimpan}>
-          {tt('Batal')}
-        </Button>
-        <Button size="sm" onClick={onSimpan} disabled={menyimpan}>
-          {menyimpan ? <Spinner className="h-3.5 w-3.5" /> : null}
-          {tt('Simpan')}
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-/** Form edit tahap yang sudah ada -- menggantikan satu baris tabel di tempat. */
-function FormTahapBaris({ form, ubah, onSimpan, onBatal, menyimpan }: FormTahapProps) {
-  return (
-    <Tr>
-      <Td colSpan={6}>
-        <div className="space-y-3 py-2">
-          <IsiFormTahap form={form} ubah={ubah} />
-          <div className="flex justify-end gap-1.5">
-            <Button variant="outline" size="sm" onClick={onBatal} disabled={menyimpan}>
-              {tt('Batal')}
-            </Button>
-            <Button size="sm" onClick={onSimpan} disabled={menyimpan}>
-              {menyimpan ? <Spinner className="h-3.5 w-3.5" /> : null}
-              {tt('Simpan')}
-            </Button>
-          </div>
-        </div>
-      </Td>
-    </Tr>
-  )
-}
-
-function IsiFormTahap({ form, ubah }: { form: FormTahap; ubah: FormTahapProps['ubah'] }) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <div className="space-y-1">
-        <Label className="text-xs">{tt('Kategori')}</Label>
-        <Select value={form.kategori} onChange={(e) => ubah('kategori', e.target.value as KategoriTreatmentFu)}>
-          {URUTAN_KATEGORI_TREATMENT.map((k) => (
-            <option key={k} value={k}>
-              {INFO_KATEGORI[k].label}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">{tt('Label')}</Label>
-        <Input placeholder="mis. Sapa H+1" value={form.label} onChange={(e) => ubah('label', e.target.value)} />
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">{tt('Hari minimum')}</Label>
-        <Input type="number" min={0} value={form.hari_min} onChange={(e) => ubah('hari_min', Number(e.target.value))} />
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">{tt('Hari maksimum')}</Label>
-        <Input type="number" min={0} value={form.hari_max} onChange={(e) => ubah('hari_max', Number(e.target.value))} />
-      </div>
-      <div className="space-y-1 sm:col-span-2 lg:col-span-3">
-        <Label className="text-xs">{tt('Pesan WA')}</Label>
-        <Textarea
-          rows={3}
-          placeholder="Gunakan {nama} untuk menyisipkan nama pembeli/pelanggan"
-          value={form.pesan_template}
-          onChange={(e) => ubah('pesan_template', e.target.value)}
-        />
-      </div>
-      <label className="flex items-center gap-2 self-end pb-1.5 text-sm">
-        <input type="checkbox" checked={form.aktif} onChange={(e) => ubah('aktif', e.target.checked)} className="h-4 w-4 rounded border-input" />
-        {tt('Aktif')}
-      </label>
-    </div>
-  )
-}

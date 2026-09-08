@@ -821,7 +821,8 @@ export const TEKS: Record<string, string> = {
   'Titik sentuh (H+N) dan pesan WA per kategori -- satu kategori bisa punya beberapa tahap. Cuma admin/owner yang boleh mengubah.':
     'Touchpoints (Day+N) and WA message per category -- one category can have several stages. Only admins/owners may change this.',
   'Tambah Tahap': 'Add Stage',
-  'Belum ada tahap treatment.': 'No treatment stages yet.',
+  'Belum ada tahap di kategori ini.': 'No stages in this category yet.',
+  'Halaman ini cuma bisa diubah oleh admin/owner.': 'This page can only be changed by admins/owners.',
   Label: 'Label',
   Hari: 'Day',
   Pesan: 'Message',
