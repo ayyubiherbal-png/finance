@@ -116,6 +116,7 @@ const MENU: Grup[] = [
           { ke: '/crm', label: 'menu.segmenPelanggan' },
           { ke: '/pembeli-marketplace', label: 'menu.pembeliMarketplace' },
           { ke: '/tugas-follow-up', label: 'menu.tugasFollowUp' },
+          { ke: '/riwayat-follow-up', label: 'menu.riwayatFollowUp' },
         ],
       },
       {

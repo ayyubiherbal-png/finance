@@ -20,11 +20,10 @@ termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
 (Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
 bukan ada yang hilang.)
 
-> ⏳ **Belum dijalankan: `0028_pembeli_marketplace_jadi_pelanggan.sql`**
-> — dibutuhkan supaya tombol "Jadikan Pelanggan" di tab Pembeli
-> Marketplace berfungsi (kolom `pelanggan_id` yang menautkan ke Master
-> Data > Customer setelah dipromosikan). (0020-0027 terkonfirmasi sudah
-> jalan -- 0026 dicek langsung lewat query.)
+> ⏳ **Belum dijalankan: `0029_riwayat_follow_up.sql`**
+> — dibutuhkan supaya tombol "Tandai Selesai" di halaman Tugas
+> Follow-Up berfungsi (tabel baru `riwayat_follow_up`, log siapa/kapan/
+> catatan hasil FU). (0020-0028 terkonfirmasi sudah jalan.)
 
 Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
 Editor Supabase, dan setiap file aman dijalankan berkali-kali
@@ -75,6 +74,7 @@ supabase/migrations/0025_pembeli_marketplace_kunci_fallback.sql
 supabase/migrations/0026_pembeli_marketplace_nama_junk.sql
 supabase/migrations/0027_pembeli_marketplace_telepon_manual.sql
 supabase/migrations/0028_pembeli_marketplace_jadi_pelanggan.sql
+supabase/migrations/0029_riwayat_follow_up.sql
 ```
 
 Kalau ada error, **berhenti dan kirim pesan errornya ke saya** — jangan

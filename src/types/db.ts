@@ -392,6 +392,19 @@ export interface PembeliMarketplace {
   updated_at: string
 }
 
+/** Log "Tandai Selesai" di Tugas Follow-Up -- lihat 0029. entitas_id polymorphic (bukan FK). */
+export interface RiwayatFollowUp {
+  id: string
+  tugas_id: string
+  kategori: string
+  entitas_tipe: 'pelanggan' | 'pembeli_marketplace'
+  entitas_id: string
+  nama: string | null
+  catatan: string | null
+  selesai_oleh: string | null
+  selesai_pada: string
+}
+
 export interface VLabaProduk {
   produk_id: string
   kode_produk: string

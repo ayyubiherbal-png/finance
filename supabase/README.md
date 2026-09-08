@@ -432,6 +432,45 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Tugas Follow-Up: tombol "Tandai Selesai" + halaman "Riwayat
+Follow-Up" (0029, 2026-09-08).** Setelah PDF framework CRM disetujui
+dan dianalisa vs. fitur CRM omnichannel pihak ketiga (2 screenshot
+sidebar & dashboard Analytics dibandingkan), user setuju 5 fitur
+diprioritaskan lalu bilang **"Kerjakan berurut"** -- ini fitur #1.
+
+Sebelumnya halaman Tugas Follow-Up (Fase 2, entri di bawah) cuma daftar
+tugas yang selalu dihitung ulang tiap render -- tidak ada cara menandai
+tugas sudah selesai dikerjakan, jadi setiap buka halaman FU yang sudah
+dihubungi kemarin tetap nongol lagi. Ditambah tabel baru
+`riwayat_follow_up` (`tugas_id` unik, `kategori`, `entitas_tipe` +
+`entitas_id` polymorphic -- bisa `pelanggan` atau
+`pembeli_marketplace`, tanpa FK karena Postgres tidak dukung FK
+kondisional -- `nama` disalin sebagai snapshot, `catatan` opsional,
+`selesai_oleh`/`selesai_pada`).
+
+`tugas_id` dirancang deterministik supaya idempotent: kategori
+frekuensi (baru/naik_setia/naik_juara) cukup
+`entitasTipe-kategori-entitasId` karena masing-masing cuma terjadi
+sekali seumur hidup pelanggan; kategori recency (mulai_hilang/tidur)
+menambahkan tanggal acuan (`terakhir_order`/`pesanan_terakhir`) karena
+satu pelanggan bisa hilang-lalu-kembali berkali-kali dan tiap episode
+harus bisa ditandai selesai secara independen. **Bug ditemukan &
+diperbaiki sebelum sempat dipakai:** id versi lama cuma
+`pelanggan-${id}` tanpa kategori -- kalau tidak diperbaiki, menandai
+selesai tugas "Baru" bisa salah ikut menyembunyikan tugas "Mulai
+Hilang" untuk orang yang sama di kemudian hari.
+
+Klik "Tandai Selesai" membuka input catatan opsional inline (pola sama
+seperti inline-edit di Pembeli Marketplace) lalu insert ke
+`riwayat_follow_up`; daftar tugas otomatis memfilter yang sudah ada di
+tabel ini. Halaman baru **Riwayat Follow-Up** (menu CRM ke-4) menampilkan
+lognya -- tanggal, nama, kategori, catatan, siapa yang menyelesaikan
+(join ke `profil`). "Tingkat Follow-Up Selesai" (rasio selesai vs.
+total tugas yang pernah muncul) SENGAJA belum dihitung -- tugas yang
+tidak pernah ditandai selesai tidak pernah tersimpan di mana pun
+(dihitung ulang tiap hari dari data live), jadi belum ada baseline
+"total tugas historis" untuk pembaginya.
+
 **Framework CRM Fase 2: halaman "Tugas Follow-Up" (murni frontend,
 2026-09-08).** Sebelumnya dikirim dokumen PDF "Framework CRM Ayyubi
 Food" (di luar repo) berisi peta siklus pelanggan (Belum Kenal -> Baru
