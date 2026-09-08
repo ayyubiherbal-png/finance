@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { tt } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal, tanggalISO } from '@/lib/format'

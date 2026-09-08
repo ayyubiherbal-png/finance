@@ -432,6 +432,55 @@ harga jual Produk), Harga terima & Biaya tambahan (Penerimaan Barang),
 Jumlah bayar per faktur (Penerimaan Kas, Pembayaran Supplier), HPP
 (Penyesuaian Stok).
 
+**Bug nyata ditemukan lewat keluhan berulang: `i18n.tsx` bikin HMR
+cascade ke seluruh app -- dipecah jadi `i18nText.ts` (murni frontend,
+2026-09-08).** User laporan fitur drag-scroll tabel (yang sebelumnya
+sudah diperbaiki & diverifikasi) "belum diselesaikan". Ditelusuri
+ULANG dari nol dengan curiga kode-nya sendiri salah:
+
+1. Kode drag-scroll di `Table` (`ui.tsx`) diuji ulang dengan cara yang
+   LEBIH ketat dari sebelumnya -- me-mount komponennya SUNGGUHAN lewat
+   `ReactDOMClient.createRoot()` di browser (bukan replika HTML manual)
+   lalu men-dispatch `MouseEvent` sungguhan (mousedown -> mousemove ->
+   mouseup) di atasnya. Hasilnya BENAR: `scrollLeft` berubah sesuai
+   arah seret, berhenti tepat saat mouse dilepas. Kode CSS layout-nya
+   (rantai flex `min-w-0` di `Layout.tsx` -> `overflow-x-auto` di
+   `Table`) juga diuji terpisah dan benar -- yang scroll adalah div
+   pembungkus tabel, bukan `<main>` atau `<body>` (jadi bukan flex
+   sizing bug yang umum terjadi).
+2. Dicek `preview_logs` (output dev server) -- ketemu pola berulang
+   PULUHAN kali sepanjang sesi: `hmr invalidate /src/lib/i18n.tsx
+   Could not Fast Refresh ("tt" export is incompatible)`, diikuti `hmr
+   update` untuk HAMPIR SEMUA file `src/pages/*.tsx` sekaligus.
+   Penyebabnya: `i18n.tsx` mengekspor CAMPURAN komponen React
+   (`I18nProvider`, `useI18n`) DAN fungsi/konstanta biasa (`tt`,
+   `KAMUS`, `TEKS`) dalam satu file -- react-refresh (plugin Fast
+   Refresh Vite) MENOLAK hot-reload file semacam ini, dan tiap kali
+   kamus `TEKS` diedit (sangat sering sepanjang sesi dwibahasa ini),
+   Vite terpaksa memaksa "soft patch" ke puluhan modul sekaligus tanpa
+   reload halaman yang bersih -- state JS di browser jadi rawan basi
+   setelah puluhan siklus itu berturut-turut, walau KODE SUMBERNYA
+   sendiri benar.
+
+Diperbaiki dengan memisah file: `src/lib/i18nText.ts` baru (murni data
+& fungsi, TANPA satu pun komponen React -- `Bahasa`, `KAMUS`, `TEKS`,
+`KunciTerjemahan`, `bahasaTersimpan`, `setBahasaAktif`, `tt`).
+`i18n.tsx` dipangkas jadi cuma `I18nProvider`/`useI18n` (murni
+komponen, sekarang eligible React Fast Refresh), meng-impor data dari
+`i18nText.ts`. Ke-43 halaman yang sebelumnya `import { tt } from
+'@/lib/i18n'` dialihkan ke `'@/lib/i18nText'` (mekanis, `sed` massal --
+tidak ada file yang mencampur `tt` dengan `useI18n`/`I18nProvider`
+dalam satu import, jadi aman). Dibuktikan lewat `preview_logs`: edit
+percobaan di `i18nText.ts` sekarang memicu **`page reload`** yang
+bersih (bukan lagi `hmr invalidate ... incompatible` + cascade) --
+persis fallback Vite yang benar untuk file data biasa. Ke depan,
+mengedit kamus terjemahan tidak lagi mengganggu drag-scroll atau
+state JS lain yang sedang berjalan di halaman manapun.
+
+Ditest ulang: `tsc`/`vite build` bersih, 49 halaman & komponen
+di-import ulang satu per satu di browser (semua OK), dan `tt()`/`KAMUS`
+dari lokasi baru diverifikasi masih menerjemahkan dengan benar.
+
 **Dwibahasa TAHAP 2: sapuan menyeluruh SEMUA halaman (murni frontend,
 2026-09-08).** User: "cek juga semua halaman. semuanya yang belum bisa."
 Rollout dwibahasa TAHAP 1 memang sengaja cuma "chrome" aplikasi (lihat

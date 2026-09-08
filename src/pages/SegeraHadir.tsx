@@ -1,5 +1,5 @@
 import { Construction } from 'lucide-react'
-import { tt } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { Card, CardContent } from '@/components/ui'
 
 /**

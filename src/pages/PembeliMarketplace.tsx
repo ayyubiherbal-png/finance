@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { tt } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, MessageCircle, RefreshCw, Search, UserPlus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'

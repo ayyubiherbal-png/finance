@@ -11,7 +11,7 @@ import {
   buatCariWilayah,
 } from '@/lib/queries'
 import { pesanKesalahan } from '@/lib/format'
-import { tt } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
 import { Combobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'

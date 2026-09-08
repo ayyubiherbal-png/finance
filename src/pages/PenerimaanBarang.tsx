@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { tt } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Search } from 'lucide-react'

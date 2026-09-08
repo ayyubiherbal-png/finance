@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { tt } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'

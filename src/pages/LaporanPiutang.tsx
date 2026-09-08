@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { tt } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal } from '@/lib/format'
 import {

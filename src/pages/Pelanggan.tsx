@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { tt } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Columns3, Plus, Search } from 'lucide-react'

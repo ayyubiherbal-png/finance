@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { tt } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'

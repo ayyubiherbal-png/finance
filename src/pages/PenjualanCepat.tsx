@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { tt } from '@/lib/i18n'
+import { tt } from '@/lib/i18nText'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Plus, Trash2, Zap } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
