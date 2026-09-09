@@ -115,7 +115,14 @@ export function UmpanBalikPublik() {
 
             <div className="flex justify-center gap-1.5">
               {[1, 2, 3, 4, 5].map((n) => (
-                <button key={n} type="button" onClick={() => setSkor(n)} className="cursor-pointer transition-transform hover:scale-110">
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setSkor(n)}
+                  aria-label={bahasa === 'id' ? `Beri skor ${n} dari 5` : `Rate ${n} out of 5`}
+                  aria-pressed={skor === n}
+                  className="cursor-pointer transition-transform hover:scale-110"
+                >
                   <Star className={cn('h-8 w-8', skor && n <= skor ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40')} />
                 </button>
               ))}

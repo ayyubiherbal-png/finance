@@ -177,6 +177,9 @@ export async function hapusDataUji(supabase: SupabaseClient, data: DataUji): Pro
 
   await hapus('penerimaan_kas', supabase.from('penerimaan_kas').delete().eq('pelanggan_id', data.pelangganId))
   await hapus('retur_penjualan', supabase.from('retur_penjualan').delete().eq('pelanggan_id', data.pelangganId))
+  await hapus('tiket', supabase.from('tiket').delete().eq('pelanggan_id', data.pelangganId))
+  // umpan_balik cascade otomatis lewat link_umpan_balik.id (on delete cascade).
+  await hapus('link_umpan_balik', supabase.from('link_umpan_balik').delete().eq('entitas_id', data.pelangganId))
   await hapus('faktur_penjualan', supabase.from('faktur_penjualan').delete().eq('pelanggan_id', data.pelangganId))
   await hapus('surat_jalan', supabase.from('surat_jalan').delete().eq('pelanggan_id', data.pelangganId))
   await hapus('sales_order', supabase.from('sales_order').delete().eq('pelanggan_id', data.pelangganId))

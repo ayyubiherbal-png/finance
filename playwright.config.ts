@@ -39,12 +39,30 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [
-    // Login sekali sebagai owner, simpan storageState -- lihat e2e/auth.setup.ts.
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    // Login sekali per peran, simpan storageState -- lihat e2e/auth.owner.setup.ts /
+    // e2e/auth.sales.setup.ts. SENGAJA 2 project setup terpisah (bukan 1 gabungan) --
+    // supaya kredensial sales yang belum/salah diisi tidak ikut memblokir seluruh
+    // suite yang sebenarnya cuma butuh login owner (dependency Playwright bersifat
+    // all-or-nothing per project, jadi 1 setup test gagal = semua dependent-nya gagal).
+    { name: 'setup-owner', testMatch: /auth\.owner\.setup\.ts/ },
+    { name: 'setup-sales', testMatch: /auth\.sales\.setup\.ts/ },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], storageState: 'playwright/.auth/owner.json' },
-      dependencies: ['setup'],
+      dependencies: ['setup-owner'],
+      // role-otorisasi.spec.ts jalan di project chromium-sales sendiri (di bawah).
+      testIgnore: /role-otorisasi\.spec\.ts/,
+    },
+    {
+      // Khusus test batasan otorisasi antar peran -- login sebagai staf 'sales'
+      // (bukan owner) supaya bisa memastikan data/menu yang seharusnya
+      // tersembunyi/terbatas untuk peran ini benar-benar begitu. Butuh KEDUA
+      // storageState (bukan cuma sales) -- role-otorisasi.spec.ts punya describe
+      // block "kontrol pembanding" yang login sebagai owner lewat test.use().
+      name: 'chromium-sales',
+      use: { ...devices['Desktop Chrome'], storageState: 'playwright/.auth/sales.json' },
+      dependencies: ['setup-owner', 'setup-sales'],
+      testMatch: /role-otorisasi\.spec\.ts/,
     },
   ],
   webServer: {
