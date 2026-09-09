@@ -13,8 +13,9 @@ Sebelum menjalankan test apa pun:
 2. Jalankan semua migrasi di `supabase/migrations/` ke project test itu (cara
    sama seperti ke project produksi).
 3. Buat minimal 1 user staf (lewat Supabase Auth Dashboard project test itu,
-   bukan lewat aplikasi) dengan peran `owner` di tabel `profil` -- tambah
-   lebih banyak kalau ada journey yang butuh uji peran lain (sales/gudang/finance).
+   bukan lewat aplikasi) dengan peran `owner` di tabel `profil` -- tambah 1 lagi
+   dengan peran default (`sales`, tidak perlu langkah SQL tambahan) untuk
+   `role-otorisasi.spec.ts`.
 4. Salin `.env.test.example` di root jadi `.env.test`, isi dari project test
    tsb + kredensial user yang baru dibuat.
 5. Baru jalankan `npm run test:e2e`.
@@ -34,17 +35,24 @@ Report HTML hasil test terakhir: `npx playwright show-report`.
 
 ```
 e2e/
-  auth.setup.ts               login sekali sebagai owner, simpan storageState -> playwright/.auth/owner.json
-  fixtures/db.ts              seed/cleanup data referensi (produk, pelanggan, supplier) lewat Supabase langsung
-  login.spec.ts                Tier 1: login (happy path + salah sandi + kolom kosong + network error)
-  penjualan-cepat.spec.ts      Tier 1: kasir cepat -- SO+SJ+Faktur+Kas sekaligus lewat 1 RPC
-  sales-order-cycle.spec.ts    Tier 1: SO -> Surat Jalan -> Faktur Penjualan -> Penerimaan Kas
-  purchase-order-cycle.spec.ts Tier 1: PO -> Penerimaan Barang -> Faktur Pembelian -> Pembayaran Supplier
-  retur-penjualan.spec.ts      Tier 1: retur penjualan freeform (tanpa faktur asal, biar berdiri sendiri)
+  auth.owner.setup.ts          login sekali sebagai owner -> playwright/.auth/owner.json (project "setup-owner")
+  auth.sales.setup.ts          login sekali sebagai sales -> playwright/.auth/sales.json (project "setup-sales")
+  fixtures/auth-helper.ts      logika login bersama dipakai kedua file setup di atas
+  fixtures/db.ts               seed/cleanup data referensi (produk, pelanggan, supplier) lewat Supabase langsung
+  login.spec.ts                 Tier 1: login (happy path + salah sandi + kolom kosong + network error)
+  penjualan-cepat.spec.ts       Tier 1: kasir cepat -- SO+SJ+Faktur+Kas sekaligus lewat 1 RPC
+  sales-order-cycle.spec.ts     Tier 1: SO -> Surat Jalan -> Faktur Penjualan -> Penerimaan Kas
+  purchase-order-cycle.spec.ts  Tier 1: PO -> Penerimaan Barang -> Faktur Pembelian -> Pembayaran Supplier
+  retur-penjualan.spec.ts       Tier 1: retur penjualan freeform (tanpa faktur asal, biar berdiri sendiri)
+  penyesuaian-stok.spec.ts      Tier 2: posting penyesuaian stok + validasi saldo awal wajib HPP
+  tiket.spec.ts                 Tier 2: tiket CRM -- buat, ubah status
+  umpan-balik-publik.spec.ts    Tier 2: link publik /u/:token tanpa login, dari sisi minta & isi
+  impor-pesanan.spec.ts         Tier 2: unggah .xlsx (dibangun di memori), pemetaan kolom & produk otomatis
+  role-otorisasi.spec.ts        Tier 2: satu-satunya file yang login sebagai 'sales' (project "chromium-sales")
 ```
 
-Tier 2 (otorisasi peran, umpan balik publik, impor pesanan, CRM/follow-up) belum ditulis --
-menunggu keputusan lanjut setelah Tier 1 ini stabil jalan lawan project test Anda.
+Semua Tier 1 + 4/5 Tier 2 sudah lolos lawan project Supabase test sungguhan.
+`role-otorisasi.spec.ts` menunggu `E2E_PASSWORD_SALES` di `.env.test` diisi.
 
 ## Kenapa produk/pelanggan/supplier dibuat lewat Supabase langsung, bukan lewat UI
 
