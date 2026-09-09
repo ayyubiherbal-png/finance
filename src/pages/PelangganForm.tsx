@@ -362,7 +362,7 @@ export function PelangganForm() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>ID</Label>
-              <Input value={form.kode} onChange={(e) => ubah('kode', e.target.value.toUpperCase())} />
+              <Input data-testid="pelanggan-kode" value={form.kode} onChange={(e) => ubah('kode', e.target.value.toUpperCase())} />
             </div>
             <div className="space-y-1.5">
               <Label>Tipe</Label>
@@ -378,7 +378,7 @@ export function PelangganForm() {
 
           <div className="space-y-1.5">
             <Label>Nama</Label>
-            <Input value={form.nama} onChange={(e) => ubah('nama', e.target.value)} />
+            <Input data-testid="pelanggan-nama" value={form.nama} onChange={(e) => ubah('nama', e.target.value)} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
