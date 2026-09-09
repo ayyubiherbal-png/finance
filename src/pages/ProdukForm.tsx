@@ -452,6 +452,48 @@ function FormEdit({ produkId }: { produkId: string }) {
     else invalidateSemua()
   }
 
+  // ---------- Satuan dasar (boleh diubah HANYA kalau belum pernah ada transaksi
+  // stok, belum ada satuan lain selain satuan dasar sendiri, DAN belum ada
+  // harga jual (produk_harga) diset -- begitu salah satu terpenuhi, konversi
+  // transaksi lama/satuan lain/acuan harga jual bergantung pada satuan ini dan
+  // mengubahnya diam-diam akan salah hitung stok/HPP/harga). ----------
+  const { data: pernahAdaMutasi } = useQuery({
+    queryKey: ['produk-pernah-mutasi', produkId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('stok_mutasi')
+        .select('id', { count: 'exact', head: true })
+        .eq('produk_id', produkId)
+      if (error) throw error
+      return (count ?? 0) > 0
+    },
+    enabled: !!produk,
+  })
+  const bisaUbahSatuanDasar = pernahAdaMutasi === false && satuanProduk?.length === 1 && hargaProduk?.length === 0
+  const [mengubahSatuanDasar, setMengubahSatuanDasar] = useState(false)
+
+  async function ubahSatuanDasar(satuanIdBaru: string) {
+    if (!satuanProduk || satuanProduk.length !== 1) return
+    setError(null)
+    setMengubahSatuanDasar(true)
+    try {
+      const { error: errProduk } = await supabase.from('produk').update({ satuan_dasar_id: satuanIdBaru }).eq('id', produkId)
+      if (errProduk) throw errProduk
+      // Satu-satunya baris produk_satuan yang ada (konversi tetap 1) ikut dialihkan ke satuan baru.
+      const { error: errSatuan } = await supabase
+        .from('produk_satuan')
+        .update({ satuan_id: satuanIdBaru })
+        .eq('id', satuanProduk[0]!.id)
+      if (errSatuan) throw errSatuan
+      toast('Satuan dasar diubah.')
+      invalidateSemua()
+    } catch (e) {
+      setError(e)
+    } finally {
+      setMengubahSatuanDasar(false)
+    }
+  }
+
   // ---------- Satuan berjenjang ----------
   const [satuanBaru, setSatuanBaru] = useState({ satuan_id: '', konversi: 1 })
   async function tambahSatuan() {
@@ -582,9 +624,29 @@ function FormEdit({ produkId }: { produkId: string }) {
 
           <div className="space-y-1.5">
             <Label>Satuan dasar</Label>
-            <Input disabled value={satuanDasar ? `${satuanDasar.nama} (${satuanDasar.kode})` : '-'} />
+            {bisaUbahSatuanDasar ? (
+              <Select
+                value={produk.satuan_dasar_id}
+                disabled={mengubahSatuanDasar}
+                onChange={(e) => ubahSatuanDasar(e.target.value)}
+              >
+                {(satuanSemua ?? []).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nama} ({s.kode})
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <Input disabled value={satuanDasar ? `${satuanDasar.nama} (${satuanDasar.kode})` : '-'} />
+            )}
             <p className="text-xs text-muted-foreground">
-              {tt('Tidak bisa diubah setelah produk dibuat -- konversi transaksi lama bergantung pada satuan ini.')}
+              {bisaUbahSatuanDasar
+                ? tt('Masih boleh diubah -- belum ada transaksi stok maupun satuan lain untuk produk ini.')
+                : pernahAdaMutasi
+                  ? tt('Tidak bisa diubah -- sudah ada transaksi stok yang konversinya bergantung pada satuan ini.')
+                  : (satuanProduk?.length ?? 0) > 1
+                    ? tt('Tidak bisa diubah -- hapus dulu semua satuan lain (LUSIN, DUS, dst.) di tabel bawah selain satuan dasar ini.')
+                    : tt('Tidak bisa diubah -- hapus dulu semua harga jual yang sudah diset untuk produk ini.')}
             </p>
           </div>
 

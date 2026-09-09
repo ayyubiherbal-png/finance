@@ -362,6 +362,7 @@ export const TEKS: Record<string, string> = {
   'Produk tersimpan.': 'Product saved.',
   'Satuan ditambahkan.': 'Unit added.',
   'Satuan dihapus.': 'Unit removed.',
+  'Satuan dasar diubah.': 'Base unit changed.',
   'Supplier tersimpan.': 'Supplier saved.',
 
   // ---------- Label status & badge (dari LABEL_STATUS, LABEL_BAYAR, dll.) ----------
@@ -681,8 +682,14 @@ export const TEKS: Record<string, string> = {
     'The prefix is used as the SKU prefix for products in this category, e.g. "MKR" becomes MKR-001.',
   'Satuan terkecil untuk stok & HPP, mis. PCS. Satuan lain (LUSIN, DUS) ditambahkan setelah produk tersimpan.':
     'Smallest unit for stock & COGS, e.g. PCS. Other units (DOZEN, BOX) are added after the product is saved.',
-  'Tidak bisa diubah setelah produk dibuat -- konversi transaksi lama bergantung pada satuan ini.':
-    'Cannot be changed after the product is created -- conversions on past transactions depend on this unit.',
+  'Masih boleh diubah -- belum ada transaksi stok maupun satuan lain untuk produk ini.':
+    "Still changeable -- no stock transactions or other units exist yet for this product.",
+  'Tidak bisa diubah -- sudah ada transaksi stok yang konversinya bergantung pada satuan ini.':
+    'Cannot be changed -- stock transactions already exist whose conversions depend on this unit.',
+  'Tidak bisa diubah -- hapus dulu semua satuan lain (LUSIN, DUS, dst.) di tabel bawah selain satuan dasar ini.':
+    'Cannot be changed -- first delete all other units (DOZEN, BOX, etc.) in the table below except this base unit.',
+  'Tidak bisa diubah -- hapus dulu semua harga jual yang sudah diset untuk produk ini.':
+    'Cannot be changed -- first delete all selling prices already set for this product.',
   'Isi min. qty lebih dari 1 untuk diskon bertingkat (mis. beli 12+ dapat harga lebih murah).':
     'Set min. qty above 1 for tiered discounts (e.g. buy 12+ for a lower price).',
   'Qty positif menambah stok (HPP ikut bergerak kalau diisi). Qty negatif mengurangi stok (mis. rusak/hilang), HPP tidak berlaku.':
