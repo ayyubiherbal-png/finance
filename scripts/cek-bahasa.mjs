@@ -72,6 +72,7 @@ const ATTR_AUTO = new Map([
   ['pesan', new Set(['KondisiKosong'])],
   ['label', new Set(['InfoField', 'Ringkas', 'Info'])], // komponen presentasi lokal yang menerjemahkan sendiri labelnya
   ['judul', new Set(['KartuAngka'])],
+  ['item', new Set(['MenuAksi'])], // MenuAksi menerjemahkan sendiri tiap label pilihannya lewat tt()
 ])
 const FUNGSI_AUTO = new Set(['toast', 'Error']) // Toaster & PesanError menerjemahkan saat render
 // Teks yang SENGAJA tidak pernah diterjemahkan (identitas merek, simbol,

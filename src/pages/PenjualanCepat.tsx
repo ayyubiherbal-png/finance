@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Plus, Trash2, Zap } from 'lucide-react'
+import { ArrowLeft, Pencil, Plus, Trash2, Zap } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import {
   useGudangAktif,
@@ -24,6 +24,7 @@ import {
   Input,
   InputAngka,
   Label,
+  MenuAksi,
   PesanError,
   Select,
   Spinner,
@@ -129,6 +130,8 @@ export function PenjualanCepat() {
 
   const [baris, setBaris] = useState<BarisCepat[]>([])
   const [addRow, setAddRow] = useState<BarisTambah>(BARIS_KOSONG)
+  /** key baris yang sedang diubah lewat form tambah -- null berarti mode tambah baru biasa. */
+  const [editKey, setEditKey] = useState<string | null>(null)
 
   const [langsungBayar, setLangsungBayar] = useState(true)
   const [akunId, setAkunId] = useState<string | null>(null)
@@ -237,7 +240,33 @@ export function PenjualanCepat() {
       return
     }
     setError(null)
-    setBaris((b) => [...b, { ...siap, key: crypto.randomUUID() }])
+    if (editKey) {
+      setBaris((b) => b.map((r) => (r.key === editKey ? { ...siap, key: editKey } : r)))
+      setEditKey(null)
+    } else {
+      setBaris((b) => [...b, { ...siap, key: crypto.randomUUID() }])
+    }
+    setAddRow(BARIS_KOSONG)
+  }
+
+  /** Isi ulang form tambah dengan data baris ini supaya bisa diubah, lalu hapus dari daftar sementara. */
+  function ubahBaris(b: BarisCepat) {
+    setError(null)
+    setEditKey(b.key)
+    setAddRow({
+      produk_id: b.produk_id,
+      produkLabel: b.produkLabel,
+      satuan_id: b.satuan_id,
+      konversi: b.konversi,
+      qty: b.qty,
+      harga_satuan: b.harga_satuan,
+      diskon_persen: b.diskon_persen,
+      diskon_nilai: b.diskon_nilai,
+    })
+  }
+
+  function batalUbahBaris() {
+    setEditKey(null)
     setAddRow(BARIS_KOSONG)
   }
 
@@ -251,7 +280,10 @@ export function PenjualanCepat() {
   // dianggap bagian dari transaksi -- supaya isian yang lupa di-klik-Tambah
   // tidak diam-diam hilang saat "Proses Penjualan" ditekan.
   const barisPending = barisSiapDitambah()
-  const semuaBaris = barisPending ? [...baris, barisPending] : baris
+  // Saat sedang mengubah baris (editKey terisi), versi lamanya disingkirkan dari
+  // daftar dulu -- yang dipakai untuk total/simpan adalah versi pending di form.
+  const barisTampil = editKey ? baris.filter((r) => r.key !== editKey) : baris
+  const semuaBaris = barisPending ? [...barisTampil, barisPending] : barisTampil
   const total = semuaBaris.reduce((s, b) => s + subtotalBaris(b), 0)
 
   async function proses() {
@@ -314,7 +346,7 @@ export function PenjualanCepat() {
   const bukanCanvassing = kanal !== 'canvassing'
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
+    <div className="mx-auto max-w-6xl space-y-4">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild>
           <Link to="/sales-order">
@@ -421,7 +453,7 @@ export function PenjualanCepat() {
               </Tr>
             </Thead>
             <Tbody>
-              {baris.map((b) => (
+              {barisTampil.map((b) => (
                 <Tr key={b.key}>
                   <Td className="font-medium">
                     {b.produkLabel.label}
@@ -433,13 +465,17 @@ export function PenjualanCepat() {
                   <Td className="tabular text-right">{teksDiskon(b)}</Td>
                   <Td className="tabular text-right font-medium">{rupiah(subtotalBaris(b))}</Td>
                   <Td className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setBaris((rows) => rows.filter((r) => r.key !== b.key))}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <MenuAksi
+                      item={[
+                        { label: 'Ubah', ikon: Pencil, onClick: () => ubahBaris(b) },
+                        {
+                          label: 'Hapus',
+                          ikon: Trash2,
+                          bahaya: true,
+                          onClick: () => setBaris((rows) => rows.filter((r) => r.key !== b.key)),
+                        },
+                      ]}
+                    />
                   </Td>
                 </Tr>
               ))}
@@ -451,7 +487,7 @@ export function PenjualanCepat() {
                       {barisPending.produkLabel.sublabel}
                     </span>
                     <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold not-italic text-amber-800">
-                      {tt('belum ditekan Tambah')}
+                      {editKey ? tt('sedang diubah') : tt('belum ditekan Tambah')}
                     </span>
                   </Td>
                   <Td className="text-xs text-muted-foreground">{barisPending.satuanKode}</Td>
@@ -462,7 +498,7 @@ export function PenjualanCepat() {
                   <Td></Td>
                 </Tr>
               ) : null}
-              {baris.length === 0 && !barisPending ? (
+              {barisTampil.length === 0 && !barisPending ? (
                 <Tr>
                   <Td colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
                     {tt("Belum ada barang.")}
@@ -471,15 +507,21 @@ export function PenjualanCepat() {
               ) : null}
             </Tbody>
           </Table>
-          {barisPending ? (
+          {barisPending && !editKey ? (
             <p className="px-3 pt-2 text-xs text-amber-700">
               {tt('Baris di atas belum ditekan')} <strong>{tt('Tambah')}</strong> {tt('tapi tetap akan ikut diproses. Klik')}{' '}
               <strong>{tt('Tambah')}</strong> {tt('untuk memastikan sebelum menambah barang lain.')}
             </p>
           ) : null}
+          {editKey ? (
+            <p className="px-3 pt-2 text-xs text-amber-700">
+              {tt('Sedang mengubah baris di atas. Klik')} <strong>{tt('Simpan')}</strong> {tt('untuk menyimpan, atau')}{' '}
+              <strong>{tt('Batal')}</strong> {tt('untuk membatalkan.')}
+            </p>
+          ) : null}
 
           <div className="space-y-2 border-t border-border p-3">
-            <div className="grid gap-2 sm:grid-cols-[2fr_1fr_0.8fr_1fr] sm:items-end">
+            <div className="grid gap-2 sm:grid-cols-4 xl:grid-cols-[minmax(160px,1.6fr)_90px_70px_110px_80px_110px_110px_auto] xl:items-end">
               <div className="space-y-1">
                 <Label className="text-xs">Produk</Label>
                 <Combobox
@@ -524,8 +566,6 @@ export function PenjualanCepat() {
                   onChange={(nilai) => setAddRow((r) => ({ ...r, harga_satuan: nilai }))}
                 />
               </div>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-[0.8fr_1fr_1fr_auto] sm:items-end">
               <div className="space-y-1">
                 <Label className="text-xs">Diskon%</Label>
                 <Input
@@ -549,10 +589,17 @@ export function PenjualanCepat() {
                   {rupiah(subtotalBaris(addRow))}
                 </div>
               </div>
-              <Button onClick={tambahBaris}>
-                <Plus className="h-4 w-4" />
-                Tambah
-              </Button>
+              <div className="flex gap-1">
+                {editKey ? (
+                  <Button variant="outline" onClick={batalUbahBaris}>
+                    Batal
+                  </Button>
+                ) : null}
+                <Button onClick={tambahBaris}>
+                  <Plus className="h-4 w-4" />
+                  {editKey ? 'Simpan' : 'Tambah'}
+                </Button>
+              </div>
             </div>
           </div>
 

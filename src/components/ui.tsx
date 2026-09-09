@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { MoreVertical, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import { pesanKesalahan } from '@/lib/format'
@@ -410,6 +411,63 @@ export function PesanError({ error }: { error: unknown }) {
   return (
     <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
       {tt(pesanKesalahan(error))}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------- Menu aksi */
+
+export interface MenuAksiItem {
+  label: string
+  onClick: () => void
+  ikon?: LucideIcon
+  bahaya?: boolean
+}
+
+/**
+ * Tombol titik-tiga di baris tabel -- diklik memunculkan kotak pilihan
+ * kecil (mis. "Ubah" / "Hapus") di bawahnya. Ditutup sendiri kalau
+ * diklik di luar atau salah satu pilihannya dipilih.
+ */
+export function MenuAksi({ item }: { item: MenuAksiItem[] }) {
+  const { tt } = useI18n()
+  const [terbuka, setTerbuka] = React.useState(false)
+  const kotakRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    function onKlikLuar(e: MouseEvent) {
+      if (kotakRef.current && !kotakRef.current.contains(e.target as Node)) setTerbuka(false)
+    }
+    document.addEventListener('mousedown', onKlikLuar)
+    return () => document.removeEventListener('mousedown', onKlikLuar)
+  }, [])
+
+  return (
+    <div ref={kotakRef} className="relative inline-block text-left">
+      <Button variant="ghost" size="icon" onClick={() => setTerbuka((v) => !v)}>
+        <MoreVertical className="h-4 w-4" />
+      </Button>
+      {terbuka ? (
+        <div className="absolute right-0 top-full z-10 mt-1 min-w-[9rem] rounded-md border border-border bg-card p-1 shadow-md">
+          {item.map((it, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => {
+                setTerbuka(false)
+                it.onClick()
+              }}
+              className={cn(
+                'flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent',
+                it.bahaya ? 'text-destructive' : 'text-foreground',
+              )}
+            >
+              {it.ikon ? <it.ikon className="h-4 w-4" /> : null}
+              {tt(it.label)}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

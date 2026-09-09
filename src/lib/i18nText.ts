@@ -420,6 +420,7 @@ export const TEKS: Record<string, string> = {
   Batal: 'Cancel',
   Batalkan: 'Cancel',
   Tambah: 'Add',
+  Ubah: 'Edit',
   Buat: 'Create',
   Cetak: 'Print',
   'Cetak Semua': 'Print all',
@@ -640,8 +641,12 @@ export const TEKS: Record<string, string> = {
   'Tidak ada pembeli yang cocok.': 'No matching buyers.',
   'Belum ada data. Klik': 'No data yet. Click',
   'belum ditekan Tambah': 'Add not pressed yet',
+  'sedang diubah': 'being edited',
   'Baris di atas belum ditekan': "The row above hasn't been added with",
   'tapi tetap akan ikut diproses. Klik': 'yet, but it will still be processed. Click',
+  'Sedang mengubah baris di atas. Klik': 'Editing the row above. Click',
+  'untuk menyimpan, atau': 'to save, or',
+  'untuk membatalkan.': 'to cancel.',
 
   // Teks bantuan / penjelasan di halaman
   'Setiap Penerimaan Kas dan Pembayaran Supplier tertaut ke salah satu akun ini':
