@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { angka, rupiah } from '@/lib/format'
+import { kutipFilterPostgrest } from '@/lib/utils'
 import {
   Badge,
   Button,
@@ -32,7 +33,7 @@ function useProduk(cari: string) {
       let q = supabase.from('v_stok_produk').select('*')
 
       if (cari.trim()) {
-        const pola = `%${cari.trim()}%`
+        const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
 

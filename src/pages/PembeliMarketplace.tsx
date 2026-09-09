@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal as fmtTanggal, tanggalWaktu } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import { toast } from '@/components/Toast'
-import { cn } from '@/lib/utils'
+import { cn, kutipFilterPostgrest } from '@/lib/utils'
 import {
   Badge,
   Button,
@@ -62,7 +62,7 @@ function usePembeliMarketplace(cari: string) {
     queryFn: async () => {
       let q = supabase.from('pembeli_marketplace').select('*')
       if (cari.trim()) {
-        const pola = `%${cari.trim()}%`
+        const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},telepon.ilike.${pola},catatan.ilike.${pola}`)
       }
       const { data, error } = await q.order('pesanan_terakhir', { ascending: false }).limit(500)

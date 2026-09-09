@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { kutipFilterPostgrest } from '@/lib/utils'
 import {
   Badge,
   Button,
@@ -30,7 +31,7 @@ function useSupplier(cari: string) {
     queryFn: async () => {
       let q = supabase.from('supplier').select('*, kabupaten_kota:kabupaten_kode(nama)')
       if (cari.trim()) {
-        const pola = `%${cari.trim()}%`
+        const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
       const { data, error } = await q.order('nama').limit(200).returns<SupplierBaris[]>()

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { kutipFilterPostgrest } from '@/lib/utils'
 import {
   Badge,
   Button,
@@ -28,7 +29,7 @@ function useGudang(cari: string) {
     queryFn: async () => {
       let q = supabase.from('gudang').select('*')
       if (cari.trim()) {
-        const pola = `%${cari.trim()}%`
+        const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
       const { data, error } = await q.order('utama', { ascending: false }).order('nama').returns<GudangRow[]>()

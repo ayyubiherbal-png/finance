@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggal } from '@/lib/format'
+import { kutipFilterPostgrest } from '@/lib/utils'
 import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
 import {
   Badge,
@@ -70,7 +71,10 @@ function useDaftarTiket(cari: string, status: string, periode: RentangTanggal) {
         .from('tiket')
         .select('id, nomor, tanggal, judul, status, prioritas, pelanggan:pelanggan_id(nama), ditugaskan:ditugaskan_ke(nama)')
 
-      if (cari.trim()) q = q.or(`nomor.ilike.%${cari.trim()}%,judul.ilike.%${cari.trim()}%`)
+      if (cari.trim()) {
+        const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+        q = q.or(`nomor.ilike.${pola},judul.ilike.${pola}`)
+      }
       if (status) q = q.eq('status', status)
       if (periode.dari) q = q.gte('tanggal', periode.dari)
       if (periode.sampai) q = q.lte('tanggal', periode.sampai)

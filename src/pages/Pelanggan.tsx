@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { Columns3, Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggal as fmtTanggal } from '@/lib/format'
+import { kutipFilterPostgrest } from '@/lib/utils'
 import {
   Badge,
   Button,
@@ -31,7 +32,7 @@ function usePelanggan(cari: string) {
       let q = supabase.from('v_pelanggan_ringkas').select('*')
 
       if (cari.trim()) {
-        const pola = `%${cari.trim()}%`
+        const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
 

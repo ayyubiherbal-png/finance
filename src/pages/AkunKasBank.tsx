@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah } from '@/lib/format'
+import { kutipFilterPostgrest } from '@/lib/utils'
 import {
   Badge,
   Button,
@@ -30,7 +31,10 @@ function useSaldoKasBank(cari: string) {
     queryKey: ['akun-kas-bank', cari],
     queryFn: async () => {
       let q = supabase.from('v_saldo_kas_bank').select('*')
-      if (cari.trim()) q = q.or(`nama.ilike.%${cari.trim()}%,kode.ilike.%${cari.trim()}%`)
+      if (cari.trim()) {
+        const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+        q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+      }
       const { data, error } = await q.order('jenis').order('nama').returns<VSaldoKasBank[]>()
       if (error) throw error
       return data ?? []

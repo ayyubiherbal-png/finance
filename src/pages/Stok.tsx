@@ -5,6 +5,7 @@ import { Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { angka, rupiah } from '@/lib/format'
 import { useGudangAktif } from '@/lib/queries'
+import { kutipFilterPostgrest } from '@/lib/utils'
 import {
   Card,
   CardContent,
@@ -40,7 +41,7 @@ function useStokGudang(gudangId: string, cari: string) {
       let q = supabase.from('v_stok_gudang').select('*')
       if (gudangId) q = q.eq('gudang_id', gudangId)
       if (cari.trim()) {
-        const pola = `%${cari.trim()}%`
+        const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
       const { data, error } = await q.order('nama_gudang').order('nama').limit(500).returns<BarisStokGudang[]>()

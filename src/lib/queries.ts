@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { kutipFilterPostgrest } from '@/lib/utils'
 import type { OpsiCombobox } from '@/components/Combobox'
 import type {
   Gudang,
@@ -132,21 +133,30 @@ export async function ambilHargaJual(params: {
 
 export async function cariProduk(kueri: string): Promise<OpsiCombobox[]> {
   let q = supabase.from('produk').select('id, kode, nama').eq('aktif', true).order('nama').limit(20)
-  if (kueri.trim()) q = q.or(`nama.ilike.%${kueri.trim()}%,kode.ilike.%${kueri.trim()}%`)
+  if (kueri.trim()) {
+    const pola = kutipFilterPostgrest(`%${kueri.trim()}%`)
+    q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+  }
   const { data } = await q
   return (data ?? []).map((p) => ({ value: p.id, label: p.nama, sublabel: p.kode }))
 }
 
 export async function cariPelanggan(kueri: string): Promise<OpsiCombobox[]> {
   let q = supabase.from('pelanggan').select('id, kode, nama').eq('aktif', true).order('nama').limit(20)
-  if (kueri.trim()) q = q.or(`nama.ilike.%${kueri.trim()}%,kode.ilike.%${kueri.trim()}%`)
+  if (kueri.trim()) {
+    const pola = kutipFilterPostgrest(`%${kueri.trim()}%`)
+    q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+  }
   const { data } = await q
   return (data ?? []).map((p) => ({ value: p.id, label: p.nama, sublabel: p.kode }))
 }
 
 export async function cariSupplier(kueri: string): Promise<OpsiCombobox[]> {
   let q = supabase.from('supplier').select('id, kode, nama').eq('aktif', true).order('nama').limit(20)
-  if (kueri.trim()) q = q.or(`nama.ilike.%${kueri.trim()}%,kode.ilike.%${kueri.trim()}%`)
+  if (kueri.trim()) {
+    const pola = kutipFilterPostgrest(`%${kueri.trim()}%`)
+    q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+  }
   const { data } = await q
   return (data ?? []).map((s) => ({ value: s.id, label: s.nama, sublabel: s.kode }))
 }
