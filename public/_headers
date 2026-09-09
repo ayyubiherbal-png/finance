@@ -1,0 +1,15 @@
+# Security header untuk hosting yang membaca format ini (Netlify, Cloudflare Pages).
+# Kalau deploy ke Vercel, pakai vercel.json di root (bukan file ini) -- boleh hapus
+# file ini kalau tidak dipakai, tidak akan mengganggu apa pun.
+#
+# CSP (Content-Security-Policy) SENGAJA belum ditambahkan di sini -- perlu tahu persis
+# domain produksi + URL project Supabase Anda (VITE_SUPABASE_URL) supaya connect-src-nya
+# benar. Kalau salah, request ke Supabase malah ke-block. Tambahkan manual setelah domain
+# final diketahui, kira-kira:
+#   Content-Security-Policy: default-src 'self'; connect-src 'self' https://<project-id>.supabase.co wss://<project-id>.supabase.co; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains

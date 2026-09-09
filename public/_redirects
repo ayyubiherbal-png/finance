@@ -1,0 +1,3 @@
+# SPA fallback untuk Netlify/Cloudflare Pages -- semua route ditangani react-router-dom
+# di client, jadi refresh di URL selain "/" harus tetap mengarah ke index.html.
+/*    /index.html   200
