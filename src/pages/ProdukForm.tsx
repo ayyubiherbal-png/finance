@@ -126,6 +126,13 @@ function FormBaru() {
       setError(new Error('Nama dan kode awal kategori wajib diisi.'))
       return
     }
+    // Nama kategori TIDAK unique di database (cuma kode) -- dicek di sini biar
+    // tidak diam-diam bikin "Makaroni" dobel cuma karena beda kapitalisasi/spasi.
+    const namaBaru = kategoriBaru.trim().toLowerCase()
+    const sudahAda = (kategori ?? []).find((k) => k.nama.trim().toLowerCase() === namaBaru)
+    if (sudahAda && !window.confirm(tt('Kategori "{nama}" sudah ada -- tetap buat baru?').replace('{nama}', sudahAda.nama))) {
+      return
+    }
     const kode = kodeKategoriBaru.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-').slice(0, 10)
     const { data, error } = await supabase
       .from('kategori_produk')

@@ -126,6 +126,7 @@ const MENU: Grup[] = [
         ikon: Boxes,
         tab: [
           { ke: '/produk', label: 'menu.produk' },
+          { ke: '/kategori-produk', label: 'menu.kategoriProduk', peran: ['owner', 'admin'] },
           { ke: '/pelanggan', label: 'menu.pelanggan' },
           { ke: '/supplier', label: 'menu.supplier', peran: ['owner', 'admin'] },
           { ke: '/gudang', label: 'menu.gudang', peran: ['owner', 'admin'] },

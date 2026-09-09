@@ -9,6 +9,8 @@ import { Login } from '@/pages/Login'
 import { Dashboard } from '@/pages/Dashboard'
 import { Produk } from '@/pages/Produk'
 import { ProdukForm } from '@/pages/ProdukForm'
+import { KategoriProduk } from '@/pages/KategoriProduk'
+import { KategoriProdukForm } from '@/pages/KategoriProdukForm'
 import { Pelanggan } from '@/pages/Pelanggan'
 import { PelangganForm } from '@/pages/PelangganForm'
 import { PembeliMarketplace } from '@/pages/PembeliMarketplace'
@@ -93,6 +95,8 @@ function Rute() {
         <Route index element={<Dashboard />} />
         <Route path="produk" element={<Produk />} />
         <Route path="produk/:id" element={<ProdukForm />} />
+        <Route path="kategori-produk" element={<KategoriProduk />} />
+        <Route path="kategori-produk/:id" element={<KategoriProdukForm />} />
         <Route path="pelanggan" element={<Pelanggan />} />
         <Route path="pelanggan/:id" element={<PelangganForm />} />
         <Route path="pembeli-marketplace" element={<PembeliMarketplace />} />
