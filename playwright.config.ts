@@ -30,7 +30,13 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // Login sekali sebagai owner, simpan storageState -- lihat e2e/auth.setup.ts.
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'], storageState: 'playwright/.auth/owner.json' },
+      dependencies: ['setup'],
+    },
   ],
   webServer: {
     command: 'npm run dev -- --mode test',

@@ -454,7 +454,7 @@ export function PenjualanCepat() {
             </Thead>
             <Tbody>
               {barisTampil.map((b) => (
-                <Tr key={b.key}>
+                <Tr key={b.key} data-testid={`baris-item-${b.produk_id}`}>
                   <Td className="font-medium">
                     {b.produkLabel.label}
                     <span className="ml-1 font-mono text-xs text-muted-foreground">{b.produkLabel.sublabel}</span>
@@ -466,6 +466,7 @@ export function PenjualanCepat() {
                   <Td className="tabular text-right font-medium">{rupiah(subtotalBaris(b))}</Td>
                   <Td className="text-right">
                     <MenuAksi
+                      testId={`menu-aksi-${b.produk_id}`}
                       item={[
                         { label: 'Ubah', ikon: Pencil, onClick: () => ubahBaris(b) },
                         {

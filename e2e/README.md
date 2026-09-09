@@ -34,6 +34,28 @@ Report HTML hasil test terakhir: `npx playwright show-report`.
 
 ```
 e2e/
-  fixtures/     auth fixture (login sekali per peran, reuse storageState) + helper seed/cleanup Supabase
-  <journey>.spec.ts   satu file per critical user journey yang disetujui
+  auth.setup.ts               login sekali sebagai owner, simpan storageState -> playwright/.auth/owner.json
+  fixtures/db.ts              seed/cleanup data referensi (produk, pelanggan, supplier) lewat Supabase langsung
+  login.spec.ts                Tier 1: login (happy path + salah sandi + kolom kosong + network error)
+  penjualan-cepat.spec.ts      Tier 1: kasir cepat -- SO+SJ+Faktur+Kas sekaligus lewat 1 RPC
+  sales-order-cycle.spec.ts    Tier 1: SO -> Surat Jalan -> Faktur Penjualan -> Penerimaan Kas
+  purchase-order-cycle.spec.ts Tier 1: PO -> Penerimaan Barang -> Faktur Pembelian -> Pembayaran Supplier
+  retur-penjualan.spec.ts      Tier 1: retur penjualan freeform (tanpa faktur asal, biar berdiri sendiri)
 ```
+
+Tier 2 (otorisasi peran, umpan balik publik, impor pesanan, CRM/follow-up) belum ditulis --
+menunggu keputusan lanjut setelah Tier 1 ini stabil jalan lawan project test Anda.
+
+## Kenapa produk/pelanggan/supplier dibuat lewat Supabase langsung, bukan lewat UI
+
+`seedDataUji()` insert langsung ke tabel `produk`/`pelanggan`/`supplier` (plus stok awal lewat
+`penyesuaian_stok`, jalur resmi yang sama seperti staf pakai) supaya tiap test punya data yang
+BENAR-BENAR unik (nama diberi akhiran timestamp) dan tidak bentrok satu sama lain saat jalan
+paralel. Dokumen transaksi (Sales Order, Purchase Order, Faktur, dst.) SENGAJA tetap dibuat lewat
+klik UI di dalam test itu sendiri -- itu justru bagian yang mau diuji.
+
+`hapusDataUji()` menghapus semua dokumen yang tersangkut ke data uji itu di akhir test
+(`test.afterAll`), mengikuti urutan constraint foreign key di skema (lihat komentar di
+`e2e/fixtures/db.ts`). Kalau sebuah test gagal di tengah jalan, cleanup tetap best-effort jalan
+tapi mungkin menyisakan sedikit data ber-prefix `E2E-...` -- aman dibiarkan (jelas dikenali dari
+namanya) atau dihapus manual lewat Supabase Studio project test.

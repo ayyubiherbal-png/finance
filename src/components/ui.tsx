@@ -409,7 +409,10 @@ export function KondisiKosong({ pesan = 'Belum ada data.' }: { pesan?: string })
 export function PesanError({ error }: { error: unknown }) {
   const { tt } = useI18n()
   return (
-    <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+    <div
+      data-testid="pesan-error"
+      className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+    >
       {tt(pesanKesalahan(error))}
     </div>
   )
@@ -429,7 +432,7 @@ export interface MenuAksiItem {
  * kecil (mis. "Ubah" / "Hapus") di bawahnya. Ditutup sendiri kalau
  * diklik di luar atau salah satu pilihannya dipilih.
  */
-export function MenuAksi({ item }: { item: MenuAksiItem[] }) {
+export function MenuAksi({ item, testId }: { item: MenuAksiItem[]; testId?: string }) {
   const { tt } = useI18n()
   const [terbuka, setTerbuka] = React.useState(false)
   const kotakRef = React.useRef<HTMLDivElement>(null)
@@ -444,7 +447,7 @@ export function MenuAksi({ item }: { item: MenuAksiItem[] }) {
 
   return (
     <div ref={kotakRef} className="relative inline-block text-left">
-      <Button variant="ghost" size="icon" onClick={() => setTerbuka((v) => !v)}>
+      <Button variant="ghost" size="icon" onClick={() => setTerbuka((v) => !v)} data-testid={testId}>
         <MoreVertical className="h-4 w-4" />
       </Button>
       {terbuka ? (
@@ -461,6 +464,7 @@ export function MenuAksi({ item }: { item: MenuAksiItem[] }) {
                 'flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent',
                 it.bahaya ? 'text-destructive' : 'text-foreground',
               )}
+              data-testid={testId ? `${testId}-${tt(it.label)}` : undefined}
             >
               {it.ikon ? <it.ikon className="h-4 w-4" /> : null}
               {tt(it.label)}
