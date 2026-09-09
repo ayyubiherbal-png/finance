@@ -1,0 +1,45 @@
+name: E2E
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Jalankan suite E2E
+        run: npm run test:e2e:ci
+        env:
+          CI: true
+          # Isi 4 secret ini di Settings > Secrets and variables > Actions,
+          # arahkan ke project Supabase TESTING -- JANGAN project produksi
+          # (lihat e2e/README.md). anon key aman disimpan sebagai secret
+          # biasa (memang didesain publik), tapi tetap lewat secret supaya
+          # tidak tertulis literal di workflow ini.
+          VITE_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          E2E_EMAIL_OWNER: ${{ secrets.E2E_EMAIL_OWNER }}
+          E2E_PASSWORD_OWNER: ${{ secrets.E2E_PASSWORD_OWNER }}
+          E2E_EMAIL_SALES: ${{ secrets.E2E_EMAIL_SALES }}
+          E2E_PASSWORD_SALES: ${{ secrets.E2E_PASSWORD_SALES }}
+
+      - name: Unggah report kalau gagal
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
