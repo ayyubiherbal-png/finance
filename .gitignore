@@ -12,3 +12,6 @@ dist
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Supabase CLI (state link lokal, mesin-spesifik)
+/supabase/.temp/

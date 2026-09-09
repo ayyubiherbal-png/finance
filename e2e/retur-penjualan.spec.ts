@@ -11,7 +11,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
-  await hapusDataUji(supabase, data)
+  if (data) await hapusDataUji(supabase, data)
 })
 
 /**
@@ -22,6 +22,10 @@ test.afterAll(async () => {
  * sama, cuma beda titik masuk).
  */
 test.describe('Retur Penjualan (freeform, tanpa faktur asal)', () => {
+  // Serial: test-test di file ini berbagi 1 data seed (beforeAll) -- paralel penuh
+  // bikin tiap worker seeding sendiri-sendiri secara redundan (boros & rawan race).
+  test.describe.configure({ mode: 'serial' })
+
   test('happy path: buat retur, tambah barang, posting -> stok kembali', async ({ page }) => {
     await page.goto('/retur-penjualan/baru')
 
@@ -34,11 +38,14 @@ test.describe('Retur Penjualan (freeform, tanpa faktur asal)', () => {
     await expect(page.getByText('Draf', { exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Cari produk...' }).click()
+    const responSatuan = page.waitForResponse((r) => r.url().includes('/rest/v1/produk_satuan'))
     await page.getByPlaceholder('Ketik untuk cari...').fill(data.produkNama)
     await page.getByRole('button', { name: data.produkNama }).click()
+    await responSatuan // tunggu satuan (PCS) otomatis terisi sebelum lanjut, retur tidak auto-fill harga
     await page.locator('input[inputmode=numeric]').fill('20000')
     await page.getByRole('button', { name: 'Tambah', exact: true }).click()
-    await expect(page.getByText(data.produkNama)).toBeVisible()
+    // Baris item beneran (di dalam tabel), bukan combobox produk yang masih menampilkan nama sama.
+    await expect(page.getByRole('cell', { name: data.produkNama })).toBeVisible()
 
     await page.getByRole('button', { name: 'Posting' }).click()
     await expect(page.getByText('Selesai', { exact: true })).toBeVisible()
@@ -68,7 +75,9 @@ test.describe('Retur Penjualan (freeform, tanpa faktur asal)', () => {
     await page.getByPlaceholder('Ketik untuk cari...').fill(data.pelangganNama)
     await page.getByRole('button', { name: data.pelangganNama }).click()
 
-    await page.route('**/rest/v1/retur_penjualan', (route) => route.abort('failed'))
+    // Regex, bukan glob string -- request insert Supabase selalu bawa query string
+    // (mis. "?select=id"), glob "**/rest/v1/retur_penjualan" tanpa akhiran tidak cocok itu.
+    await page.route(/\/rest\/v1\/retur_penjualan(\?|$)/, (route) => route.abort('failed'))
     await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
 
     await expect(page.getByTestId('pesan-error')).toBeVisible({ timeout: 10_000 })

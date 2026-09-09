@@ -11,7 +11,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
-  await hapusDataUji(supabase, data)
+  if (data) await hapusDataUji(supabase, data)
 })
 
 async function pilihComboboxUji(page: Page, tombolPlaceholder: string, kueri: string, hasil: string) {
@@ -21,6 +21,10 @@ async function pilihComboboxUji(page: Page, tombolPlaceholder: string, kueri: st
 }
 
 test.describe('Siklus Purchase Order penuh (Procure to Pay)', () => {
+  // Serial: test-test di file ini berbagi 1 data seed (beforeAll) -- paralel penuh
+  // bikin tiap worker seeding sendiri-sendiri secara redundan (boros & rawan race).
+  test.describe.configure({ mode: 'serial' })
+
   test('happy path: PO -> Penerimaan Barang -> Faktur Pembelian -> Bayar Supplier -> Lunas', async ({ page }) => {
     // 1) Buat & setujui Purchase Order
     await page.goto('/purchase-order/baru')
@@ -30,12 +34,15 @@ test.describe('Siklus Purchase Order penuh (Procure to Pay)', () => {
     await expect(page.getByText('Draf', { exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: 'Cari produk...' }).click()
+    const responSatuan = page.waitForResponse((r) => r.url().includes('/rest/v1/produk_satuan'))
     await page.getByPlaceholder('Ketik untuk cari...').fill(data.produkNama)
     await page.getByRole('button', { name: data.produkNama }).click()
+    await responSatuan // tunggu satuan (PCS) otomatis terisi sebelum lanjut, PO tidak auto-fill harga
     // Harga beli tidak auto-fill (beda dari sisi jual) -- isi manual.
     await page.locator('input[inputmode=numeric]').first().fill('15000')
     await page.getByRole('button', { name: 'Tambah', exact: true }).click()
-    await expect(page.getByText(data.produkNama)).toBeVisible()
+    // Baris item beneran (di dalam tabel), bukan combobox produk yang masih menampilkan nama sama.
+    await expect(page.getByRole('cell', { name: data.produkNama })).toBeVisible()
 
     await page.getByRole('button', { name: 'Setujui' }).click()
     await expect(page.getByText('Disetujui', { exact: true })).toBeVisible()
@@ -87,7 +94,9 @@ test.describe('Siklus Purchase Order penuh (Procure to Pay)', () => {
     await page.goto('/purchase-order/baru')
     await pilihComboboxUji(page, 'Cari nama atau kode supplier...', data.supplierNama, data.supplierNama)
 
-    await page.route('**/rest/v1/purchase_order', (route) => route.abort('failed'))
+    // Regex, bukan glob string -- request insert Supabase selalu bawa query string
+    // (mis. "?select=id"), glob "**/rest/v1/purchase_order" tanpa akhiran tidak cocok itu.
+    await page.route(/\/rest\/v1\/purchase_order(\?|$)/, (route) => route.abort('failed'))
     await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
 
     await expect(page.getByTestId('pesan-error')).toBeVisible({ timeout: 10_000 })

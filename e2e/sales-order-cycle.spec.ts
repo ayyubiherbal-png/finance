@@ -11,7 +11,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
-  await hapusDataUji(supabase, data)
+  if (data) await hapusDataUji(supabase, data)
 })
 
 async function pilihComboboxUji(page: Page, tombolPlaceholder: string, kueri: string, hasil: string) {
@@ -21,6 +21,10 @@ async function pilihComboboxUji(page: Page, tombolPlaceholder: string, kueri: st
 }
 
 test.describe('Siklus Sales Order penuh (Order to Cash)', () => {
+  // Serial: test-test di file ini berbagi 1 data seed (beforeAll) -- paralel penuh
+  // bikin tiap worker seeding sendiri-sendiri secara redundan (boros & rawan race).
+  test.describe.configure({ mode: 'serial' })
+
   test('happy path: SO -> Surat Jalan -> Faktur -> Penerimaan Kas -> Lunas', async ({ page }) => {
     // 1) Buat & setujui Sales Order
     await page.goto('/sales-order/baru')
@@ -89,7 +93,9 @@ test.describe('Siklus Sales Order penuh (Order to Cash)', () => {
     await page.goto('/sales-order/baru')
     await pilihComboboxUji(page, 'Cari nama atau kode pelanggan...', data.pelangganNama, data.pelangganNama)
 
-    await page.route('**/rest/v1/sales_order', (route) => route.abort('failed'))
+    // Regex, bukan glob string -- request insert Supabase selalu bawa query string
+    // (mis. "?select=id"), glob "**/rest/v1/sales_order" tanpa akhiran tidak cocok itu.
+    await page.route(/\/rest\/v1\/sales_order(\?|$)/, (route) => route.abort('failed'))
     await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
 
     await expect(page.getByTestId('pesan-error')).toBeVisible({ timeout: 10_000 })

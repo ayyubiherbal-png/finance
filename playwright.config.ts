@@ -3,11 +3,20 @@ import { defineConfig, devices } from '@playwright/test'
 /**
  * E2E dijalankan lawan project Supabase TERPISAH untuk testing -- JANGAN pernah
  * arahkan ke project produksi (lihat e2e/README.md). Vite otomatis memuat
- * `.env.test`/`.env.test.local` saat dijalankan dengan `--mode test` (lihat
- * `webServer.command` di bawah), jadi VITE_SUPABASE_URL/ANON_KEY di sana yang
- * dipakai baik oleh dev server maupun oleh test yang bicara langsung ke Supabase
- * lewat REST (seeding/cleanup, lihat e2e/fixtures/).
+ * `.env.test`/`.env.test.local` untuk DEV SERVER-nya sendiri saat dijalankan
+ * dengan `--mode test` (lihat `webServer.command` di bawah) -- TAPI proses
+ * Playwright/Node yang menjalankan config & test file ini (termasuk
+ * e2e/auth.setup.ts, e2e/fixtures/db.ts) TIDAK ikut kebagian env itu secara
+ * otomatis, jadi dimuat manual di sini lewat API bawaan Node (tanpa dependency
+ * tambahan). Di CI, `.env.test` tidak ada -- env sudah diisi langsung lewat
+ * GitHub Actions secrets, jadi pemuatan ini di-skip kalau file tidak ada.
  */
+try {
+  process.loadEnvFile('.env.test')
+} catch {
+  // Tidak ada .env.test (mis. di CI, env sudah diisi lewat secrets) -- aman diabaikan.
+}
+
 const PORT = 5174
 const BASE_URL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`
 

@@ -11,7 +11,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
-  await hapusDataUji(supabase, data)
+  if (data) await hapusDataUji(supabase, data)
 })
 
 /** Pilih pelanggan uji lewat Combobox "1. Pembeli". */
@@ -35,6 +35,10 @@ async function tambahBarangUji(page: Page, qty = 1) {
 }
 
 test.describe('Penjualan Cepat', () => {
+  // Serial: test-test di file ini berbagi 1 data seed (beforeAll) -- paralel penuh
+  // bikin tiap worker seeding sendiri-sendiri secara redundan (boros & rawan race).
+  test.describe.configure({ mode: 'serial' })
+
   test('happy path: pilih pelanggan, tambah barang, bayar tunai -> faktur langsung lunas', async ({ page }) => {
     await page.goto('/penjualan-cepat')
 

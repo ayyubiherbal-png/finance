@@ -59,7 +59,10 @@ export interface DataUji {
  * (satuan PCS, tier_harga default, gudang utama harus sudah ada).
  */
 export async function seedDataUji(supabase: SupabaseClient, label: string): Promise<DataUji> {
-  const prefix = `E2E-${label}-${Date.now()}`
+  // Worker berbeda bisa memanggil ini nyaris bersamaan (mode paralel Playwright) --
+  // Date.now() saja tidak cukup anti-tabrakan, tambahkan komponen acak.
+  const acak = Math.random().toString(36).slice(2, 8)
+  const prefix = `E2E-${label}-${Date.now()}-${acak}`
 
   const { data: satuanPcs, error: eSatuan } = await supabase.from('satuan').select('id').eq('kode', 'PCS').single()
   if (eSatuan || !satuanPcs) throw new Error('Satuan PCS tidak ditemukan -- pastikan migrasi 0009_seed_awal.sql sudah dijalankan di project test.')
@@ -93,7 +96,7 @@ export async function seedDataUji(supabase: SupabaseClient, label: string): Prom
   const pelangganNama = `Pelanggan Uji ${prefix}`
   const { data: pelanggan, error: ePelanggan } = await supabase
     .from('pelanggan')
-    .insert({ kode: pelangganKode, nama: pelangganNama, tipe: 'toko', tier_harga_id: tierDefault.id, termin: 'cod', aktif: true })
+    .insert({ kode: pelangganKode, nama: pelangganNama, tipe: 'mitra', tier_harga_id: tierDefault.id, termin: 'cod', aktif: true })
     .select('id')
     .single()
   if (ePelanggan || !pelanggan) throw new Error(`Gagal seed pelanggan uji: ${ePelanggan?.message}`)
@@ -144,14 +147,22 @@ export async function seedDataUji(supabase: SupabaseClient, label: string): Prom
 
 /**
  * Hapus semua dokumen transaksi yang dibuat test (lewat UI) untuk
- * pelanggan/supplier/produk uji ini, lalu data referensinya sendiri.
+ * pelanggan/supplier uji ini, lalu pelanggan/supplier-nya sendiri.
  *
- * Urutan WAJIB mengikuti arah FK (banyak kolom `on delete restrict` di
- * skema ini -- lihat supabase/migrations/0004 & 0005): header dokumen
- * dihapus dari yang PALING BARU di alur (kas/bayar) mundur ke yang paling
- * awal (SO/PO) supaya tidak kena constraint. Tabel `_item`/`_alokasi`/
- * `_sj`/`_pb` OTOMATIS ikut terhapus (on delete cascade dari headernya),
- * tidak perlu dihapus manual.
+ * `produk` (+ `penyesuaian_stok` seed & riwayat `stok_mutasi`-nya) SENGAJA
+ * TIDAK ikut dihapus -- `stok_mutasi` tidak punya policy tulis sama sekali
+ * (lihat 0008_rls.sql, kartu stok harus permanen/append-only bahkan untuk
+ * data test), jadi `produk` juga tidak akan pernah bisa dihapus selama
+ * masih ada riwayat stoknya (FK restrict). Nama produk unik per run
+ * (timestamp di `kode`), jadi aman menumpuk di project test yang memang
+ * disposable -- bukan kebocoran, cuma histori.
+ *
+ * Urutan dokumen transaksi WAJIB mengikuti arah FK (banyak kolom
+ * `on delete restrict` di skema ini -- lihat supabase/migrations/0004 &
+ * 0005): header dihapus dari yang PALING BARU di alur (kas/bayar) mundur
+ * ke yang paling awal (SO/PO) supaya tidak kena constraint. Tabel
+ * `_item`/`_alokasi`/`_sj`/`_pb` OTOMATIS ikut terhapus (on delete cascade
+ * dari headernya), tidak perlu dihapus manual.
  *
  * Best-effort: tiap langkah gagal cuma di-warn, tidak menghentikan
  * cleanup langkah lain -- supaya satu tabel yang gagal tidak menyisakan
@@ -176,13 +187,12 @@ export async function hapusDataUji(supabase: SupabaseClient, data: DataUji): Pro
   await hapus('penerimaan_barang', supabase.from('penerimaan_barang').delete().eq('supplier_id', data.supplierId))
   await hapus('purchase_order', supabase.from('purchase_order').delete().eq('supplier_id', data.supplierId))
 
-  // Kartu stok (append-only, on delete restrict ke produk) -- harus bersih sebelum produk dihapus.
-  await hapus('stok_mutasi', supabase.from('stok_mutasi').delete().eq('produk_id', data.produkId))
-
-  await hapus('penyesuaian_stok (seed)', supabase.from('penyesuaian_stok').delete().eq('id', data.penyesuaianStokId))
-
-  // produk_satuan & produk_harga cascade otomatis lewat penghapusan produk.
-  await hapus('produk', supabase.from('produk').delete().eq('id', data.produkId))
+  // `stok_mutasi` SENGAJA tidak punya policy tulis sama sekali (lihat 0008_rls.sql --
+  // kartu stok harus permanen/append-only, bahkan untuk data test). Akibatnya `produk`
+  // uji juga tidak akan pernah bisa dihapus selama masih ada riwayat stoknya (FK restrict)
+  // -- ini konsisten dengan desain aplikasi, bukan sesuatu yang perlu "diperbaiki" di sini.
+  // Produk + penyesuaian_stok seed-nya SENGAJA dibiarkan (nama unik per run, tidak
+  // tabrakan, aman menumpuk di project test yang memang disposable).
   await hapus('pelanggan', supabase.from('pelanggan').delete().eq('id', data.pelangganId))
   await hapus('supplier', supabase.from('supplier').delete().eq('id', data.supplierId))
 }
