@@ -91,24 +91,20 @@ function FormBaru() {
 
     setMenyimpan(true)
     try {
-      const { data, error } = await supabase
-        .from('pengeluaran_kas')
-        .insert({
-          tanggal: header.tanggal,
-          nama_pengeluaran_id: header.nama_pengeluaran_id,
-          akun_id: header.akun_id,
-          metode: header.metode,
-          nomor_referensi: header.nomor_referensi || null,
-          tanggal_cair: header.metode === 'giro' ? header.tanggal_cair || null : null,
-          jumlah: header.jumlah,
-          catatan: header.catatan || null,
-          dibuat_oleh: profil?.id ?? null,
-        })
-        .select('id')
-        .single()
+      const { error } = await supabase.from('pengeluaran_kas').insert({
+        tanggal: header.tanggal,
+        nama_pengeluaran_id: header.nama_pengeluaran_id,
+        akun_id: header.akun_id,
+        metode: header.metode,
+        nomor_referensi: header.nomor_referensi || null,
+        tanggal_cair: header.metode === 'giro' ? header.tanggal_cair || null : null,
+        jumlah: header.jumlah,
+        catatan: header.catatan || null,
+        dibuat_oleh: profil?.id ?? null,
+      })
       if (error) throw error
       toast('Pengeluaran kas tersimpan.')
-      navigate(`/pengeluaran-kas/${data.id}`, { replace: true })
+      navigate('/pengeluaran-kas', { replace: true })
     } catch (e) {
       setError(e)
     } finally {
