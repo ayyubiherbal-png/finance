@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
@@ -17,6 +17,20 @@ interface FormState {
 
 const KOSONG: FormState = { kategori_biaya_id: '', kode: '', nama: '' }
 
+/** Saran kode sub berikutnya di bawah satu kategori -- kode kategori
+ * numerik (mis. "6300") lanjut angka berurutan (6301, 6302, ...); kode
+ * non-numerik (mis. "OPS") pakai pola "KODE-01", "KODE-02", dst. */
+function saranKodeBerikutnya(kodeKategori: string, kodeTerpakai: string[]): string {
+  if (/^\d+$/.test(kodeKategori)) {
+    const basis = parseInt(kodeKategori, 10)
+    const angkaTerpakai = kodeTerpakai.map((k) => parseInt(k, 10)).filter((n) => !Number.isNaN(n))
+    const terbesar = angkaTerpakai.length > 0 ? Math.max(...angkaTerpakai) : basis
+    return String(terbesar + 1)
+  }
+  const urutan = kodeTerpakai.filter((k) => k.startsWith(`${kodeKategori}-`)).length + 1
+  return `${kodeKategori}-${String(urutan).padStart(2, '0')}`
+}
+
 export function NamaPengeluaranForm() {
   const { id } = useParams<{ id: string }>()
   const isBaru = !id || id === 'baru'
@@ -31,6 +45,28 @@ export function NamaPengeluaranForm() {
   const [menyimpan, setMenyimpan] = useState(false)
   const [menghapus, setMenghapus] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  const namaRef = useRef<HTMLInputElement>(null)
+
+  // Kode sub-item berikutnya disarankan otomatis dari kategori terpilih --
+  // supaya nambah banyak item berurutan (6301, 6302, 6303, ...) tidak
+  // perlu ketik manual tiap kali. `kodeOtomatis` mati begitu user ketik
+  // sendiri, supaya tidak menimpa yang sudah diketik.
+  const [kodeOtomatis, setKodeOtomatis] = useState(true)
+  const { data: kodeSekategori } = useQuery({
+    queryKey: ['nama-pengeluaran-oleh-kategori', form.kategori_biaya_id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('nama_pengeluaran').select('kode').eq('kategori_biaya_id', form.kategori_biaya_id)
+      if (error) throw error
+      return (data ?? []).map((r) => r.kode)
+    },
+    enabled: isBaru && !!form.kategori_biaya_id,
+  })
+  const kategoriTerpilih = (kategoriAktif ?? []).find((k) => k.id === form.kategori_biaya_id)
+
+  useEffect(() => {
+    if (!isBaru || !kodeOtomatis || !kategoriTerpilih || !kodeSekategori) return
+    setForm((f) => ({ ...f, kode: saranKodeBerikutnya(kategoriTerpilih.kode, kodeSekategori) }))
+  }, [isBaru, kodeOtomatis, kategoriTerpilih, kodeSekategori])
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ['nama-pengeluaran-detail', id],
@@ -88,11 +124,20 @@ export function NamaPengeluaranForm() {
     setMenyimpan(true)
     try {
       if (isBaru) {
-        const { data, error } = await supabase.from('nama_pengeluaran').insert(payload).select('id').single()
+        const { error } = await supabase.from('nama_pengeluaran').insert(payload)
         if (error) throw error
         toast('Nama pengeluaran tersimpan.')
         invalidateSemua()
-        navigate(`/nama-pengeluaran/${data.id}`, { replace: true })
+        // Tetap di form ini (bukan pindah ke halaman detail) supaya nambah
+        // banyak item berurutan di kategori yang sama cukup isi Nama lalu
+        // Simpan berkali-kali -- tidak perlu klik "Tambah" ulang tiap item.
+        queryClient.setQueryData<string[]>(['nama-pengeluaran-oleh-kategori', form.kategori_biaya_id], (lama) => [
+          ...(lama ?? []),
+          payload.kode,
+        ])
+        setForm((f) => ({ ...f, kode: '', nama: '' }))
+        setKodeOtomatis(true)
+        namaRef.current?.focus()
       } else {
         const { error } = await supabase.from('nama_pengeluaran').update(payload).eq('id', id)
         if (error) throw error
@@ -182,11 +227,17 @@ export function NamaPengeluaranForm() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Kode</Label>
-              <Input value={form.kode} onChange={(e) => ubah('kode', e.target.value.toUpperCase())} />
+              <Input
+                value={form.kode}
+                onChange={(e) => {
+                  setKodeOtomatis(false)
+                  ubah('kode', e.target.value.toUpperCase())
+                }}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Nama Pengeluaran</Label>
-              <Input value={form.nama} onChange={(e) => ubah('nama', e.target.value)} />
+              <Input ref={namaRef} value={form.nama} onChange={(e) => ubah('nama', e.target.value)} />
             </div>
           </div>
 
@@ -217,7 +268,7 @@ export function NamaPengeluaranForm() {
             )}
             <div className="flex gap-2">
               <Button variant="outline" asChild>
-                <Link to="/kategori-biaya">Batal</Link>
+                <Link to="/kategori-biaya">{isBaru ? 'Selesai' : 'Batal'}</Link>
               </Button>
               <Button onClick={simpan} disabled={menyimpan}>
                 {menyimpan ? <Spinner /> : null}
