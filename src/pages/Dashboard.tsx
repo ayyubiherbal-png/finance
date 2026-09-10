@@ -425,7 +425,7 @@ export function Dashboard() {
                 <KondisiKosong pesan={t('dasbor.semuaProdukAmanStok')} />
               ) : (
                 <div className="divide-y divide-border">
-                  {data.perluRestock.map((p) => {
+                  {data.perluRestock.slice(0, 5).map((p) => {
                     const habis = Number(p.qty) <= 0
                     return (
                       <Link
@@ -453,6 +453,14 @@ export function Dashboard() {
                       </Link>
                     )
                   })}
+                  {data.perluRestock.length > 5 ? (
+                    <Link
+                      to="/produk"
+                      className="block px-4 py-2.5 text-center text-sm font-medium text-primary transition-colors hover:bg-accent"
+                    >
+                      {t('dasbor.lihatSemuaRestock').replace('{n}', String(data.perluRestock.length))}
+                    </Link>
+                  ) : null}
                 </div>
               )}
             </CardContent>

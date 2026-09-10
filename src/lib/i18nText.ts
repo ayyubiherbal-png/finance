@@ -125,6 +125,7 @@ export const KAMUS = {
   'dasbor.saldoKasBank': { id: 'Saldo Kas & Bank', en: 'Cash & bank balance' },
   'dasbor.lihatSemuaAkun': { id: 'Lihat semua akun', en: 'View all accounts' },
   'dasbor.perluRestock': { id: 'Perlu restock', en: 'Needs restocking' },
+  'dasbor.lihatSemuaRestock': { id: 'Lihat semua ({n})', en: 'View all ({n})' },
   'dasbor.semuaProdukAmanStok': { id: 'Semua produk di atas stok minimum.', en: 'All products are above minimum stock.' },
   'dasbor.habis': { id: 'Habis', en: 'Out of stock' },
   'dasbor.menipis': { id: 'Menipis', en: 'Low stock' },
