@@ -1,17 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { useAkunKasBankAktif, useKategoriBiayaAktif } from '@/lib/queries'
+import { useAkunKasBankAktif, useNamaPengeluaranAktif, type NamaPengeluaranDenganKategori } from '@/lib/queries'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { toast } from '@/components/Toast'
 import { Badge, Button, Card, CardContent, Input, InputAngka, Label, PesanError, Select, Spinner } from '@/components/ui'
 import { LABEL_STATUS, VARIAN_STATUS } from '@/pages/SalesOrder'
 import { LABEL_METODE } from '@/pages/PenerimaanKas'
 import type { MetodeBayar, StatusDokumen } from '@/types/db'
+
+/** Kelompokkan Nama Pengeluaran per kategori induknya (urut kode kategori)
+ * supaya dropdown-nya jadi <optgroup> -- gampang dicari di kategori mana. */
+function kelompokkanPerKategori(item: NamaPengeluaranDenganKategori[]) {
+  const peta = new Map<string, { kode: string; nama: string; item: NamaPengeluaranDenganKategori[] }>()
+  for (const i of item) {
+    const ada = peta.get(i.kategori_biaya_id)
+    if (ada) ada.item.push(i)
+    else peta.set(i.kategori_biaya_id, { kode: i.kategori?.kode ?? '', nama: i.kategori?.nama ?? '', item: [i] })
+  }
+  return [...peta.values()].sort((a, b) => a.kode.localeCompare(b.kode))
+}
 
 export function PengeluaranKasForm() {
   const { id } = useParams<{ id: string }>()
@@ -27,11 +39,12 @@ function FormBaru() {
   const navigate = useNavigate()
   const { profil } = useAuth()
   const { data: akunAktif } = useAkunKasBankAktif()
-  const { data: kategoriAktif } = useKategoriBiayaAktif()
+  const { data: namaPengeluaranAktif } = useNamaPengeluaranAktif()
+  const kelompokPengeluaran = useMemo(() => kelompokkanPerKategori(namaPengeluaranAktif ?? []), [namaPengeluaranAktif])
 
   const [header, setHeader] = useState({
     tanggal: tanggalISO(),
-    kategori_biaya_id: '',
+    nama_pengeluaran_id: '',
     akun_id: '',
     metode: 'transfer' as MetodeBayar,
     nomor_referensi: '',
@@ -50,8 +63,8 @@ function FormBaru() {
 
   async function simpan() {
     setError(null)
-    if (!header.kategori_biaya_id) {
-      setError(new Error('Pilih kategori biaya.'))
+    if (!header.nama_pengeluaran_id) {
+      setError(new Error('Pilih nama pengeluaran.'))
       return
     }
     if (!header.akun_id) {
@@ -69,7 +82,7 @@ function FormBaru() {
         .from('pengeluaran_kas')
         .insert({
           tanggal: header.tanggal,
-          kategori_biaya_id: header.kategori_biaya_id,
+          nama_pengeluaran_id: header.nama_pengeluaran_id,
           akun_id: header.akun_id,
           metode: header.metode,
           nomor_referensi: header.nomor_referensi || null,
@@ -104,22 +117,26 @@ function FormBaru() {
       <Card>
         <CardContent className="space-y-4 p-4">
           <div className="space-y-1.5">
-            <Label>Kategori biaya</Label>
+            <Label>Nama pengeluaran</Label>
             <Select
-              value={header.kategori_biaya_id}
-              onChange={(e) => setHeader((h) => ({ ...h, kategori_biaya_id: e.target.value }))}
+              value={header.nama_pengeluaran_id}
+              onChange={(e) => setHeader((h) => ({ ...h, nama_pengeluaran_id: e.target.value }))}
             >
               <option value="" disabled>
-                Pilih kategori...
+                Pilih nama pengeluaran...
               </option>
-              {(kategoriAktif ?? []).map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.nama}
-                </option>
+              {kelompokPengeluaran.map((k) => (
+                <optgroup key={k.kode} label={`${k.kode} - ${k.nama}`}>
+                  {k.item.map((i) => (
+                    <option key={i.id} value={i.id}>
+                      {i.kode} - {i.nama}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </Select>
-            {kategoriAktif && kategoriAktif.length === 0 ? (
-              <p className="text-xs text-destructive">{tt('Belum ada kategori biaya. Tambahkan dulu di menu Kategori Biaya.')}</p>
+            {namaPengeluaranAktif && namaPengeluaranAktif.length === 0 ? (
+              <p className="text-xs text-destructive">{tt('Belum ada nama pengeluaran. Tambahkan dulu di menu Kategori Biaya.')}</p>
             ) : null}
           </div>
 
@@ -210,7 +227,7 @@ interface PengeluaranDetail {
   jumlah: number
   status: StatusDokumen
   catatan: string | null
-  kategori: { nama: string } | null
+  namaPengeluaran: { nama: string; kategori: { nama: string } | null } | null
   akun: { nama: string } | null
 }
 
@@ -225,7 +242,7 @@ function FormDetail({ pengeluaranId }: { pengeluaranId: string }) {
       const { data, error } = await supabase
         .from('pengeluaran_kas')
         .select(
-          'id, nomor, tanggal, metode, nomor_referensi, jumlah, status, catatan, kategori:kategori_biaya_id(nama), akun:akun_id(nama)',
+          'id, nomor, tanggal, metode, nomor_referensi, jumlah, status, catatan, namaPengeluaran:nama_pengeluaran_id(nama, kategori:kategori_biaya_id(nama)), akun:akun_id(nama)',
         )
         .eq('id', pengeluaranId)
         .single()
@@ -272,7 +289,7 @@ function FormDetail({ pengeluaranId }: { pengeluaranId: string }) {
         <div className="flex-1">
           <h1 className="font-mono text-lg font-semibold">{pengeluaran.nomor}</h1>
           <p className="text-sm text-muted-foreground">
-            {fmtTanggal(pengeluaran.tanggal)} &middot; {pengeluaran.kategori?.nama ?? '-'}
+            {fmtTanggal(pengeluaran.tanggal)} &middot; {pengeluaran.namaPengeluaran?.nama ?? '-'}
           </p>
         </div>
         <Badge variant={VARIAN_STATUS[pengeluaran.status]}>{LABEL_STATUS[pengeluaran.status]}</Badge>
@@ -280,6 +297,8 @@ function FormDetail({ pengeluaranId }: { pengeluaranId: string }) {
 
       <Card>
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2">
+          <InfoField label="Kategori" value={pengeluaran.namaPengeluaran?.kategori?.nama ?? '-'} />
+          <InfoField label="Nama pengeluaran" value={pengeluaran.namaPengeluaran?.nama ?? '-'} />
           <InfoField label="Metode" value={LABEL_METODE[pengeluaran.metode]} />
           <InfoField label="Jumlah" value={rupiah(pengeluaran.jumlah)} />
           <InfoField label="Akun" value={pengeluaran.akun?.nama ?? '-'} />

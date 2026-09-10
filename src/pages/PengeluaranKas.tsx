@@ -36,17 +36,18 @@ interface BarisPengeluaran {
   metode: MetodeBayar
   jumlah: number
   status: StatusDokumen
-  kategori: { nama: string } | null
+  namaPengeluaran: { nama: string; kategori: { nama: string } | null } | null
   akun: { nama: string } | null
 }
+
+const SELECT_PENGELUARAN =
+  'id, nomor, tanggal, metode, jumlah, status, namaPengeluaran:nama_pengeluaran_id(nama, kategori:kategori_biaya_id(nama)), akun:akun_id(nama)'
 
 function useDaftarPengeluaran(cari: string, status: string, periode: RentangTanggal) {
   return useQuery({
     queryKey: ['pengeluaran-kas', cari, status, periode],
     queryFn: async () => {
-      let q = supabase
-        .from('pengeluaran_kas')
-        .select('id, nomor, tanggal, metode, jumlah, status, kategori:kategori_biaya_id(nama), akun:akun_id(nama)')
+      let q = supabase.from('pengeluaran_kas').select(SELECT_PENGELUARAN)
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
       if (periode.dari) q = q.gte('tanggal', periode.dari)
@@ -62,7 +63,8 @@ function useDaftarPengeluaran(cari: string, status: string, periode: RentangTang
 const KOLOM_EKSPOR_PENGELUARAN: KolomEkspor<BarisPengeluaran>[] = [
   { header: 'Nomor', nilai: (r) => r.nomor },
   { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
-  { header: 'Kategori', nilai: (r) => r.kategori?.nama ?? '-' },
+  { header: 'Kategori', nilai: (r) => r.namaPengeluaran?.kategori?.nama ?? '-' },
+  { header: 'Nama Pengeluaran', nilai: (r) => r.namaPengeluaran?.nama ?? '-' },
   { header: 'Akun', nilai: (r) => r.akun?.nama ?? '-' },
   { header: 'Metode', nilai: (r) => LABEL_METODE[r.metode] },
   { header: 'Jumlah', nilai: (r) => r.jumlah, format: (v) => rupiah(v as number), rata: 'kanan' },
@@ -85,9 +87,7 @@ export function PengeluaranKas() {
         <div className="flex gap-2">
           <TombolEkspor
             ambilData={async () => {
-              let q = supabase
-                .from('pengeluaran_kas')
-                .select('id, nomor, tanggal, metode, jumlah, status, kategori:kategori_biaya_id(nama), akun:akun_id(nama)')
+              let q = supabase.from('pengeluaran_kas').select(SELECT_PENGELUARAN)
               if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
               if (status) q = q.eq('status', status)
               if (periode.dari) q = q.gte('tanggal', periode.dari)
@@ -146,6 +146,7 @@ export function PengeluaranKas() {
                     <Th>Nomor</Th>
                     <Th>Tanggal</Th>
                     <Th>Kategori</Th>
+                    <Th>Nama Pengeluaran</Th>
                     <Th>Akun</Th>
                     <Th>Metode</Th>
                     <Th className="text-right">Jumlah</Th>
@@ -161,7 +162,8 @@ export function PengeluaranKas() {
                         </Link>
                       </Td>
                       <Td className="text-muted-foreground">{tanggal(p.tanggal)}</Td>
-                      <Td className="font-medium">{p.kategori?.nama ?? '-'}</Td>
+                      <Td className="text-muted-foreground">{p.namaPengeluaran?.kategori?.nama ?? '-'}</Td>
+                      <Td className="font-medium">{p.namaPengeluaran?.nama ?? '-'}</Td>
                       <Td className="text-muted-foreground">{p.akun?.nama ?? '-'}</Td>
                       <Td className="text-muted-foreground">{LABEL_METODE[p.metode]}</Td>
                       <Td className="tabular text-right font-medium">{rupiah(p.jumlah)}</Td>

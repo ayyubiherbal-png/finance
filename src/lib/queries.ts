@@ -8,6 +8,7 @@ import type {
   ProdukSatuan,
   AkunKasBank,
   KategoriBiaya,
+  NamaPengeluaran,
   WilayahProvinsi,
   WilayahKabupatenKota,
   WilayahKecamatan,
@@ -57,7 +58,7 @@ export function useAkunKasBankAktif() {
   })
 }
 
-/** Kategori biaya aktif -- selector wajib di form Pengeluaran Kas. */
+/** Kategori biaya aktif -- selector kategori induk wajib di form Nama Pengeluaran. */
 export function useKategoriBiayaAktif() {
   return useQuery({
     queryKey: ['kategori-biaya-aktif'],
@@ -66,8 +67,30 @@ export function useKategoriBiayaAktif() {
         .from('kategori_biaya')
         .select('id, kode, nama, aktif')
         .eq('aktif', true)
-        .order('nama')
+        .order('kode')
         .returns<KategoriBiaya[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 5 * 60_000,
+  })
+}
+
+export interface NamaPengeluaranDenganKategori extends NamaPengeluaran {
+  kategori: { kode: string; nama: string } | null
+}
+
+/** Nama pengeluaran aktif (dengan kategori induknya) -- selector wajib di form Pengeluaran Kas. */
+export function useNamaPengeluaranAktif() {
+  return useQuery({
+    queryKey: ['nama-pengeluaran-aktif'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('nama_pengeluaran')
+        .select('id, kategori_biaya_id, kode, nama, aktif, kategori:kategori_biaya_id(kode, nama)')
+        .eq('aktif', true)
+        .order('kode')
+        .returns<NamaPengeluaranDenganKategori[]>()
       if (error) throw error
       return data ?? []
     },

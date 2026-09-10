@@ -1,54 +1,57 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tt } from '@/lib/i18nText'
+import { useKategoriBiayaAktif } from '@/lib/queries'
 import { toast } from '@/components/Toast'
-import { Button, Card, CardContent, Input, Label, PesanError, Spinner } from '@/components/ui'
-import type { KategoriBiaya } from '@/types/db'
+import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
+import type { NamaPengeluaran } from '@/types/db'
 
 interface FormState {
+  kategori_biaya_id: string
   kode: string
   nama: string
 }
 
-const KOSONG: FormState = { kode: '', nama: '' }
+const KOSONG: FormState = { kategori_biaya_id: '', kode: '', nama: '' }
 
-export function KategoriBiayaForm() {
+export function NamaPengeluaranForm() {
   const { id } = useParams<{ id: string }>()
   const isBaru = !id || id === 'baru'
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
 
-  const [form, setForm] = useState<FormState>(KOSONG)
+  const { data: kategoriAktif } = useKategoriBiayaAktif()
+
+  const [form, setForm] = useState<FormState>({ ...KOSONG, kategori_biaya_id: searchParams.get('kategori') ?? '' })
   const [aktif, setAktif] = useState(true)
   const [menyimpan, setMenyimpan] = useState(false)
   const [menghapus, setMenghapus] = useState(false)
   const [error, setError] = useState<unknown>(null)
 
   const { data: existing, isLoading } = useQuery({
-    queryKey: ['kategori-biaya-detail', id],
+    queryKey: ['nama-pengeluaran-detail', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('kategori_biaya').select('*').eq('id', id as string).single()
+      const { data, error } = await supabase.from('nama_pengeluaran').select('*').eq('id', id as string).single()
       if (error) throw error
-      return data as KategoriBiaya
+      return data as NamaPengeluaran
     },
     enabled: !isBaru,
   })
 
-  // Jumlah Nama Pengeluaran di bawah kategori ini -- kategori TIDAK BOLEH
-  // dihapus selama masih ada (nama_pengeluaran.kategori_biaya_id itu
-  // `on delete restrict`, beda dari pola produk.kategori_id yang boleh
-  // `set null`) -- jadi ini blokir dengan pesan jelas, bukan konfirmasi
-  // "hapus paksa" yang ujung-ujungnya gagal di database.
-  const { data: jumlahItem } = useQuery({
-    queryKey: ['kategori-biaya-jumlah-item', id],
+  // Jumlah Pengeluaran Kas yang sudah pakai item ini -- nama_pengeluaran_id
+  // di pengeluaran_kas itu `on delete restrict`, jadi item TIDAK BOLEH
+  // dihapus selama masih dipakai riwayat -- blokir dengan pesan jelas.
+  const { data: jumlahPengeluaran } = useQuery({
+    queryKey: ['nama-pengeluaran-jumlah-pengeluaran', id],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from('nama_pengeluaran')
+        .from('pengeluaran_kas')
         .select('id', { count: 'exact', head: true })
-        .eq('kategori_biaya_id', id as string)
+        .eq('nama_pengeluaran_id', id as string)
       if (error) throw error
       return count ?? 0
     },
@@ -57,7 +60,7 @@ export function KategoriBiayaForm() {
 
   useEffect(() => {
     if (!existing) return
-    setForm({ kode: existing.kode, nama: existing.nama })
+    setForm({ kategori_biaya_id: existing.kategori_biaya_id, kode: existing.kode, nama: existing.nama })
     setAktif(existing.aktif)
   }, [existing])
 
@@ -67,30 +70,34 @@ export function KategoriBiayaForm() {
 
   function invalidateSemua() {
     queryClient.invalidateQueries({ queryKey: ['kategori-biaya-list'] })
-    queryClient.invalidateQueries({ queryKey: ['kategori-biaya-aktif'] }) // dipakai dropdown form Pengeluaran Kas
+    queryClient.invalidateQueries({ queryKey: ['nama-pengeluaran-aktif'] }) // dipakai dropdown form Pengeluaran Kas
   }
 
   async function simpan() {
     setError(null)
+    if (!form.kategori_biaya_id) {
+      setError(new Error('Pilih kategori.'))
+      return
+    }
     if (!form.kode.trim() || !form.nama.trim()) {
       setError(new Error('Kode dan nama wajib diisi.'))
       return
     }
-    const payload = { kode: form.kode.trim().toUpperCase(), nama: form.nama.trim() }
+    const payload = { kategori_biaya_id: form.kategori_biaya_id, kode: form.kode.trim().toUpperCase(), nama: form.nama.trim() }
 
     setMenyimpan(true)
     try {
       if (isBaru) {
-        const { data, error } = await supabase.from('kategori_biaya').insert(payload).select('id').single()
+        const { data, error } = await supabase.from('nama_pengeluaran').insert(payload).select('id').single()
         if (error) throw error
-        toast('Kategori tersimpan.')
+        toast('Nama pengeluaran tersimpan.')
         invalidateSemua()
-        navigate(`/kategori-biaya/${data.id}`, { replace: true })
+        navigate(`/nama-pengeluaran/${data.id}`, { replace: true })
       } else {
-        const { error } = await supabase.from('kategori_biaya').update(payload).eq('id', id)
+        const { error } = await supabase.from('nama_pengeluaran').update(payload).eq('id', id)
         if (error) throw error
-        toast('Kategori tersimpan.')
-        queryClient.invalidateQueries({ queryKey: ['kategori-biaya-detail', id] })
+        toast('Nama pengeluaran tersimpan.')
+        queryClient.invalidateQueries({ queryKey: ['nama-pengeluaran-detail', id] })
         invalidateSemua()
         navigate('/kategori-biaya')
       }
@@ -104,27 +111,31 @@ export function KategoriBiayaForm() {
   async function ubahAktif(nilai: boolean) {
     setAktif(nilai)
     if (!isBaru) {
-      const { error } = await supabase.from('kategori_biaya').update({ aktif: nilai }).eq('id', id)
+      const { error } = await supabase.from('nama_pengeluaran').update({ aktif: nilai }).eq('id', id)
       if (error) setError(error)
       else {
-        queryClient.invalidateQueries({ queryKey: ['kategori-biaya-detail', id] })
+        queryClient.invalidateQueries({ queryKey: ['nama-pengeluaran-detail', id] })
         invalidateSemua()
       }
     }
   }
 
   async function hapus() {
-    if (jumlahItem && jumlahItem > 0) {
-      setError(new Error(tt('Masih ada {n} nama pengeluaran di kategori ini -- hapus atau pindahkan dulu sebelum menghapus kategorinya.').replace('{n}', String(jumlahItem))))
+    if (jumlahPengeluaran && jumlahPengeluaran > 0) {
+      setError(
+        new Error(
+          tt('Masih ada {n} Pengeluaran Kas yang pakai nama pengeluaran ini -- tidak bisa dihapus.').replace('{n}', String(jumlahPengeluaran)),
+        ),
+      )
       return
     }
-    if (!window.confirm(tt('Hapus kategori ini?'))) return
+    if (!window.confirm(tt('Hapus nama pengeluaran ini?'))) return
     setError(null)
     setMenghapus(true)
     try {
-      const { error } = await supabase.from('kategori_biaya').delete().eq('id', id)
+      const { error } = await supabase.from('nama_pengeluaran').delete().eq('id', id)
       if (error) throw error
-      toast('Kategori dihapus.')
+      toast('Nama pengeluaran dihapus.')
       invalidateSemua()
       navigate('/kategori-biaya')
     } catch (e) {
@@ -149,18 +160,32 @@ export function KategoriBiayaForm() {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">{isBaru ? tt('Kategori Baru') : form.nama || '...'}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{isBaru ? tt('Nama Pengeluaran Baru') : form.nama || '...'}</h1>
       </div>
 
       <Card>
         <CardContent className="space-y-4 p-4">
+          <div className="space-y-1.5">
+            <Label>Kategori</Label>
+            <Select value={form.kategori_biaya_id} onChange={(e) => ubah('kategori_biaya_id', e.target.value)}>
+              <option value="" disabled>
+                Pilih kategori...
+              </option>
+              {(kategoriAktif ?? []).map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.kode} - {k.nama}
+                </option>
+              ))}
+            </Select>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Kode</Label>
               <Input value={form.kode} onChange={(e) => ubah('kode', e.target.value.toUpperCase())} />
             </div>
             <div className="space-y-1.5">
-              <Label>Nama</Label>
+              <Label>Nama Pengeluaran</Label>
               <Input value={form.nama} onChange={(e) => ubah('nama', e.target.value)} />
             </div>
           </div>
@@ -172,9 +197,9 @@ export function KategoriBiayaForm() {
                 {tt('Aktif')}
               </label>
               <p className="text-xs text-muted-foreground">
-                {jumlahItem === undefined
-                  ? tt('Memuat jumlah nama pengeluaran...')
-                  : tt('{n} nama pengeluaran di kategori ini.').replace('{n}', String(jumlahItem))}
+                {jumlahPengeluaran === undefined
+                  ? tt('Memuat jumlah pengeluaran...')
+                  : tt('{n} Pengeluaran Kas pakai nama pengeluaran ini.').replace('{n}', String(jumlahPengeluaran))}
               </p>
             </>
           ) : null}

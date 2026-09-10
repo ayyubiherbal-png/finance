@@ -13,6 +13,7 @@ import { KategoriProduk } from '@/pages/KategoriProduk'
 import { KategoriProdukForm } from '@/pages/KategoriProdukForm'
 import { KategoriBiaya } from '@/pages/KategoriBiaya'
 import { KategoriBiayaForm } from '@/pages/KategoriBiayaForm'
+import { NamaPengeluaranForm } from '@/pages/NamaPengeluaranForm'
 import { Pelanggan } from '@/pages/Pelanggan'
 import { PelangganForm } from '@/pages/PelangganForm'
 import { PembeliMarketplace } from '@/pages/PembeliMarketplace'
@@ -103,6 +104,7 @@ function Rute() {
         <Route path="kategori-produk/:id" element={<KategoriProdukForm />} />
         <Route path="kategori-biaya" element={<KategoriBiaya />} />
         <Route path="kategori-biaya/:id" element={<KategoriBiayaForm />} />
+        <Route path="nama-pengeluaran/:id" element={<NamaPengeluaranForm />} />
         <Route path="pelanggan" element={<Pelanggan />} />
         <Route path="pelanggan/:id" element={<PelangganForm />} />
         <Route path="pembeli-marketplace" element={<PembeliMarketplace />} />

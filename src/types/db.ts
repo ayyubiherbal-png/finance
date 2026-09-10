@@ -211,11 +211,19 @@ export interface KategoriBiaya {
   aktif: boolean
 }
 
+export interface NamaPengeluaran {
+  id: string
+  kategori_biaya_id: string
+  kode: string
+  nama: string
+  aktif: boolean
+}
+
 export interface PengeluaranKas {
   id: string
   nomor: string
   tanggal: string
-  kategori_biaya_id: string | null
+  nama_pengeluaran_id: string
   akun_id: string
   metode: MetodeBayar
   nomor_referensi: string | null
