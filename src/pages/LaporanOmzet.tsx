@@ -215,7 +215,7 @@ export function LaporanOmzet() {
             <KartuAngka judul={`Laba kotor ${terakhir?.label ?? '-'}`} nilai={rupiah(terakhir?.laba_kotor ?? 0)} />
             <KartuAngka judul={`Total omzet (${kelompok.length} ${LABEL_SATUAN[mode]})`} nilai={rupiah(totalOmzet)} />
             <KartuAngka judul={`Total laba kotor (${kelompok.length} ${LABEL_SATUAN[mode]})`} nilai={rupiah(totalLaba)} />
-            <KartuAngka judul={`Margin keseluruhan`} nilai={`${marginKeseluruhan.toFixed(1)}%`} />
+            <KartuAngka judul={`Margin laba kotor`} nilai={`${marginKeseluruhan.toFixed(1)}%`} />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">

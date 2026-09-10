@@ -208,6 +208,10 @@ export interface KategoriBiaya {
   id: string
   kode: string
   nama: string
+  /** false = non-operasional (modal, ambil pribadi, dll) -- tetap
+   * mengurangi saldo kas tapi TIDAK dihitung ke Biaya Operasional/Laba
+   * Bersih di Dashboard/Laporan Omzet/Laporan Laba. */
+  operasional: boolean
   aktif: boolean
 }
 
@@ -637,4 +641,5 @@ export interface VRingkasanLabaBiaya {
   total_laba_kotor: number
   total_biaya_operasional: number
   laba_bersih: number
+  total_biaya_non_operasional: number
 }

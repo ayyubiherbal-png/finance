@@ -11,9 +11,10 @@ import type { KategoriBiaya } from '@/types/db'
 interface FormState {
   kode: string
   nama: string
+  operasional: boolean
 }
 
-const KOSONG: FormState = { kode: '', nama: '' }
+const KOSONG: FormState = { kode: '', nama: '', operasional: true }
 
 export function KategoriBiayaForm() {
   const { id } = useParams<{ id: string }>()
@@ -57,7 +58,7 @@ export function KategoriBiayaForm() {
 
   useEffect(() => {
     if (!existing) return
-    setForm({ kode: existing.kode, nama: existing.nama })
+    setForm({ kode: existing.kode, nama: existing.nama, operasional: existing.operasional })
     setAktif(existing.aktif)
   }, [existing])
 
@@ -76,7 +77,7 @@ export function KategoriBiayaForm() {
       setError(new Error('Kode dan nama wajib diisi.'))
       return
     }
-    const payload = { kode: form.kode.trim().toUpperCase(), nama: form.nama.trim() }
+    const payload = { kode: form.kode.trim().toUpperCase(), nama: form.nama.trim(), operasional: form.operasional }
 
     setMenyimpan(true)
     try {
@@ -163,6 +164,23 @@ export function KategoriBiayaForm() {
               <Label>Nama</Label>
               <Input value={form.nama} onChange={(e) => ubah('nama', e.target.value)} />
             </div>
+          </div>
+
+          <div className="space-y-1.5 rounded-md border border-border p-3">
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={form.operasional}
+                onChange={(e) => ubah('operasional', e.target.checked)}
+                className="h-4 w-4 rounded border-input"
+              />
+              {tt('Biaya operasional')}
+            </label>
+            <p className="text-xs text-muted-foreground">
+              {form.operasional
+                ? tt('Pengeluaran di kategori ini dihitung sebagai Biaya Operasional & mengurangi Laba Bersih di Dashboard/Laporan.')
+                : tt('Cocok untuk modal, ambil pribadi, dll -- tetap mengurangi saldo kas, TAPI TIDAK dihitung sebagai Biaya Operasional/Laba Bersih.')}
+            </p>
           </div>
 
           {!isBaru ? (

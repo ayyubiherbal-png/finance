@@ -793,6 +793,16 @@ export const TEKS: Record<string, string> = {
   'Kode "{kode}" sudah dipakai kategori lain.': 'Code "{kode}" is already used by another category.',
   'Total Biaya Operasional (semua waktu)': 'Total Operating Expenses (all time)',
   'Laba Bersih (semua waktu)': 'Net Profit (all time)',
+  'Biaya Non-Operasional (semua waktu)': 'Non-Operating Expenses (all time)',
+  'Biaya non-operasional (modal, ambil pribadi, dll) TIDAK ikut mengurangi Laba Bersih di atas -- kelola tandanya di menu Kategori Biaya.':
+    'Non-operating expenses (capital, personal draws, etc.) do NOT reduce the Net Profit above -- manage the flag from the Expense Categories menu.',
+  'Non-operasional': 'Non-operating',
+  'Biaya operasional': 'Operating expense',
+  'Pengeluaran di kategori ini dihitung sebagai Biaya Operasional & mengurangi Laba Bersih di Dashboard/Laporan.':
+    'Expenses in this category are counted as Operating Expenses & reduce Net Profit on the Dashboard/Reports.',
+  'Cocok untuk modal, ambil pribadi, dll -- tetap mengurangi saldo kas, TAPI TIDAK dihitung sebagai Biaya Operasional/Laba Bersih.':
+    'Suited for capital, personal draws, etc. -- still reduces the cash balance, BUT is NOT counted as an Operating Expense/in Net Profit.',
+  'Margin laba kotor': 'Gross margin',
   'Biaya Operasional': 'Operating Expenses',
   'Laba Bersih': 'Net Profit',
   'Memuat jumlah produk...': 'Loading product count...',

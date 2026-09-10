@@ -118,13 +118,22 @@ export function LaporanLaba() {
         <KartuAngka judul="Margin" nilai={`${marginKeseluruhan.toFixed(1)}%`} />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
         <KartuAngka
           judul={tt('Total Biaya Operasional (semua waktu)')}
           nilai={rupiah(ringkasan.data?.total_biaya_operasional ?? 0)}
         />
         <KartuAngka judul={tt('Laba Bersih (semua waktu)')} nilai={rupiah(ringkasan.data?.laba_bersih ?? 0)} />
+        <KartuAngka
+          judul={tt('Biaya Non-Operasional (semua waktu)')}
+          nilai={rupiah(ringkasan.data?.total_biaya_non_operasional ?? 0)}
+        />
       </div>
+      {(ringkasan.data?.total_biaya_non_operasional ?? 0) > 0 ? (
+        <p className="text-xs text-muted-foreground">
+          {tt('Biaya non-operasional (modal, ambil pribadi, dll) TIDAK ikut mengurangi Laba Bersih di atas -- kelola tandanya di menu Kategori Biaya.')}
+        </p>
+      ) : null}
 
       <div className="inline-flex rounded-md border border-border p-0.5">
         {(['produk', 'pelanggan'] as const).map((t) => (

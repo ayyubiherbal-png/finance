@@ -43,6 +43,7 @@ function useKategoriBiayaDenganItem() {
 interface BarisEksporKategoriBiaya {
   kodeKategori: string
   namaKategori: string
+  operasionalKategori: boolean
   kode: string
   nama: string
   aktif: boolean
@@ -51,6 +52,7 @@ interface BarisEksporKategoriBiaya {
 const KOLOM_EKSPOR_KATEGORI_BIAYA: KolomEkspor<BarisEksporKategoriBiaya>[] = [
   { header: 'Kode Kategori', nilai: (r) => r.kodeKategori },
   { header: 'Kategori', nilai: (r) => r.namaKategori },
+  { header: 'Operasional', nilai: (r) => (r.operasionalKategori ? 'Ya' : 'Tidak') },
   { header: 'Kode', nilai: (r) => r.kode },
   { header: 'Nama Pengeluaran', nilai: (r) => r.nama },
   { header: 'Aktif', nilai: (r) => (r.aktif ? 'Ya' : 'Tidak') },
@@ -96,7 +98,14 @@ export function KategoriBiaya() {
               const hasil: BarisEksporKategoriBiaya[] = []
               for (const k of data?.kategori ?? []) {
                 for (const i of itemPerKategori.get(k.id) ?? []) {
-                  hasil.push({ kodeKategori: k.kode, namaKategori: k.nama, kode: i.kode, nama: i.nama, aktif: i.aktif })
+                  hasil.push({
+                    kodeKategori: k.kode,
+                    namaKategori: k.nama,
+                    operasionalKategori: k.operasional,
+                    kode: i.kode,
+                    nama: i.nama,
+                    aktif: i.aktif,
+                  })
                 }
               }
               return hasil
@@ -136,6 +145,11 @@ export function KategoriBiaya() {
                     <Link to={`/kategori-biaya/${k.id}`} className="hover:underline">
                       {idx + 1}. {k.nama} &middot; {k.kode}
                     </Link>
+                    {!k.operasional ? (
+                      <Badge variant="peringatan" className="ml-2">
+                        Non-operasional
+                      </Badge>
+                    ) : null}
                     {!k.aktif ? (
                       <Badge variant="netral" className="ml-2">
                         Nonaktif
