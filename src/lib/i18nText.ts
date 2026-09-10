@@ -355,6 +355,7 @@ export const TEKS: Record<string, string> = {
   'Gudang tersimpan.': 'Warehouse saved.',
   'Kategori tersimpan.': 'Category saved.',
   'Kategori dihapus.': 'Category deleted.',
+  'Produk dihapus.': 'Product deleted.',
   'Harga ditambahkan.': 'Price added.',
   'Harga dihapus.': 'Price removed.',
   'Item ditambahkan.': 'Item added.',
@@ -730,6 +731,12 @@ export const TEKS: Record<string, string> = {
   'Hapus satuan ini?': 'Delete this unit?',
   'Hapus aturan harga ini?': 'Delete this price rule?',
   'Hapus kategori ini?': 'Delete this category?',
+  'Hapus produk ini? Produk yang sudah pernah ada transaksi/stok tidak akan bisa dihapus.':
+    'Delete this product? A product that already has transactions/stock history cannot be deleted.',
+  '{n} varian produk ini akan kehilangan link ke sini (jadi produk mandiri). Yakin hapus?':
+    "{n} variant(s) of this product will lose their link to it (becoming standalone products). Delete anyway?",
+  'Tidak bisa dihapus -- produk ini sudah pernah dipakai di transaksi/stok. Nonaktifkan saja lewat checkbox Aktif di atas.':
+    'Cannot delete -- this product has already been used in a transaction/stock movement. Deactivate it instead using the Active checkbox above.',
   '{n} produk masih pakai kategori ini -- semuanya akan jadi "Tanpa kategori". Yakin hapus?':
     '{n} products still use this category -- they will all become "Uncategorized". Delete anyway?',
   'Kategori "{nama}" sudah ada -- tetap buat baru?': 'Category "{nama}" already exists -- create a new one anyway?',

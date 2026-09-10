@@ -390,6 +390,7 @@ interface ProdukHargaBaris {
 }
 
 function FormEdit({ produkId }: { produkId: string }) {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data: satuanSemua } = useSatuan()
   const { data: kategori } = useKategori()
@@ -517,6 +518,41 @@ function FormEdit({ produkId }: { produkId: string }) {
     const { error } = await supabase.from('produk').update({ aktif: nilai }).eq('id', produkId)
     if (error) setError(error)
     else invalidateSemua()
+  }
+
+  // ---------- Hapus produk ----------
+  // Tidak ada pre-check manual untuk tiap tabel transaksi (stok, SO, PO, faktur,
+  // retur, dst) -- semuanya sudah `references produk(id) on delete restrict` di
+  // migrasi, jadi Postgres sendiri yang menolak (23503) kalau produk ini pernah
+  // dipakai. produk_satuan/produk_harga ikut cascade delete (memang child-nya).
+  const [menghapus, setMenghapus] = useState(false)
+  async function hapus() {
+    if (!produk) return
+    const jumlahAnak = produk.induk_id ? 0 : daftarVarian.length
+    const peringatan =
+      jumlahAnak > 0
+        ? tt('{n} varian produk ini akan kehilangan link ke sini (jadi produk mandiri). Yakin hapus?').replace('{n}', String(jumlahAnak))
+        : tt('Hapus produk ini? Produk yang sudah pernah ada transaksi/stok tidak akan bisa dihapus.')
+    if (!window.confirm(peringatan)) return
+    setError(null)
+    setMenghapus(true)
+    try {
+      const { error } = await supabase.from('produk').delete().eq('id', produkId)
+      if (error) throw error
+      toast('Produk dihapus.')
+      queryClient.invalidateQueries({ queryKey: ['produk'] })
+      navigate('/produk')
+    } catch (e) {
+      const err = e as { code?: string }
+      setError(
+        err.code === '23503'
+          ? new Error(
+              tt('Tidak bisa dihapus -- produk ini sudah pernah dipakai di transaksi/stok. Nonaktifkan saja lewat checkbox Aktif di atas.'),
+            )
+          : e,
+      )
+      setMenghapus(false)
+    }
   }
 
   // ---------- Satuan dasar (boleh diubah HANYA kalau belum pernah ada transaksi
@@ -762,7 +798,11 @@ function FormEdit({ produkId }: { produkId: string }) {
 
           {error ? <PesanError error={error} /> : null}
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between">
+            <Button variant="outline" onClick={hapus} disabled={menghapus}>
+              {menghapus ? <Spinner className="h-3.5 w-3.5" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+              {tt('Hapus')}
+            </Button>
             <Button onClick={simpanDetail} disabled={menyimpan}>
               {menyimpan ? <Spinner /> : null}
               Simpan Detail
