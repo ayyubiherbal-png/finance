@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -8,21 +8,34 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useAkunKasBankAktif, useNamaPengeluaranAktif, type NamaPengeluaranDenganKategori } from '@/lib/queries'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { toast } from '@/components/Toast'
+import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import { Badge, Button, Card, CardContent, Input, InputAngka, Label, PesanError, Select, Spinner } from '@/components/ui'
 import { LABEL_STATUS, VARIAN_STATUS } from '@/pages/SalesOrder'
 import { LABEL_METODE } from '@/pages/PenerimaanKas'
 import type { MetodeBayar, StatusDokumen } from '@/types/db'
 
-/** Kelompokkan Nama Pengeluaran per kategori induknya (urut kode kategori)
- * supaya dropdown-nya jadi <optgroup> -- gampang dicari di kategori mana. */
-function kelompokkanPerKategori(item: NamaPengeluaranDenganKategori[]) {
-  const peta = new Map<string, { kode: string; nama: string; item: NamaPengeluaranDenganKategori[] }>()
-  for (const i of item) {
-    const ada = peta.get(i.kategori_biaya_id)
-    if (ada) ada.item.push(i)
-    else peta.set(i.kategori_biaya_id, { kode: i.kategori?.kode ?? '', nama: i.kategori?.nama ?? '', item: [i] })
+/** Cari Nama Pengeluaran dari daftar yang sudah dimuat (master data kecil,
+ * tidak perlu round-trip server per ketikan) -- kode/nama sendiri maupun
+ * kode/nama kategori induknya ikut dicocokkan, supaya bisa dicari dari
+ * kategorinya juga (mis. ketik "marketing"). */
+function buatPencarianNamaPengeluaran(daftar: NamaPengeluaranDenganKategori[]) {
+  return async (kueri: string): Promise<OpsiCombobox[]> => {
+    const q = kueri.trim().toLowerCase()
+    const cocok = !q
+      ? daftar
+      : daftar.filter(
+          (i) =>
+            i.kode.toLowerCase().includes(q) ||
+            i.nama.toLowerCase().includes(q) ||
+            i.kategori?.kode.toLowerCase().includes(q) ||
+            i.kategori?.nama.toLowerCase().includes(q),
+        )
+    return cocok.map((i) => ({
+      value: i.id,
+      label: `${i.kode} - ${i.nama}`,
+      sublabel: i.kategori ? `${i.kategori.kode} - ${i.kategori.nama}` : undefined,
+    }))
   }
-  return [...peta.values()].sort((a, b) => a.kode.localeCompare(b.kode))
 }
 
 export function PengeluaranKasForm() {
@@ -40,7 +53,7 @@ function FormBaru() {
   const { profil } = useAuth()
   const { data: akunAktif } = useAkunKasBankAktif()
   const { data: namaPengeluaranAktif } = useNamaPengeluaranAktif()
-  const kelompokPengeluaran = useMemo(() => kelompokkanPerKategori(namaPengeluaranAktif ?? []), [namaPengeluaranAktif])
+  const [namaPengeluaranTerpilih, setNamaPengeluaranTerpilih] = useState<OpsiCombobox | null>(null)
 
   const [header, setHeader] = useState({
     tanggal: tanggalISO(),
@@ -118,23 +131,16 @@ function FormBaru() {
         <CardContent className="space-y-4 p-4">
           <div className="space-y-1.5">
             <Label>Nama pengeluaran</Label>
-            <Select
-              value={header.nama_pengeluaran_id}
-              onChange={(e) => setHeader((h) => ({ ...h, nama_pengeluaran_id: e.target.value }))}
-            >
-              <option value="" disabled>
-                Pilih nama pengeluaran...
-              </option>
-              {kelompokPengeluaran.map((k) => (
-                <optgroup key={k.kode} label={`${k.kode} - ${k.nama}`}>
-                  {k.item.map((i) => (
-                    <option key={i.id} value={i.id}>
-                      {i.kode} - {i.nama}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </Select>
+            <Combobox
+              value={header.nama_pengeluaran_id || null}
+              opsiTerpilih={namaPengeluaranTerpilih}
+              onChange={(value, opsi) => {
+                setHeader((h) => ({ ...h, nama_pengeluaran_id: value }))
+                setNamaPengeluaranTerpilih(opsi)
+              }}
+              cariOpsi={buatPencarianNamaPengeluaran(namaPengeluaranAktif ?? [])}
+              placeholder="Pilih nama pengeluaran..."
+            />
             {namaPengeluaranAktif && namaPengeluaranAktif.length === 0 ? (
               <p className="text-xs text-destructive">{tt('Belum ada nama pengeluaran. Tambahkan dulu di menu Kategori Biaya.')}</p>
             ) : null}
