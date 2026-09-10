@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal, terlihatSepertiNama } from '@/lib/format'
+import { rupiah, tanggal, tanggalISO, terlihatSepertiNama } from '@/lib/format'
 import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -77,6 +79,21 @@ function useDaftarFaktur(cari: string, statusBayar: string, periode: RentangTang
   })
 }
 
+function namaPembeli(f: Pick<BarisFaktur, 'so' | 'pelanggan'>): string {
+  return (f.so?.nama_penerima && terlihatSepertiNama(f.so.nama_penerima) ? f.so.nama_penerima : null) || f.pelanggan?.nama || '-'
+}
+
+const KOLOM_EKSPOR_FAKTUR: KolomEkspor<BarisFaktur>[] = [
+  { header: 'Nomor', nilai: (r) => r.nomor },
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Pelanggan', nilai: (r) => namaPembeli(r) },
+  { header: 'Jatuh Tempo', nilai: (r) => r.jatuh_tempo, format: (v) => tanggal(v as string) },
+  { header: 'Total', nilai: (r) => r.total, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Sisa', nilai: (r) => r.sisa, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Status', nilai: (r) => LABEL_STATUS[r.status] },
+  { header: 'Status Bayar', nilai: (r) => LABEL_BAYAR[r.status_bayar] },
+]
+
 export function FakturPenjualan() {
   const [cari, setCari] = useState('')
   const [statusBayar, setStatusBayar] = useState('')
@@ -90,12 +107,36 @@ export function FakturPenjualan() {
           <h1 className="text-2xl font-bold tracking-tight">{tt('Faktur Penjualan')}</h1>
           <p className="text-sm text-muted-foreground">{tt('Ditagihkan dari satu atau beberapa Surat Jalan')}</p>
         </div>
-        <Button variant="pill" asChild>
-          <Link to="/faktur-penjualan/baru">
-            <Plus className="h-4 w-4" />
-            Faktur Baru
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase
+                .from('faktur_penjualan')
+                .select(
+                  'id, nomor, tanggal, jatuh_tempo, kanal, status, status_bayar, total, sisa, pelanggan:pelanggan_id(nama), so:so_id(nama_penerima), pesanan_marketplace_impor(status_platform)',
+                )
+              if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
+              if (statusBayar) q = q.eq('status_bayar', statusBayar)
+              if (periode.dari) q = q.gte('tanggal', periode.dari)
+              if (periode.sampai) q = q.lte('tanggal', periode.sampai)
+              const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
+              if (error) throw error
+              return (data ?? []) as unknown as BarisFaktur[]
+            }}
+            kolom={KOLOM_EKSPOR_FAKTUR}
+            opsi={{
+              namaFile: `faktur-penjualan-${tanggalISO()}`,
+              judul: tt('Faktur Penjualan'),
+              subjudul: periode.dari || periode.sampai ? `Periode ${periode.dari ?? '...'} s/d ${periode.sampai ?? '...'}` : undefined,
+            }}
+          />
+          <Button variant="pill" asChild>
+            <Link to="/faktur-penjualan/baru">
+              <Plus className="h-4 w-4" />
+              Faktur Baru
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

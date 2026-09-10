@@ -1,9 +1,13 @@
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { tanggal as fmtTanggal } from '@/lib/format'
+import { tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { Badge, Card, CardContent, KondisiKosong, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import type { RiwayatFollowUp as BarisRiwayat, VTingkatFuSelesai } from '@/types/db'
+
+type BarisRiwayatTampil = BarisRiwayat & { profil: { nama: string } | null }
 
 /**
  * Log "Tandai Selesai" dari Tugas Follow-Up (0029) -- fitur #1 dari 5
@@ -46,13 +50,15 @@ function useTingkatFuSelesai() {
   })
 }
 
+const SELECT_RIWAYAT_FU = '*, profil:selesai_oleh(nama)'
+
 function useRiwayatFollowUp() {
   return useQuery({
     queryKey: ['riwayat-follow-up'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('riwayat_follow_up')
-        .select('*, profil:selesai_oleh(nama)')
+        .select(SELECT_RIWAYAT_FU)
         .order('selesai_pada', { ascending: false })
         .limit(300)
       if (error) throw error
@@ -60,6 +66,14 @@ function useRiwayatFollowUp() {
     },
   })
 }
+
+const KOLOM_EKSPOR_RIWAYAT_FU: KolomEkspor<BarisRiwayatTampil>[] = [
+  { header: 'Tanggal', nilai: (r) => r.selesai_pada, format: (v) => fmtTanggal(v as string) },
+  { header: 'Nama', nilai: (r) => r.nama || '-' },
+  { header: 'Kategori', nilai: (r) => tt(LABEL_KATEGORI[r.kategori] ?? r.kategori) },
+  { header: 'Catatan', nilai: (r) => r.catatan || '-' },
+  { header: 'Diselesaikan oleh', nilai: (r) => r.profil?.nama ?? '-' },
+]
 
 export function RiwayatFollowUp() {
   const { data, isLoading, error } = useRiwayatFollowUp()
@@ -71,9 +85,24 @@ export function RiwayatFollowUp() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('Riwayat Follow-Up')}</h1>
-        <p className="text-sm text-muted-foreground">{tt('Catatan tugas follow-up yang sudah ditandai selesai -- siapa, kapan, dan hasilnya apa.')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Riwayat Follow-Up')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Catatan tugas follow-up yang sudah ditandai selesai -- siapa, kapan, dan hasilnya apa.')}</p>
+        </div>
+        <TombolEkspor
+          ambilData={async () => {
+            const { data, error } = await supabase
+              .from('riwayat_follow_up')
+              .select(SELECT_RIWAYAT_FU)
+              .order('selesai_pada', { ascending: false })
+              .limit(10000)
+            if (error) throw error
+            return (data ?? []) as BarisRiwayatTampil[]
+          }}
+          kolom={KOLOM_EKSPOR_RIWAYAT_FU}
+          opsi={{ namaFile: `riwayat-follow-up-${tanggalISO()}`, judul: tt('Riwayat Follow-Up') }}
+        />
       </div>
 
       {tingkat && tingkat.length > 0 ? (

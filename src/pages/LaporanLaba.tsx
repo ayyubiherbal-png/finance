@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { rupiah, angka } from '@/lib/format'
+import { rupiah, angka, tanggalISO } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Card,
   CardContent,
@@ -17,7 +19,7 @@ import {
   Thead,
   Tr,
 } from '@/components/ui'
-import type { VLabaPelanggan, VLabaProduk } from '@/types/db'
+import type { VLabaPelanggan, VLabaProduk, VRingkasanLabaBiaya } from '@/types/db'
 
 function useLabaProduk() {
   return useQuery({
@@ -51,10 +53,22 @@ function useLabaPelanggan() {
   })
 }
 
+function useRingkasanLabaBiaya() {
+  return useQuery({
+    queryKey: ['laporan-laba-ringkasan'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('v_ringkasan_laba_biaya').select('*').single()
+      if (error) throw error
+      return data as VRingkasanLabaBiaya
+    },
+  })
+}
+
 export function LaporanLaba() {
   const [tab, setTab] = useState<'produk' | 'pelanggan'>('produk')
   const produk = useLabaProduk()
   const pelanggan = useLabaPelanggan()
+  const ringkasan = useRingkasanLabaBiaya()
 
   const aktif = tab === 'produk' ? produk : pelanggan
   const data = aktif.data
@@ -62,17 +76,54 @@ export function LaporanLaba() {
   const totalLaba = (data ?? []).reduce((t: number, r: { laba_kotor: number }) => t + Number(r.laba_kotor), 0)
   const marginKeseluruhan = totalOmzet > 0 ? (totalLaba / totalOmzet) * 100 : 0
 
+  const kolomEkspor: KolomEkspor<VLabaProduk | VLabaPelanggan>[] =
+    tab === 'produk'
+      ? [
+          { header: 'Produk', nilai: (r) => (r as VLabaProduk).nama_produk },
+          { header: 'Kode', nilai: (r) => (r as VLabaProduk).kode_produk },
+          { header: 'Qty Terjual', nilai: (r) => (r as VLabaProduk).qty_terjual, format: (v) => angka(v as number), rata: 'kanan' },
+          { header: 'Omzet', nilai: (r) => r.omzet, format: (v) => rupiah(v as number), rata: 'kanan' },
+          { header: 'HPP', nilai: (r) => r.hpp, format: (v) => rupiah(v as number), rata: 'kanan' },
+          { header: 'Laba Kotor', nilai: (r) => r.laba_kotor, format: (v) => rupiah(v as number), rata: 'kanan' },
+          { header: 'Margin', nilai: (r) => r.margin_persen, format: (v) => `${(v as number).toFixed(1)}%`, rata: 'kanan' },
+        ]
+      : [
+          { header: 'Pelanggan', nilai: (r) => (r as VLabaPelanggan).nama_pelanggan },
+          { header: 'Jml Faktur', nilai: (r) => (r as VLabaPelanggan).jumlah_faktur, rata: 'kanan' },
+          { header: 'Omzet', nilai: (r) => r.omzet, format: (v) => rupiah(v as number), rata: 'kanan' },
+          { header: 'HPP', nilai: (r) => r.hpp, format: (v) => rupiah(v as number), rata: 'kanan' },
+          { header: 'Laba Kotor', nilai: (r) => r.laba_kotor, format: (v) => rupiah(v as number), rata: 'kanan' },
+          { header: 'Margin', nilai: (r) => r.margin_persen, format: (v) => `${(v as number).toFixed(1)}%`, rata: 'kanan' },
+        ]
+
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('Laporan Laba Kotor')}</h1>
-        <p className="text-sm text-muted-foreground">{tt('Omzet dikurangi HPP, dari seluruh faktur penjualan')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Laporan Laba Kotor')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Omzet dikurangi HPP, dari seluruh faktur penjualan')}</p>
+        </div>
+        {data && data.length > 0 ? (
+          <TombolEkspor
+            ambilData={async () => data}
+            kolom={kolomEkspor}
+            opsi={{ namaFile: `laporan-laba-${tab}-${tanggalISO()}`, judul: tt('Laporan Laba Kotor') }}
+          />
+        ) : null}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <KartuAngka judul="Omzet" nilai={rupiah(totalOmzet)} />
         <KartuAngka judul="Laba kotor" nilai={rupiah(totalLaba)} />
         <KartuAngka judul="Margin" nilai={`${marginKeseluruhan.toFixed(1)}%`} />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <KartuAngka
+          judul={tt('Total Biaya Operasional (semua waktu)')}
+          nilai={rupiah(ringkasan.data?.total_biaya_operasional ?? 0)}
+        />
+        <KartuAngka judul={tt('Laba Bersih (semua waktu)')} nilai={rupiah(ringkasan.data?.laba_bersih ?? 0)} />
       </div>
 
       <div className="inline-flex rounded-md border border-border p-0.5">

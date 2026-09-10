@@ -4,9 +4,11 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { tanggal } from '@/lib/format'
+import { tanggal, tanggalISO } from '@/lib/format'
 import { kutipFilterPostgrest } from '@/lib/utils'
 import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -87,6 +89,16 @@ function useDaftarTiket(cari: string, status: string, periode: RentangTanggal) {
   })
 }
 
+const KOLOM_EKSPOR_TIKET: KolomEkspor<BarisTiket>[] = [
+  { header: 'Nomor', nilai: (r) => r.nomor },
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Pelanggan', nilai: (r) => r.pelanggan?.nama ?? '-' },
+  { header: 'Judul', nilai: (r) => r.judul },
+  { header: 'Prioritas', nilai: (r) => LABEL_PRIORITAS[r.prioritas] },
+  { header: 'Ditugaskan ke', nilai: (r) => r.ditugaskan?.nama ?? '-' },
+  { header: 'Status', nilai: (r) => LABEL_STATUS_TIKET[r.status] },
+]
+
 export function Tiket() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
@@ -100,12 +112,33 @@ export function Tiket() {
           <h1 className="text-2xl font-bold tracking-tight">{tt('Tiket')}</h1>
           <p className="text-sm text-muted-foreground">{tt('Lacak komplain, pertanyaan, dan retur pelanggan sampai tuntas')}</p>
         </div>
-        <Button variant="pill" asChild>
-          <Link to="/tiket/baru">
-            <Plus className="h-4 w-4" />
-            Tiket Baru
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase
+                .from('tiket')
+                .select('id, nomor, tanggal, judul, status, prioritas, pelanggan:pelanggan_id(nama), ditugaskan:ditugaskan_ke(nama)')
+              if (cari.trim()) {
+                const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+                q = q.or(`nomor.ilike.${pola},judul.ilike.${pola}`)
+              }
+              if (status) q = q.eq('status', status)
+              if (periode.dari) q = q.gte('tanggal', periode.dari)
+              if (periode.sampai) q = q.lte('tanggal', periode.sampai)
+              const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
+              if (error) throw error
+              return (data ?? []) as unknown as BarisTiket[]
+            }}
+            kolom={KOLOM_EKSPOR_TIKET}
+            opsi={{ namaFile: `tiket-${tanggalISO()}`, judul: tt('Tiket') }}
+          />
+          <Button variant="pill" asChild>
+            <Link to="/tiket/baru">
+              <Plus className="h-4 w-4" />
+              Tiket Baru
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

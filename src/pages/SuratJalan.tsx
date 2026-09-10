@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Printer, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { tanggal, terlihatSepertiNama } from '@/lib/format'
+import { tanggal, tanggalISO, terlihatSepertiNama } from '@/lib/format'
 import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -55,6 +57,18 @@ function useDaftarSJ(cari: string, status: string, periode: RentangTanggal) {
   })
 }
 
+function namaPenerimaSj(sj: Pick<BarisSJ, 'nama_penerima' | 'pelanggan'>): string {
+  return (sj.nama_penerima && terlihatSepertiNama(sj.nama_penerima) ? sj.nama_penerima : null) || sj.pelanggan?.nama || '-'
+}
+
+const KOLOM_EKSPOR_SJ: KolomEkspor<BarisSJ>[] = [
+  { header: 'Nomor', nilai: (r) => r.nomor },
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Pelanggan', nilai: (r) => namaPenerimaSj(r) },
+  { header: 'Gudang', nilai: (r) => r.gudang?.nama ?? '-' },
+  { header: 'Status', nilai: (r) => LABEL_STATUS[r.status] },
+]
+
 export function SuratJalan() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
@@ -86,11 +100,33 @@ export function SuratJalan() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('Surat Jalan')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {tt('Dibuat dari Sales Order yang sudah disetujui. Untuk membuat baru, buka SO-nya dan klik "Buat Surat Jalan". Centang beberapa baris untuk mencetak banyak label pengiriman sekaligus.')}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Surat Jalan')}</h1>
+          <p className="text-sm text-muted-foreground">
+            {tt('Dibuat dari Sales Order yang sudah disetujui. Untuk membuat baru, buka SO-nya dan klik "Buat Surat Jalan". Centang beberapa baris untuk mencetak banyak label pengiriman sekaligus.')}
+          </p>
+        </div>
+        <TombolEkspor
+          ambilData={async () => {
+            let q = supabase
+              .from('surat_jalan')
+              .select('id, nomor, tanggal, status, nama_penerima, pelanggan:pelanggan_id(nama), gudang:gudang_id(nama)')
+            if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
+            if (status) q = q.eq('status', status)
+            if (periode.dari) q = q.gte('tanggal', periode.dari)
+            if (periode.sampai) q = q.lte('tanggal', periode.sampai)
+            const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
+            if (error) throw error
+            return (data ?? []) as unknown as BarisSJ[]
+          }}
+          kolom={KOLOM_EKSPOR_SJ}
+          opsi={{
+            namaFile: `surat-jalan-${tanggalISO()}`,
+            judul: tt('Surat Jalan'),
+            subjudul: periode.dari || periode.sampai ? `Periode ${periode.dari ?? '...'} s/d ${periode.sampai ?? '...'}` : undefined,
+          }}
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

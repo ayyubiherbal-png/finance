@@ -4,10 +4,12 @@ import { tt } from '@/lib/i18nText'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, History, MessageCircle, RefreshCw, Search, UserPlus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal as fmtTanggal, tanggalWaktu } from '@/lib/format'
+import { rupiah, tanggal as fmtTanggal, tanggalWaktu, tanggalISO } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import { toast } from '@/components/Toast'
 import { cn, kutipFilterPostgrest } from '@/lib/utils'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -103,6 +105,19 @@ interface FormEdit {
 function siapDijadikanPelanggan(p: BarisPembeli): boolean {
   return !!(p.nama?.trim() && p.telepon?.trim() && p.alamat?.trim())
 }
+
+const KOLOM_EKSPOR_PEMBELI_MP: KolomEkspor<BarisPembeli>[] = [
+  { header: 'Kanal', nilai: (r) => LABEL_KANAL[r.kanal] },
+  { header: 'Nama', nilai: (r) => r.nama || '-' },
+  { header: 'Segmen', nilai: (r) => INFO_SEGMEN[segmenPembeli(r)].label },
+  { header: 'Telepon', nilai: (r) => r.telepon || '-' },
+  { header: 'Alamat', nilai: (r) => r.alamat || '-' },
+  { header: 'Jml. Pesanan', nilai: (r) => r.jumlah_pesanan, rata: 'kanan' },
+  { header: 'Total Belanja', nilai: (r) => r.total_belanja, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Pesanan Terakhir', nilai: (r) => r.pesanan_terakhir ?? '-', format: (v) => (v && v !== '-' ? fmtTanggal(v as string) : '-') },
+  { header: 'Catatan FU', nilai: (r) => r.catatan || '-' },
+  { header: 'Sudah Jadi Pelanggan', nilai: (r) => (r.pelanggan_id ? 'Ya' : 'Tidak') },
+]
 
 export function PembeliMarketplace() {
   const navigate = useNavigate()
@@ -203,11 +218,18 @@ export function PembeliMarketplace() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('Pembeli Marketplace')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {tt('Segmentasi otomatis dari riwayat pesanan -- klik segmen untuk menyaring. Bisa diedit & dihapus bebas, tidak memengaruhi Faktur/Surat Jalan yang sudah ada.')}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Pembeli Marketplace')}</h1>
+          <p className="text-sm text-muted-foreground">
+            {tt('Segmentasi otomatis dari riwayat pesanan -- klik segmen untuk menyaring. Bisa diedit & dihapus bebas, tidak memengaruhi Faktur/Surat Jalan yang sudah ada.')}
+          </p>
+        </div>
+        <TombolEkspor
+          ambilData={async () => tersaring}
+          kolom={KOLOM_EKSPOR_PEMBELI_MP}
+          opsi={{ namaFile: `pembeli-marketplace-${tanggalISO()}`, judul: tt('Pembeli Marketplace') }}
+        />
       </div>
 
       {semua.length > 0 ? (

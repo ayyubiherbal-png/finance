@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah } from '@/lib/format'
+import { rupiah, tanggalISO } from '@/lib/format'
 import { kutipFilterPostgrest } from '@/lib/utils'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -43,6 +45,16 @@ function useSaldoKasBank(cari: string) {
   })
 }
 
+const KOLOM_EKSPOR_AKUN: KolomEkspor<VSaldoKasBank>[] = [
+  { header: 'Kode', nilai: (r) => r.kode },
+  { header: 'Nama', nilai: (r) => r.nama },
+  { header: 'Jenis', nilai: (r) => LABEL_JENIS[r.jenis] },
+  { header: 'No. Rekening', nilai: (r) => r.nomor_rekening ?? '-' },
+  { header: 'Saldo Awal', nilai: (r) => r.saldo_awal, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Saldo', nilai: (r) => r.saldo, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Aktif', nilai: (r) => (r.aktif ? 'Ya' : 'Tidak') },
+]
+
 export function AkunKasBank() {
   const [cari, setCari] = useState('')
   const { data, isLoading, error, isFetching } = useSaldoKasBank(cari)
@@ -63,6 +75,20 @@ export function AkunKasBank() {
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input className="pl-8" placeholder="Cari nama atau kode..." value={cari} onChange={(e) => setCari(e.target.value)} />
           </div>
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase.from('v_saldo_kas_bank').select('*')
+              if (cari.trim()) {
+                const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+                q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+              }
+              const { data, error } = await q.order('jenis').order('nama').returns<VSaldoKasBank[]>()
+              if (error) throw error
+              return data ?? []
+            }}
+            kolom={KOLOM_EKSPOR_AKUN}
+            opsi={{ namaFile: `akun-kas-bank-${tanggalISO()}`, judul: tt('Kas & Bank') }}
+          />
           <Button variant="pill" asChild>
             <Link to="/kas-bank/baru">
               <Plus className="h-4 w-4" />

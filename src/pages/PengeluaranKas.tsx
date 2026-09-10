@@ -26,78 +26,87 @@ import {
   Tr,
 } from '@/components/ui'
 import { LABEL_STATUS, VARIAN_STATUS } from '@/pages/SalesOrder'
-import type { StatusDokumen } from '@/types/db'
+import { LABEL_METODE } from '@/pages/PenerimaanKas'
+import type { MetodeBayar, StatusDokumen } from '@/types/db'
 
-interface Baris {
+interface BarisPengeluaran {
   id: string
   nomor: string
   tanggal: string
+  metode: MetodeBayar
+  jumlah: number
   status: StatusDokumen
-  total: number
-  pelanggan: { nama: string } | null
+  kategori: { nama: string } | null
+  akun: { nama: string } | null
 }
 
-function useDaftar(cari: string, status: string, periode: RentangTanggal) {
+function useDaftarPengeluaran(cari: string, status: string, periode: RentangTanggal) {
   return useQuery({
-    queryKey: ['retur-penjualan', cari, status, periode],
+    queryKey: ['pengeluaran-kas', cari, status, periode],
     queryFn: async () => {
-      let q = supabase.from('retur_penjualan').select('id, nomor, tanggal, status, total, pelanggan:pelanggan_id(nama)')
+      let q = supabase
+        .from('pengeluaran_kas')
+        .select('id, nomor, tanggal, metode, jumlah, status, kategori:kategori_biaya_id(nama), akun:akun_id(nama)')
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
       if (periode.dari) q = q.gte('tanggal', periode.dari)
       if (periode.sampai) q = q.lte('tanggal', periode.sampai)
       const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(100)
       if (error) throw error
-      return (data ?? []) as unknown as Baris[]
+      return (data ?? []) as unknown as BarisPengeluaran[]
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
 }
 
-const KOLOM_EKSPOR_RETUR_JUAL: KolomEkspor<Baris>[] = [
+const KOLOM_EKSPOR_PENGELUARAN: KolomEkspor<BarisPengeluaran>[] = [
   { header: 'Nomor', nilai: (r) => r.nomor },
   { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
-  { header: 'Pelanggan', nilai: (r) => r.pelanggan?.nama ?? '-' },
-  { header: 'Total', nilai: (r) => r.total, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Kategori', nilai: (r) => r.kategori?.nama ?? '-' },
+  { header: 'Akun', nilai: (r) => r.akun?.nama ?? '-' },
+  { header: 'Metode', nilai: (r) => LABEL_METODE[r.metode] },
+  { header: 'Jumlah', nilai: (r) => r.jumlah, format: (v) => rupiah(v as number), rata: 'kanan' },
   { header: 'Status', nilai: (r) => LABEL_STATUS[r.status] },
 ]
 
-export function ReturPenjualan() {
+export function PengeluaranKas() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
   const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
-  const { data, isLoading, error, isFetching } = useDaftar(cari, status, periode)
+  const { data, isLoading, error, isFetching } = useDaftarPengeluaran(cari, status, periode)
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{tt('Retur Penjualan')}</h1>
-          <p className="text-sm text-muted-foreground">{tt('Barang kembali dari pelanggan')}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Pengeluaran Kas')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Biaya operasional umum -- sewa, listrik, gaji, dll, tanpa faktur supplier')}</p>
         </div>
         <div className="flex gap-2">
           <TombolEkspor
             ambilData={async () => {
-              let q = supabase.from('retur_penjualan').select('id, nomor, tanggal, status, total, pelanggan:pelanggan_id(nama)')
+              let q = supabase
+                .from('pengeluaran_kas')
+                .select('id, nomor, tanggal, metode, jumlah, status, kategori:kategori_biaya_id(nama), akun:akun_id(nama)')
               if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
               if (status) q = q.eq('status', status)
               if (periode.dari) q = q.gte('tanggal', periode.dari)
               if (periode.sampai) q = q.lte('tanggal', periode.sampai)
               const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
               if (error) throw error
-              return (data ?? []) as unknown as Baris[]
+              return (data ?? []) as unknown as BarisPengeluaran[]
             }}
-            kolom={KOLOM_EKSPOR_RETUR_JUAL}
+            kolom={KOLOM_EKSPOR_PENGELUARAN}
             opsi={{
-              namaFile: `retur-penjualan-${tanggalISO()}`,
-              judul: tt('Retur Penjualan'),
+              namaFile: `pengeluaran-kas-${tanggalISO()}`,
+              judul: tt('Pengeluaran Kas'),
               subjudul: periode.dari || periode.sampai ? `Periode ${periode.dari ?? '...'} s/d ${periode.sampai ?? '...'}` : undefined,
             }}
           />
           <Button variant="pill" asChild>
-            <Link to="/retur-penjualan/baru">
+            <Link to="/pengeluaran-kas/baru">
               <Plus className="h-4 w-4" />
-              Retur Baru
+              Catat Pengeluaran
             </Link>
           </Button>
         </div>
@@ -110,11 +119,9 @@ export function ReturPenjualan() {
         </div>
         <Select className="w-full sm:w-48" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">Semua status</option>
-          {Object.entries(LABEL_STATUS).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
+          {/* Pengeluaran kas cuma pernah 'disetujui' (default saat dibuat) atau 'dibatalkan'. */}
+          <option value="disetujui">{LABEL_STATUS.disetujui}</option>
+          <option value="dibatalkan">{LABEL_STATUS.dibatalkan}</option>
         </Select>
         <FilterPeriode onChange={setPeriode} />
       </div>
@@ -130,7 +137,7 @@ export function ReturPenjualan() {
               <PesanError error={error} />
             </div>
           ) : !data || data.length === 0 ? (
-            <KondisiKosong pesan="Belum ada Retur Penjualan." />
+            <KondisiKosong pesan="Belum ada Pengeluaran Kas." />
           ) : (
             <>
               <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
@@ -138,24 +145,28 @@ export function ReturPenjualan() {
                   <Tr>
                     <Th>Nomor</Th>
                     <Th>Tanggal</Th>
-                    <Th>Pelanggan</Th>
-                    <Th className="text-right">Total</Th>
+                    <Th>Kategori</Th>
+                    <Th>Akun</Th>
+                    <Th>Metode</Th>
+                    <Th className="text-right">Jumlah</Th>
                     <Th>Status</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {data.map((r) => (
-                    <Tr key={r.id}>
+                  {data.map((p) => (
+                    <Tr key={p.id}>
                       <Td>
-                        <Link to={`/retur-penjualan/${r.id}`} className="font-mono text-xs text-primary hover:underline">
-                          {r.nomor}
+                        <Link to={`/pengeluaran-kas/${p.id}`} className="font-mono text-xs text-primary hover:underline">
+                          {p.nomor}
                         </Link>
                       </Td>
-                      <Td className="text-muted-foreground">{tanggal(r.tanggal)}</Td>
-                      <Td className="font-medium">{r.pelanggan?.nama ?? '-'}</Td>
-                      <Td className="tabular text-right font-medium">{rupiah(r.total)}</Td>
+                      <Td className="text-muted-foreground">{tanggal(p.tanggal)}</Td>
+                      <Td className="font-medium">{p.kategori?.nama ?? '-'}</Td>
+                      <Td className="text-muted-foreground">{p.akun?.nama ?? '-'}</Td>
+                      <Td className="text-muted-foreground">{LABEL_METODE[p.metode]}</Td>
+                      <Td className="tabular text-right font-medium">{rupiah(p.jumlah)}</Td>
                       <Td>
-                        <Badge variant={VARIAN_STATUS[r.status]}>{LABEL_STATUS[r.status]}</Badge>
+                        <Badge variant={VARIAN_STATUS[p.status]}>{LABEL_STATUS[p.status]}</Badge>
                       </Td>
                     </Tr>
                   ))}
@@ -163,9 +174,9 @@ export function ReturPenjualan() {
               </Table>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
-                  {data.length >= 100 ? tt('Total 100 retur teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('retur')}`}
+                  {data.length >= 100 ? tt('Total 100 pengeluaran teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('pengeluaran')}`}
                 </span>
-                <span className="tabular font-semibold">{rupiah(data.reduce((t, r) => t + r.total, 0))}</span>
+                <span className="tabular font-semibold">{rupiah(data.reduce((t, p) => t + p.jumlah, 0))}</span>
               </div>
             </>
           )}

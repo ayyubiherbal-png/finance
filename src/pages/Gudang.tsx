@@ -5,6 +5,9 @@ import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { kutipFilterPostgrest } from '@/lib/utils'
+import { tanggalISO } from '@/lib/format'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -40,6 +43,14 @@ function useGudang(cari: string) {
   })
 }
 
+const KOLOM_EKSPOR_GUDANG: KolomEkspor<GudangRow>[] = [
+  { header: 'Kode', nilai: (r) => r.kode },
+  { header: 'Nama', nilai: (r) => r.nama },
+  { header: 'Alamat', nilai: (r) => r.alamat ?? '-' },
+  { header: 'Utama', nilai: (r) => (r.utama ? 'Ya' : 'Tidak') },
+  { header: 'Aktif', nilai: (r) => (r.aktif ? 'Ya' : 'Tidak') },
+]
+
 export function Gudang() {
   const [cari, setCari] = useState('')
   const { data, isLoading, error, isFetching } = useGudang(cari)
@@ -56,6 +67,11 @@ export function Gudang() {
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input className="pl-8" placeholder="Cari nama atau kode..." value={cari} onChange={(e) => setCari(e.target.value)} />
           </div>
+          <TombolEkspor
+            ambilData={async () => data ?? []}
+            kolom={KOLOM_EKSPOR_GUDANG}
+            opsi={{ namaFile: `gudang-${tanggalISO()}`, judul: tt('Gudang') }}
+          />
           <Button variant="pill" asChild>
             <Link to="/gudang/baru">
               <Plus className="h-4 w-4" />

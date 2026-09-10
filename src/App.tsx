@@ -11,6 +11,8 @@ import { Produk } from '@/pages/Produk'
 import { ProdukForm } from '@/pages/ProdukForm'
 import { KategoriProduk } from '@/pages/KategoriProduk'
 import { KategoriProdukForm } from '@/pages/KategoriProdukForm'
+import { KategoriBiaya } from '@/pages/KategoriBiaya'
+import { KategoriBiayaForm } from '@/pages/KategoriBiayaForm'
 import { Pelanggan } from '@/pages/Pelanggan'
 import { PelangganForm } from '@/pages/PelangganForm'
 import { PembeliMarketplace } from '@/pages/PembeliMarketplace'
@@ -48,6 +50,8 @@ import { FakturPenjualanForm } from '@/pages/FakturPenjualanForm'
 import { FakturPenjualanCetak } from '@/pages/FakturPenjualanCetak'
 import { PenerimaanKas } from '@/pages/PenerimaanKas'
 import { PenerimaanKasForm } from '@/pages/PenerimaanKasForm'
+import { PengeluaranKas } from '@/pages/PengeluaranKas'
+import { PengeluaranKasForm } from '@/pages/PengeluaranKasForm'
 import { PurchaseOrder } from '@/pages/PurchaseOrder'
 import { PurchaseOrderForm } from '@/pages/PurchaseOrderForm'
 import { PenerimaanBarang } from '@/pages/PenerimaanBarang'
@@ -97,6 +101,8 @@ function Rute() {
         <Route path="produk/:id" element={<ProdukForm />} />
         <Route path="kategori-produk" element={<KategoriProduk />} />
         <Route path="kategori-produk/:id" element={<KategoriProdukForm />} />
+        <Route path="kategori-biaya" element={<KategoriBiaya />} />
+        <Route path="kategori-biaya/:id" element={<KategoriBiayaForm />} />
         <Route path="pelanggan" element={<Pelanggan />} />
         <Route path="pelanggan/:id" element={<PelangganForm />} />
         <Route path="pembeli-marketplace" element={<PembeliMarketplace />} />
@@ -133,6 +139,8 @@ function Rute() {
         <Route path="faktur-penjualan/:id" element={<FakturPenjualanForm />} />
         <Route path="penerimaan-kas" element={<PenerimaanKas />} />
         <Route path="penerimaan-kas/:id" element={<PenerimaanKasForm />} />
+        <Route path="pengeluaran-kas" element={<PengeluaranKas />} />
+        <Route path="pengeluaran-kas/:id" element={<PengeluaranKasForm />} />
         <Route path="purchase-order" element={<PurchaseOrder />} />
         <Route path="purchase-order/:id" element={<PurchaseOrderForm />} />
         <Route path="penerimaan-barang" element={<PenerimaanBarang />} />

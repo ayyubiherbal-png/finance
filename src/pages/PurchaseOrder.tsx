@@ -4,7 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal } from '@/lib/format'
+import { rupiah, tanggal, tanggalISO } from '@/lib/format'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -49,6 +51,14 @@ function useDaftarPO(cari: string, status: string) {
   })
 }
 
+const KOLOM_EKSPOR_PO: KolomEkspor<BarisPO>[] = [
+  { header: 'Nomor', nilai: (r) => r.nomor },
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Supplier', nilai: (r) => r.supplier?.nama ?? '-' },
+  { header: 'Total', nilai: (r) => r.total, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Status', nilai: (r) => LABEL_STATUS[r.status] },
+]
+
 export function PurchaseOrder() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
@@ -61,12 +71,26 @@ export function PurchaseOrder() {
           <h1 className="text-2xl font-bold tracking-tight">{tt('Purchase Order')}</h1>
           <p className="text-sm text-muted-foreground">{tt('Pemesanan barang ke supplier')}</p>
         </div>
-        <Button variant="pill" asChild>
-          <Link to="/purchase-order/baru">
-            <Plus className="h-4 w-4" />
-            PO Baru
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase.from('purchase_order').select('id, nomor, tanggal, status, total, supplier:supplier_id(nama)')
+              if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
+              if (status) q = q.eq('status', status)
+              const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
+              if (error) throw error
+              return (data ?? []) as unknown as BarisPO[]
+            }}
+            kolom={KOLOM_EKSPOR_PO}
+            opsi={{ namaFile: `purchase-order-${tanggalISO()}`, judul: tt('Purchase Order') }}
+          />
+          <Button variant="pill" asChild>
+            <Link to="/purchase-order/baru">
+              <Plus className="h-4 w-4" />
+              PO Baru
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

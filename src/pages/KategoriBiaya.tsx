@@ -24,22 +24,18 @@ import {
   Thead,
   Tr,
 } from '@/components/ui'
-import type { Supplier as SupplierRow } from '@/types/db'
+import type { KategoriBiaya as KategoriRow } from '@/types/db'
 
-type SupplierBaris = SupplierRow & { kabupaten_kota: { nama: string } | null }
-
-const SELECT_SUPPLIER = '*, kabupaten_kota:kabupaten_kode(nama)'
-
-function useSupplier(cari: string) {
+function useKategoriBiaya(cari: string) {
   return useQuery({
-    queryKey: ['supplier', cari],
+    queryKey: ['kategori-biaya-list', cari],
     queryFn: async () => {
-      let q = supabase.from('supplier').select(SELECT_SUPPLIER)
+      let q = supabase.from('kategori_biaya').select('*')
       if (cari.trim()) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
-      const { data, error } = await q.order('nama').limit(200).returns<SupplierBaris[]>()
+      const { data, error } = await q.order('nama').returns<KategoriRow[]>()
       if (error) throw error
       return data ?? []
     },
@@ -47,25 +43,22 @@ function useSupplier(cari: string) {
   })
 }
 
-const KOLOM_EKSPOR_SUPPLIER: KolomEkspor<SupplierBaris>[] = [
+const KOLOM_EKSPOR_KATEGORI_BIAYA: KolomEkspor<KategoriRow>[] = [
   { header: 'Kode', nilai: (r) => r.kode },
   { header: 'Nama', nilai: (r) => r.nama },
-  { header: 'Kontak', nilai: (r) => r.kontak_nama ?? '-' },
-  { header: 'Kabupaten/Kota', nilai: (r) => r.kabupaten_kota?.nama ?? r.kota ?? '-' },
-  { header: 'Termin', nilai: (r) => (r.termin_hari > 0 ? `${r.termin_hari} hari` : 'COD') },
   { header: 'Aktif', nilai: (r) => (r.aktif ? 'Ya' : 'Tidak') },
 ]
 
-export function Supplier() {
+export function KategoriBiaya() {
   const [cari, setCari] = useState('')
-  const { data, isLoading, error, isFetching } = useSupplier(cari)
+  const { data, isLoading, error, isFetching } = useKategoriBiaya(cari)
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{tt('Supplier')}</h1>
-          <p className="text-sm text-muted-foreground">{tt('Sumber barang untuk Purchase Order')}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Kategori Biaya')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Pengelompokan biaya operasional untuk Pengeluaran Kas')}</p>
         </div>
         <div className="flex flex-1 justify-end gap-2 sm:flex-none">
           <div className="relative w-full sm:w-64">
@@ -73,23 +66,14 @@ export function Supplier() {
             <Input className="pl-8" placeholder="Cari nama atau kode..." value={cari} onChange={(e) => setCari(e.target.value)} />
           </div>
           <TombolEkspor
-            ambilData={async () => {
-              let q = supabase.from('supplier').select(SELECT_SUPPLIER)
-              if (cari.trim()) {
-                const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
-                q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
-              }
-              const { data, error } = await q.order('nama').limit(10000).returns<SupplierBaris[]>()
-              if (error) throw error
-              return data ?? []
-            }}
-            kolom={KOLOM_EKSPOR_SUPPLIER}
-            opsi={{ namaFile: `supplier-${tanggalISO()}`, judul: tt('Supplier') }}
+            ambilData={async () => data ?? []}
+            kolom={KOLOM_EKSPOR_KATEGORI_BIAYA}
+            opsi={{ namaFile: `kategori-biaya-${tanggalISO()}`, judul: tt('Kategori Biaya') }}
           />
           <Button variant="pill" asChild>
-            <Link to="/supplier/baru">
+            <Link to="/kategori-biaya/baru">
               <Plus className="h-4 w-4" />
-              Supplier Baru
+              Kategori Baru
             </Link>
           </Button>
         </div>
@@ -106,32 +90,26 @@ export function Supplier() {
               <PesanError error={error} />
             </div>
           ) : !data || data.length === 0 ? (
-            <KondisiKosong pesan="Belum ada supplier." />
+            <KondisiKosong pesan="Belum ada kategori biaya." />
           ) : (
             <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
               <Thead>
                 <Tr>
                   <Th>Kode</Th>
                   <Th>Nama</Th>
-                  <Th>Kontak</Th>
-                  <Th>Kabupaten/Kota</Th>
-                  <Th>Termin</Th>
                   <Th></Th>
                 </Tr>
               </Thead>
               <Tbody>
-                {data.map((s) => (
-                  <Tr key={s.id}>
-                    <Td className="font-mono text-xs">{s.kode}</Td>
+                {data.map((k) => (
+                  <Tr key={k.id}>
+                    <Td className="font-mono text-xs">{k.kode}</Td>
                     <Td>
-                      <Link to={`/supplier/${s.id}`} className="font-medium text-primary hover:underline">
-                        {s.nama}
+                      <Link to={`/kategori-biaya/${k.id}`} className="font-medium text-primary hover:underline">
+                        {k.nama}
                       </Link>
                     </Td>
-                    <Td className="text-muted-foreground">{s.kontak_nama ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{s.kabupaten_kota?.nama ?? s.kota ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{s.termin_hari > 0 ? `${s.termin_hari} hari` : 'COD'}</Td>
-                    <Td className="text-right">{!s.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
+                    <Td className="text-right">{!k.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
                   </Tr>
                 ))}
               </Tbody>

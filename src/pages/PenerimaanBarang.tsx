@@ -4,7 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { tanggal } from '@/lib/format'
+import { tanggal, tanggalISO } from '@/lib/format'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Card,
@@ -50,6 +52,14 @@ function useDaftarPB(cari: string, status: string) {
   })
 }
 
+const KOLOM_EKSPOR_PB: KolomEkspor<BarisPB>[] = [
+  { header: 'Nomor', nilai: (r) => r.nomor },
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Supplier', nilai: (r) => r.supplier?.nama ?? '-' },
+  { header: 'Gudang', nilai: (r) => r.gudang?.nama ?? '-' },
+  { header: 'Status', nilai: (r) => LABEL_STATUS[r.status] },
+]
+
 export function PenerimaanBarang() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
@@ -57,11 +67,27 @@ export function PenerimaanBarang() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('Penerimaan Barang')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {tt('Dibuat dari Purchase Order yang sudah disetujui. Untuk membuat baru, buka PO-nya dan klik "Buat Penerimaan Barang".')}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Penerimaan Barang')}</h1>
+          <p className="text-sm text-muted-foreground">
+            {tt('Dibuat dari Purchase Order yang sudah disetujui. Untuk membuat baru, buka PO-nya dan klik "Buat Penerimaan Barang".')}
+          </p>
+        </div>
+        <TombolEkspor
+          ambilData={async () => {
+            let q = supabase
+              .from('penerimaan_barang')
+              .select('id, nomor, tanggal, status, supplier:supplier_id(nama), gudang:gudang_id(nama)')
+            if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
+            if (status) q = q.eq('status', status)
+            const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
+            if (error) throw error
+            return (data ?? []) as unknown as BarisPB[]
+          }}
+          kolom={KOLOM_EKSPOR_PB}
+          opsi={{ namaFile: `penerimaan-barang-${tanggalISO()}`, judul: tt('Penerimaan Barang') }}
+        />
       </div>
 
       <div className="flex flex-wrap gap-2">

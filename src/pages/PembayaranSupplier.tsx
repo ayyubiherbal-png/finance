@@ -4,7 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal } from '@/lib/format'
+import { rupiah, tanggal, tanggalISO } from '@/lib/format'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -51,6 +53,15 @@ function useDaftarBayar(cari: string, status: string) {
   })
 }
 
+const KOLOM_EKSPOR_BAYAR: KolomEkspor<BarisBayar>[] = [
+  { header: 'Nomor', nilai: (r) => r.nomor },
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Supplier', nilai: (r) => r.supplier?.nama ?? '-' },
+  { header: 'Metode', nilai: (r) => LABEL_METODE[r.metode] },
+  { header: 'Jumlah', nilai: (r) => r.jumlah, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Status', nilai: (r) => LABEL_STATUS[r.status] },
+]
+
 export function PembayaranSupplier() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
@@ -63,12 +74,26 @@ export function PembayaranSupplier() {
           <h1 className="text-2xl font-bold tracking-tight">{tt('Pembayaran Supplier')}</h1>
           <p className="text-sm text-muted-foreground">{tt('Pembayaran ke supplier, dialokasikan ke faktur pembelian')}</p>
         </div>
-        <Button variant="pill" asChild>
-          <Link to="/pembayaran-supplier/baru">
-            <Plus className="h-4 w-4" />
-            Bayar Supplier
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase.from('pembayaran_supplier').select('id, nomor, tanggal, metode, jumlah, status, supplier:supplier_id(nama)')
+              if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
+              if (status) q = q.eq('status', status)
+              const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
+              if (error) throw error
+              return (data ?? []) as unknown as BarisBayar[]
+            }}
+            kolom={KOLOM_EKSPOR_BAYAR}
+            opsi={{ namaFile: `pembayaran-supplier-${tanggalISO()}`, judul: tt('Pembayaran Supplier') }}
+          />
+          <Button variant="pill" asChild>
+            <Link to="/pembayaran-supplier/baru">
+              <Plus className="h-4 w-4" />
+              Bayar Supplier
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal, terlihatSepertiNama } from '@/lib/format'
+import { rupiah, tanggal, tanggalISO, terlihatSepertiNama } from '@/lib/format'
 import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -86,6 +88,19 @@ function useDaftarSO(cari: string, status: string, periode: RentangTanggal) {
   })
 }
 
+function namaPemesan(so: Pick<BarisSO, 'nama_penerima' | 'pelanggan'>): string {
+  return (so.nama_penerima && terlihatSepertiNama(so.nama_penerima) ? so.nama_penerima : null) || so.pelanggan?.nama || '-'
+}
+
+const KOLOM_EKSPOR_SO: KolomEkspor<BarisSO>[] = [
+  { header: 'Nomor', nilai: (r) => r.nomor },
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Pelanggan', nilai: (r) => namaPemesan(r) },
+  { header: 'Kanal', nilai: (r) => LABEL_KANAL[r.kanal] },
+  { header: 'Total', nilai: (r) => r.total, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Status', nilai: (r) => LABEL_STATUS[r.status] },
+]
+
 export function SalesOrder() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
@@ -99,12 +114,34 @@ export function SalesOrder() {
           <h1 className="text-2xl font-bold tracking-tight">{tt('Sales Order')}</h1>
           <p className="text-sm text-muted-foreground">{tt('Pesanan dari canvassing maupun kanal online')}</p>
         </div>
-        <Button variant="pill" asChild>
-          <Link to="/sales-order/baru">
-            <Plus className="h-4 w-4" />
-            SO Baru
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase
+                .from('sales_order')
+                .select('id, nomor, tanggal, status, kanal, total, nama_penerima, pelanggan:pelanggan_id(nama)')
+              if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
+              if (status) q = q.eq('status', status)
+              if (periode.dari) q = q.gte('tanggal', periode.dari)
+              if (periode.sampai) q = q.lte('tanggal', periode.sampai)
+              const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
+              if (error) throw error
+              return (data ?? []) as unknown as BarisSO[]
+            }}
+            kolom={KOLOM_EKSPOR_SO}
+            opsi={{
+              namaFile: `sales-order-${tanggalISO()}`,
+              judul: tt('Sales Order'),
+              subjudul: periode.dari || periode.sampai ? `Periode ${periode.dari ?? '...'} s/d ${periode.sampai ?? '...'}` : undefined,
+            }}
+          />
+          <Button variant="pill" asChild>
+            <Link to="/sales-order/baru">
+              <Plus className="h-4 w-4" />
+              SO Baru
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

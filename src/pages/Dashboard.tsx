@@ -18,11 +18,28 @@ import { supabase } from '@/lib/supabase'
 import { rupiah, angka, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { useI18n } from '@/lib/i18n'
 import { tt } from '@/lib/i18nText'
+import { useAuth } from '@/contexts/AuthContext'
 import { GrafikBatang, GrafikDonut, GrafikKapsul } from '@/components/Charts'
 import { cn } from '@/lib/utils'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, KondisiKosong, PesanError, Spinner } from '@/components/ui'
 import { INFO_SEGMEN } from '@/pages/CrmPelanggan'
-import type { VPenjualanHarian, VStokProduk, VPiutangAging, VPelangganCrm, VSaldoKasBank, VPelangganAktifBulanan } from '@/types/db'
+import type {
+  VPenjualanHarian,
+  VPengeluaranHarian,
+  VStokProduk,
+  VPiutangAging,
+  VPelangganCrm,
+  VSaldoKasBank,
+  VPelangganAktifBulanan,
+} from '@/types/db'
+
+/** Pengeluaran Kas cuma boleh dibaca peran ini (lihat RLS 0046) -- kartu
+ * "Laba Bersih" HARUS ikut disembunyikan untuk peran lain, karena kalau
+ * tidak, angkanya akan sama persis dengan "Laba Kotor" (baris pengeluaran
+ * pulang kosong lewat RLS, BUKAN error) -- terlihat seolah tidak ada
+ * biaya sama sekali, padahal cuma "tidak boleh lihat". Itu lebih
+ * menyesatkan daripada sekadar menyembunyikan kartunya. */
+const PERAN_BOLEH_LIHAT_BIAYA = ['owner', 'admin', 'finance']
 
 const NAMA_BULAN_PENDEK = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
@@ -60,12 +77,21 @@ function useRingkasan() {
 
       const bulanAwal = new Date(hariIni.getFullYear(), hariIni.getMonth() - 5, 1)
 
-      const [penjualan, stok, piutang, jatuhTempo, pelangganTeratas, saldoKas, aktifBulanan] = await Promise.all([
+      const [penjualan, pengeluaran, stok, piutang, jatuhTempo, pelangganTeratas, saldoKas, aktifBulanan] = await Promise.all([
         supabase
           .from('v_penjualan_harian')
           .select('tanggal, jumlah_faktur, omzet, laba_kotor')
           .gte('tanggal', tanggalISO(batas60))
           .returns<VPenjualanHarian[]>(),
+        // Peran yang tidak boleh baca pengeluaran_kas (lihat RLS 0046) akan
+        // dapat baris kosong di sini, BUKAN error -- lihat komponen Dashboard
+        // untuk bagaimana ini dijaga supaya tidak menampilkan Laba Bersih
+        // yang menyesatkan untuk peran tersebut.
+        supabase
+          .from('v_pengeluaran_harian')
+          .select('tanggal, jumlah_pengeluaran, total_keluar')
+          .gte('tanggal', tanggalISO(batas30))
+          .returns<VPengeluaranHarian[]>(),
         supabase
           .from('v_stok_produk')
           .select('produk_id, kode, nama, qty, stok_min, nilai_persediaan, perlu_restock')
@@ -107,6 +133,7 @@ function useRingkasan() {
       ])
 
       if (penjualan.error) throw penjualan.error
+      if (pengeluaran.error) throw pengeluaran.error
       if (stok.error) throw stok.error
       if (piutang.error) throw piutang.error
       if (jatuhTempo.error) throw jatuhTempo.error
@@ -153,11 +180,15 @@ function useRingkasan() {
       const omzetSebelum = periodeSebelum.reduce((t, h) => t + Number(h.omzet ?? 0), 0)
       const deltaOmzetPersen = omzetSebelum > 0 ? ((omzet30Hari - omzetSebelum) / omzetSebelum) * 100 : null
 
+      const pengeluaran30Hari = (pengeluaran.data ?? []).reduce((t, h) => t + Number(h.total_keluar ?? 0), 0)
+
       return {
         trenHarian,
         pelangganAktifPerBulan,
         omzet30Hari,
         laba30Hari,
+        pengeluaran30Hari,
+        labaBersih30Hari: laba30Hari - pengeluaran30Hari,
         deltaOmzetPersen,
         nilaiPersediaan: barisStok.reduce((t, b) => t + Number(b.nilai_persediaan ?? 0), 0),
         totalPiutang: barisPiutang.reduce((t, b) => t + Number(b.total_piutang ?? 0), 0),
@@ -174,7 +205,9 @@ function useRingkasan() {
 
 export function Dashboard() {
   const { t, bahasa } = useI18n()
+  const { profil } = useAuth()
   const { data, isLoading, error } = useRingkasan()
+  const bolehLihatBiaya = PERAN_BOLEH_LIHAT_BIAYA.includes(profil?.peran ?? '')
 
   if (isLoading) {
     return (
@@ -219,6 +252,24 @@ export function Dashboard() {
           catatan={`${t('dasbor.margin')} ${margin.toFixed(1)}%`}
           tautan="/laporan/laba"
         />
+        {bolehLihatBiaya ? (
+          <>
+            <KartuStat
+              judul={t('dasbor.pengeluaran30Hari')}
+              nilai={rupiah(data.pengeluaran30Hari)}
+              warna={AKSEN.merah}
+              ikon={<Coins className="h-4 w-4" />}
+              tautan="/pengeluaran-kas"
+            />
+            <KartuStat
+              judul={t('dasbor.labaBersih30Hari')}
+              nilai={rupiah(data.labaBersih30Hari)}
+              warna={AKSEN.hijau}
+              ikon={<TrendingUp className="h-4 w-4" />}
+              tautan="/laporan/laba"
+            />
+          </>
+        ) : null}
         <KartuStat
           judul={t('dasbor.nilaiPersediaan')}
           nilai={rupiah(data.nilaiPersediaan)}

@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase'
 import { useGudangAktif, cariProduk } from '@/lib/queries'
 import { angka, rupiah, tanggal, tanggalISO } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Card,
@@ -66,6 +68,17 @@ function useKartuStok(produkId: string | null, gudangId: string, dari: string, s
   })
 }
 
+const KOLOM_EKSPOR_KARTU_STOK: KolomEkspor<BarisKartu>[] = [
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Jenis', nilai: (r) => LABEL_JENIS[r.jenis] },
+  { header: 'No. Dokumen', nilai: (r) => r.ref_nomor ?? '-' },
+  { header: 'Gudang', nilai: (r) => r.nama_gudang },
+  { header: 'Masuk', nilai: (r) => r.masuk, format: (v) => angka(v as number), rata: 'kanan' },
+  { header: 'Keluar', nilai: (r) => r.keluar, format: (v) => angka(v as number), rata: 'kanan' },
+  { header: 'Saldo', nilai: (r) => r.saldo, format: (v) => angka(v as number), rata: 'kanan' },
+  { header: 'Nilai', nilai: (r) => r.nilai, format: (v) => rupiah(v as number), rata: 'kanan' },
+]
+
 export function KartuStok() {
   const { data: gudang } = useGudangAktif()
   const [produkId, setProdukId] = useState<string | null>(null)
@@ -80,9 +93,30 @@ export function KartuStok() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('Kartu Stok')}</h1>
-        <p className="text-sm text-muted-foreground">{tt('Riwayat mutasi dan saldo berjalan per produk')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Kartu Stok')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Riwayat mutasi dan saldo berjalan per produk')}</p>
+        </div>
+        {produkId ? (
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase.from('v_kartu_stok').select('*').eq('produk_id', produkId as string)
+              if (gudangId) q = q.eq('gudang_id', gudangId)
+              if (dari) q = q.gte('tanggal', dari)
+              if (sampai) q = q.lte('tanggal', sampai)
+              const { data, error } = await q.order('tanggal').order('id').limit(10000).returns<BarisKartu[]>()
+              if (error) throw error
+              return data ?? []
+            }}
+            kolom={KOLOM_EKSPOR_KARTU_STOK}
+            opsi={{
+              namaFile: `kartu-stok-${produkLabel?.sublabel ?? produkId}-${dari}-${sampai}`,
+              judul: `${tt('Kartu Stok')} -- ${produkLabel?.label ?? ''}`,
+              subjudul: `Periode ${tanggal(dari)} s/d ${tanggal(sampai)}`,
+            }}
+          />
+        ) : null}
       </div>
 
       <Card>

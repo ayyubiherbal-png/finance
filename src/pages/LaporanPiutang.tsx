@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { tt } from '@/lib/i18nText'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal } from '@/lib/format'
+import { rupiah, tanggal, tanggalISO } from '@/lib/format'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Card,
@@ -50,6 +52,24 @@ function usePiutangJatuhTempo() {
   })
 }
 
+const KOLOM_EKSPOR_AGING: KolomEkspor<VPiutangAging>[] = [
+  { header: 'Pelanggan', nilai: (r) => r.nama_pelanggan },
+  { header: 'Total', nilai: (r) => r.total_piutang, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Belum Jatuh Tempo', nilai: (r) => r.belum_jatuh_tempo ?? 0, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: '1-30 Hari', nilai: (r) => r.umur_1_30 ?? 0, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: '31-60 Hari', nilai: (r) => r.umur_31_60 ?? 0, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: '61-90 Hari', nilai: (r) => r.umur_61_90 ?? 0, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: '90+ Hari', nilai: (r) => r.umur_90_plus ?? 0, format: (v) => rupiah(v as number), rata: 'kanan' },
+]
+
+const KOLOM_EKSPOR_LEWAT_TEMPO: KolomEkspor<VPiutang>[] = [
+  { header: 'Nomor', nilai: (r) => r.nomor },
+  { header: 'Pelanggan', nilai: (r) => r.nama_pelanggan },
+  { header: 'Jatuh Tempo', nilai: (r) => r.jatuh_tempo, format: (v) => tanggal(v as string) },
+  { header: 'Terlambat (hari)', nilai: (r) => r.hari_lewat, rata: 'kanan' },
+  { header: 'Sisa', nilai: (r) => r.sisa, format: (v) => rupiah(v as number), rata: 'kanan' },
+]
+
 export function LaporanPiutang() {
   const { data: aging, isLoading, error } = usePiutangAging()
   const { data: lewatTempo } = usePiutangJatuhTempo()
@@ -65,9 +85,18 @@ export function LaporanPiutang() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('Laporan Piutang')}</h1>
-        <p className="text-sm text-muted-foreground">{tt('Sisa tagihan pelanggan berdasarkan umur jatuh tempo')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Laporan Piutang')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Sisa tagihan pelanggan berdasarkan umur jatuh tempo')}</p>
+        </div>
+        {aging && aging.length > 0 ? (
+          <TombolEkspor
+            ambilData={async () => aging}
+            kolom={KOLOM_EKSPOR_AGING}
+            opsi={{ namaFile: `piutang-aging-${tanggalISO()}`, judul: tt('Laporan Piutang') }}
+          />
+        ) : null}
       </div>
 
       {isLoading ? (
@@ -124,7 +153,14 @@ export function LaporanPiutang() {
 
           {lewatTempo && lewatTempo.length > 0 ? (
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold">{tt('Faktur lewat jatuh tempo')}</h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold">{tt('Faktur lewat jatuh tempo')}</h2>
+                <TombolEkspor
+                  ambilData={async () => lewatTempo}
+                  kolom={KOLOM_EKSPOR_LEWAT_TEMPO}
+                  opsi={{ namaFile: `piutang-lewat-tempo-${tanggalISO()}`, judul: tt('Faktur lewat jatuh tempo') }}
+                />
+              </div>
               <Card>
                 <CardContent className="p-0 pb-2">
                   <Table>

@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { angka, rupiah } from '@/lib/format'
+import { angka, rupiah, tanggalISO } from '@/lib/format'
 import { kutipFilterPostgrest } from '@/lib/utils'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -85,6 +87,20 @@ export function Produk() {
     }
     return peta
   }, [data])
+  // Nama induk di-lookup dari data yang sudah dimuat -- dipakai kolom
+  // ekspor "Produk Induk" supaya hubungan varian tidak hilang saat
+  // tabelnya diratakan jadi CSV/PDF.
+  const petaNamaById = useMemo(() => new Map((data ?? []).map((p) => [p.produk_id, p.nama])), [data])
+  const kolomEksporProduk: KolomEkspor<VStokProduk>[] = [
+    { header: 'Kode', nilai: (r) => r.kode },
+    { header: 'Nama', nilai: (r) => r.nama },
+    { header: 'Produk Induk', nilai: (r) => (r.induk_id ? (petaNamaById.get(r.induk_id) ?? '') : '') },
+    { header: 'Kategori', nilai: (r) => r.kategori ?? '-' },
+    { header: 'Stok', nilai: (r) => r.qty, format: (v) => angka(v as number), rata: 'kanan' },
+    { header: 'Satuan', nilai: (r) => r.satuan_dasar },
+    { header: 'HPP', nilai: (r) => r.hpp_rata2, format: (v) => rupiah(v as number), rata: 'kanan' },
+    { header: 'Nilai Persediaan', nilai: (r) => r.nilai_persediaan, format: (v) => rupiah(v as number), rata: 'kanan' },
+  ]
 
   return (
     <div className="space-y-4">
@@ -106,6 +122,20 @@ export function Produk() {
               onChange={(e) => setCari(e.target.value)}
             />
           </div>
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase.from('v_stok_produk').select('*')
+              if (cari.trim()) {
+                const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+                q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+              }
+              const { data, error } = await q.order('nama').limit(10000).returns<VStokProduk[]>()
+              if (error) throw error
+              return data ?? []
+            }}
+            kolom={kolomEksporProduk}
+            opsi={{ namaFile: `produk-${tanggalISO()}`, judul: tt('Produk') }}
+          />
           <Button variant="pill" asChild>
             <Link to="/produk/baru">
               <Plus className="h-4 w-4" />

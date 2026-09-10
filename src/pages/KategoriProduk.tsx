@@ -5,6 +5,9 @@ import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { kutipFilterPostgrest } from '@/lib/utils'
+import { tanggalISO } from '@/lib/format'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -40,6 +43,12 @@ function useKategoriProduk(cari: string) {
   })
 }
 
+const KOLOM_EKSPOR_KATEGORI_PRODUK: KolomEkspor<KategoriRow>[] = [
+  { header: 'Kode', nilai: (r) => r.kode },
+  { header: 'Nama', nilai: (r) => r.nama },
+  { header: 'Aktif', nilai: (r) => (r.aktif ? 'Ya' : 'Tidak') },
+]
+
 export function KategoriProduk() {
   const [cari, setCari] = useState('')
   const { data, isLoading, error, isFetching } = useKategoriProduk(cari)
@@ -56,6 +65,11 @@ export function KategoriProduk() {
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input className="pl-8" placeholder="Cari nama atau kode..." value={cari} onChange={(e) => setCari(e.target.value)} />
           </div>
+          <TombolEkspor
+            ambilData={async () => data ?? []}
+            kolom={KOLOM_EKSPOR_KATEGORI_PRODUK}
+            opsi={{ namaFile: `kategori-produk-${tanggalISO()}`, judul: tt('Kategori Produk') }}
+          />
           <Button variant="pill" asChild>
             <Link to="/kategori-produk/baru">
               <Plus className="h-4 w-4" />

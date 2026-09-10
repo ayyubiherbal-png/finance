@@ -4,12 +4,14 @@ import { tt } from '@/lib/i18nText'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, MessageCircle, Settings2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { tanggal as fmtTanggal } from '@/lib/format'
+import { tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/components/Toast'
 import { Badge, Button, Card, CardContent, Input, KondisiKosong, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import type { KategoriTreatmentFu, PembeliMarketplace, TahapanTreatmentFu, VPelangganCrm } from '@/types/db'
 
 /**
@@ -366,6 +368,14 @@ function susunTugas(
   return hasil
 }
 
+const KOLOM_EKSPOR_TUGAS_FU: KolomEkspor<Tugas>[] = [
+  { header: 'Sumber', nilai: (r) => r.sumber },
+  { header: 'Nama', nilai: (r) => r.nama },
+  { header: 'Kategori', nilai: (r) => tt(INFO_KATEGORI[r.kategori].label) },
+  { header: 'Tahap', nilai: (r) => r.tahapanLabel ?? '-' },
+  { header: 'Konteks', nilai: (r) => r.konteks },
+]
+
 export function TugasFollowUp() {
   const { profil } = useAuth()
   const bolehAturTreatment = profil?.peran === 'owner' || profil?.peran === 'admin'
@@ -450,14 +460,21 @@ export function TugasFollowUp() {
             {tt('Disusun otomatis tiap hari dari riwayat transaksi -- tinggal ditinjau, klik Chat untuk kirim manual. Bukan pengiriman otomatis (lihat catatan di framework CRM).')}
           </p>
         </div>
-        {bolehAturTreatment ? (
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/tahapan-treatment">
-              <Settings2 className="h-4 w-4" />
-              {tt('Tahapan Treatment')}
-            </Link>
-          </Button>
-        ) : null}
+        <div className="flex gap-2">
+          <TombolEkspor
+            ambilData={async () => tersaring}
+            kolom={KOLOM_EKSPOR_TUGAS_FU}
+            opsi={{ namaFile: `tugas-follow-up-${tanggalISO()}`, judul: tt('Tugas Follow-Up') }}
+          />
+          {bolehAturTreatment ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/tahapan-treatment">
+                <Settings2 className="h-4 w-4" />
+                {tt('Tahapan Treatment')}
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {!isLoading && !error ? (

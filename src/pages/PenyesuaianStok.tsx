@@ -4,7 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { tanggal } from '@/lib/format'
+import { tanggal, tanggalISO } from '@/lib/format'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -55,6 +57,15 @@ function useDaftar(cari: string, status: string) {
   })
 }
 
+const KOLOM_EKSPOR_PENYESUAIAN: KolomEkspor<BarisPenyesuaian>[] = [
+  { header: 'Nomor', nilai: (r) => r.nomor },
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Gudang', nilai: (r) => r.gudang?.nama ?? '-' },
+  { header: 'Jenis', nilai: (r) => LABEL_JENIS[r.jenis] },
+  { header: 'Alasan', nilai: (r) => r.alasan ?? '-' },
+  { header: 'Status', nilai: (r) => LABEL_STATUS[r.status] },
+]
+
 export function PenyesuaianStok() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
@@ -67,12 +78,26 @@ export function PenyesuaianStok() {
           <h1 className="text-2xl font-bold tracking-tight">{tt('Penyesuaian Stok')}</h1>
           <p className="text-sm text-muted-foreground">{tt('Saldo awal, koreksi hitung fisik, barang rusak/hilang')}</p>
         </div>
-        <Button variant="pill" asChild>
-          <Link to="/penyesuaian-stok/baru">
-            <Plus className="h-4 w-4" />
-            Penyesuaian Baru
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase.from('penyesuaian_stok').select('id, nomor, tanggal, jenis, status, alasan, gudang:gudang_id(nama)')
+              if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
+              if (status) q = q.eq('status', status)
+              const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
+              if (error) throw error
+              return (data ?? []) as unknown as BarisPenyesuaian[]
+            }}
+            kolom={KOLOM_EKSPOR_PENYESUAIAN}
+            opsi={{ namaFile: `penyesuaian-stok-${tanggalISO()}`, judul: tt('Penyesuaian Stok') }}
+          />
+          <Button variant="pill" asChild>
+            <Link to="/penyesuaian-stok/baru">
+              <Plus className="h-4 w-4" />
+              Penyesuaian Baru
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

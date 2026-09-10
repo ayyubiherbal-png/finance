@@ -204,6 +204,27 @@ export interface AkunKasBank {
   catatan: string | null
 }
 
+export interface KategoriBiaya {
+  id: string
+  kode: string
+  nama: string
+  aktif: boolean
+}
+
+export interface PengeluaranKas {
+  id: string
+  nomor: string
+  tanggal: string
+  kategori_biaya_id: string | null
+  akun_id: string
+  metode: MetodeBayar
+  nomor_referensi: string | null
+  tanggal_cair: string | null
+  jumlah: number
+  status: StatusDokumen
+  catatan: string | null
+}
+
 /** Header dokumen yang punya pola total sama (SO, PO, faktur) */
 export interface TotalDokumen {
   subtotal: number
@@ -586,7 +607,7 @@ export interface VSaldoKasBank {
 
 export interface VKartuKasBank {
   ref_id: string
-  jenis: 'penerimaan_kas' | 'pembayaran_supplier'
+  jenis: 'penerimaan_kas' | 'pembayaran_supplier' | 'pengeluaran_kas'
   tanggal: string
   akun_id: string
   kode_akun: string
@@ -596,4 +617,16 @@ export interface VKartuKasBank {
   keluar: number
   catatan: string | null
   saldo: number
+}
+
+export interface VPengeluaranHarian {
+  tanggal: string
+  jumlah_pengeluaran: number
+  total_keluar: number
+}
+
+export interface VRingkasanLabaBiaya {
+  total_laba_kotor: number
+  total_biaya_operasional: number
+  laba_bersih: number
 }

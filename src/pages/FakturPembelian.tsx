@@ -4,7 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal } from '@/lib/format'
+import { rupiah, tanggal, tanggalISO } from '@/lib/format'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -65,6 +67,17 @@ function useDaftarFaktur(cari: string, statusBayar: string) {
   })
 }
 
+const KOLOM_EKSPOR_FAKTUR_BELI: KolomEkspor<BarisFaktur>[] = [
+  { header: 'Nomor', nilai: (r) => r.nomor },
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Supplier', nilai: (r) => r.supplier?.nama ?? '-' },
+  { header: 'Jatuh Tempo', nilai: (r) => r.jatuh_tempo, format: (v) => tanggal(v as string) },
+  { header: 'Total', nilai: (r) => r.total, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Sisa', nilai: (r) => r.sisa, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Status', nilai: (r) => LABEL_STATUS[r.status] },
+  { header: 'Status Bayar', nilai: (r) => LABEL_BAYAR[r.status_bayar] },
+]
+
 export function FakturPembelian() {
   const [cari, setCari] = useState('')
   const [statusBayar, setStatusBayar] = useState('')
@@ -77,12 +90,28 @@ export function FakturPembelian() {
           <h1 className="text-2xl font-bold tracking-tight">{tt('Faktur Pembelian')}</h1>
           <p className="text-sm text-muted-foreground">{tt('Tagihan dari supplier, ditagihkan dari satu atau beberapa Penerimaan Barang')}</p>
         </div>
-        <Button variant="pill" asChild>
-          <Link to="/faktur-pembelian/baru">
-            <Plus className="h-4 w-4" />
-            Faktur Baru
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase
+                .from('faktur_pembelian')
+                .select('id, nomor, tanggal, jatuh_tempo, status, status_bayar, total, sisa, supplier:supplier_id(nama)')
+              if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
+              if (statusBayar) q = q.eq('status_bayar', statusBayar)
+              const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
+              if (error) throw error
+              return (data ?? []) as unknown as BarisFaktur[]
+            }}
+            kolom={KOLOM_EKSPOR_FAKTUR_BELI}
+            opsi={{ namaFile: `faktur-pembelian-${tanggalISO()}`, judul: tt('Faktur Pembelian') }}
+          />
+          <Button variant="pill" asChild>
+            <Link to="/faktur-pembelian/baru">
+              <Plus className="h-4 w-4" />
+              Faktur Baru
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

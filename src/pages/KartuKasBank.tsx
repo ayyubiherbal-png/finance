@@ -20,6 +20,8 @@ import {
   Thead,
   Tr,
 } from '@/components/ui'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import type { VKartuKasBank, VSaldoKasBank } from '@/types/db'
 
 function useDaftarAkun() {
@@ -57,7 +59,17 @@ function useKartuKasBank(akunId: string, dari: string, sampai: string) {
 const LABEL_JENIS = {
   penerimaan_kas: 'Penerimaan Kas',
   pembayaran_supplier: 'Pembayaran Supplier',
+  pengeluaran_kas: 'Pengeluaran Kas',
 }
+
+const KOLOM_EKSPOR_KARTU: KolomEkspor<VKartuKasBank>[] = [
+  { header: 'Tanggal', nilai: (r) => r.tanggal, format: (v) => tanggal(v as string) },
+  { header: 'Jenis', nilai: (r) => LABEL_JENIS[r.jenis] },
+  { header: 'No. Dokumen', nilai: (r) => r.ref_nomor },
+  { header: 'Masuk', nilai: (r) => r.masuk, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Keluar', nilai: (r) => r.keluar, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Saldo', nilai: (r) => r.saldo, format: (v) => rupiah(v as number), rata: 'kanan' },
+]
 
 export function KartuKasBank() {
   const { data: akunList } = useDaftarAkun()
@@ -71,9 +83,29 @@ export function KartuKasBank() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('Kartu Kas & Bank')}</h1>
-        <p className="text-sm text-muted-foreground">{tt('Riwayat mutasi dan saldo berjalan per akun')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Kartu Kas & Bank')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Riwayat mutasi dan saldo berjalan per akun')}</p>
+        </div>
+        {akunId ? (
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase.from('v_kartu_kas_bank').select('*').eq('akun_id', akunId)
+              if (dari) q = q.gte('tanggal', dari)
+              if (sampai) q = q.lte('tanggal', sampai)
+              const { data, error } = await q.order('tanggal').order('ref_id').limit(10000).returns<VKartuKasBank[]>()
+              if (error) throw error
+              return data ?? []
+            }}
+            kolom={KOLOM_EKSPOR_KARTU}
+            opsi={{
+              namaFile: `kartu-kas-bank-${akunList?.find((a) => a.akun_id === akunId)?.kode ?? akunId}-${dari}-${sampai}`,
+              judul: `Kartu Kas & Bank -- ${akunList?.find((a) => a.akun_id === akunId)?.nama ?? ''}`,
+              subjudul: `Periode ${tanggal(dari)} s/d ${tanggal(sampai)}`,
+            }}
+          />
+        ) : null}
       </div>
 
       <Card>

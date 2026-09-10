@@ -102,6 +102,7 @@ const MENU: Grup[] = [
         tab: [
           { ke: '/kas-bank', label: 'menu.akunKasBank' },
           { ke: '/kartu-kas-bank', label: 'menu.kartuKasBank' },
+          { ke: '/pengeluaran-kas', label: 'menu.pengeluaranKas', peran: ['owner', 'admin', 'finance'] },
         ],
       },
     ],
@@ -127,6 +128,7 @@ const MENU: Grup[] = [
         tab: [
           { ke: '/produk', label: 'menu.produk' },
           { ke: '/kategori-produk', label: 'menu.kategoriProduk', peran: ['owner', 'admin'] },
+          { ke: '/kategori-biaya', label: 'menu.kategoriBiaya', peran: ['owner', 'admin'] },
           { ke: '/pelanggan', label: 'menu.pelanggan' },
           { ke: '/supplier', label: 'menu.supplier', peran: ['owner', 'admin'] },
           { ke: '/gudang', label: 'menu.gudang', peran: ['owner', 'admin'] },

@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { MessageCircle, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, tanggal as fmtTanggal } from '@/lib/format'
+import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -58,6 +60,15 @@ function usePelangganCrm() {
   })
 }
 
+const KOLOM_EKSPOR_CRM: KolomEkspor<VPelangganCrm>[] = [
+  { header: 'Kode', nilai: (r) => r.kode },
+  { header: 'Nama', nilai: (r) => r.nama },
+  { header: 'Segmen', nilai: (r) => INFO_SEGMEN[r.segmen].label },
+  { header: 'Transaksi', nilai: (r) => r.jumlah_transaksi, rata: 'kanan' },
+  { header: 'Total Belanja', nilai: (r) => r.total_belanja, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Terakhir Order', nilai: (r) => r.terakhir_order ?? '-', format: (v) => (v ? fmtTanggal(v as string) : '-') },
+]
+
 export function CrmPelanggan() {
   const [cari, setCari] = useState('')
   const [segmenAktif, setSegmenAktif] = useState<SegmenPelanggan | null>(null)
@@ -75,11 +86,18 @@ export function CrmPelanggan() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('CRM Pelanggan')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {tt('Segmentasi otomatis dari riwayat belanja -- klik segmen untuk menyaring')}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('CRM Pelanggan')}</h1>
+          <p className="text-sm text-muted-foreground">
+            {tt('Segmentasi otomatis dari riwayat belanja -- klik segmen untuk menyaring')}
+          </p>
+        </div>
+        <TombolEkspor
+          ambilData={async () => tersaring}
+          kolom={KOLOM_EKSPOR_CRM}
+          opsi={{ namaFile: `crm-pelanggan-${tanggalISO()}`, judul: tt('CRM Pelanggan') }}
+        />
       </div>
 
       {isLoading ? (

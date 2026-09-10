@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Columns3, Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { tanggal as fmtTanggal } from '@/lib/format'
+import { tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { kutipFilterPostgrest } from '@/lib/utils'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
   Button,
@@ -137,6 +139,21 @@ function KolomPicker({ aktif, onUbah }: { aktif: Set<KunciKolom>; onUbah: (kunci
   )
 }
 
+const KOLOM_EKSPOR_PELANGGAN: KolomEkspor<VPelangganRingkas>[] = [
+  { header: 'ID', nilai: (r) => r.kode },
+  { header: 'Nama', nilai: (r) => r.nama },
+  { header: 'Tipe', nilai: (r) => LABEL_TIPE[r.tipe] },
+  { header: 'Kontak', nilai: (r) => r.kontak_nama || '-' },
+  { header: 'Sales', nilai: (r) => r.sales_nama || '-' },
+  { header: 'Telepon', nilai: (r) => r.telepon || '-' },
+  { header: 'WhatsApp', nilai: (r) => r.whatsapp || '-' },
+  { header: 'Email', nilai: (r) => r.email || '-' },
+  { header: 'Sumber', nilai: (r) => tt(labelSumber(r)) },
+  { header: 'Tanggal Lahir', nilai: (r) => r.tanggal_lahir ?? '-', format: (v) => (v && v !== '-' ? fmtTanggal(v as string) : '-') },
+  { header: 'Media Sosial', nilai: (r) => r.sosial_media || '-' },
+  { header: 'Alamat', nilai: (r) => r.alamat_lengkap || '-' },
+]
+
 export function Pelanggan() {
   const [cari, setCari] = useState('')
   const { data, isLoading, error, isFetching } = usePelanggan(cari)
@@ -175,6 +192,20 @@ export function Pelanggan() {
             />
           </div>
           <KolomPicker aktif={kolomAktif} onUbah={ubahKolom} />
+          <TombolEkspor
+            ambilData={async () => {
+              let q = supabase.from('v_pelanggan_ringkas').select('*')
+              if (cari.trim()) {
+                const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+                q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+              }
+              const { data, error } = await q.order('nama').limit(10000).returns<VPelangganRingkas[]>()
+              if (error) throw error
+              return data ?? []
+            }}
+            kolom={KOLOM_EKSPOR_PELANGGAN}
+            opsi={{ namaFile: `pelanggan-${tanggalISO()}`, judul: tt('Pelanggan') }}
+          />
           <Button variant="pill" asChild>
             <Link to="/pelanggan/baru">
               <Plus className="h-4 w-4" />

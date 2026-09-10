@@ -3,9 +3,11 @@ import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { angka, rupiah } from '@/lib/format'
+import { angka, rupiah, tanggalISO } from '@/lib/format'
 import { useGudangAktif } from '@/lib/queries'
 import { kutipFilterPostgrest } from '@/lib/utils'
+import { TombolEkspor } from '@/components/TombolEkspor'
+import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Card,
   CardContent,
@@ -52,6 +54,15 @@ function useStokGudang(gudangId: string, cari: string) {
   })
 }
 
+const KOLOM_EKSPOR_STOK: KolomEkspor<BarisStokGudang>[] = [
+  { header: 'Kode', nilai: (r) => r.kode },
+  { header: 'Produk', nilai: (r) => r.nama },
+  { header: 'Gudang', nilai: (r) => r.nama_gudang },
+  { header: 'Qty', nilai: (r) => r.qty, format: (v) => angka(v as number), rata: 'kanan' },
+  { header: 'HPP', nilai: (r) => r.hpp_rata2, format: (v) => rupiah(v as number), rata: 'kanan' },
+  { header: 'Nilai', nilai: (r) => r.nilai, format: (v) => rupiah(v as number), rata: 'kanan' },
+]
+
 export function Stok() {
   const { data: gudang } = useGudangAktif()
   const [gudangId, setGudangId] = useState('')
@@ -62,9 +73,26 @@ export function Stok() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{tt('Stok per Gudang')}</h1>
-        <p className="text-sm text-muted-foreground">{tt('Saldo persediaan berjalan, dari kartu stok')}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{tt('Stok per Gudang')}</h1>
+          <p className="text-sm text-muted-foreground">{tt('Saldo persediaan berjalan, dari kartu stok')}</p>
+        </div>
+        <TombolEkspor
+          ambilData={async () => {
+            let q = supabase.from('v_stok_gudang').select('*')
+            if (gudangId) q = q.eq('gudang_id', gudangId)
+            if (cari.trim()) {
+              const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+              q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+            }
+            const { data, error } = await q.order('nama_gudang').order('nama').limit(10000).returns<BarisStokGudang[]>()
+            if (error) throw error
+            return data ?? []
+          }}
+          kolom={KOLOM_EKSPOR_STOK}
+          opsi={{ namaFile: `stok-${tanggalISO()}`, judul: tt('Stok per Gudang') }}
+        />
       </div>
 
       <div className="flex flex-wrap gap-2">

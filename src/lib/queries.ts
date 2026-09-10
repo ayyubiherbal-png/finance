@@ -7,6 +7,7 @@ import type {
   TierHarga,
   ProdukSatuan,
   AkunKasBank,
+  KategoriBiaya,
   WilayahProvinsi,
   WilayahKabupatenKota,
   WilayahKecamatan,
@@ -53,6 +54,24 @@ export function useAkunKasBankAktif() {
       return data ?? []
     },
     staleTime: 60_000,
+  })
+}
+
+/** Kategori biaya aktif -- selector wajib di form Pengeluaran Kas. */
+export function useKategoriBiayaAktif() {
+  return useQuery({
+    queryKey: ['kategori-biaya-aktif'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('kategori_biaya')
+        .select('id, kode, nama, aktif')
+        .eq('aktif', true)
+        .order('nama')
+        .returns<KategoriBiaya[]>()
+      if (error) throw error
+      return data ?? []
+    },
+    staleTime: 5 * 60_000,
   })
 }
 
