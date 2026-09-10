@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -45,9 +45,46 @@ function useProduk(cari: string) {
   })
 }
 
+// Baris varian dikelompokkan langsung di bawah baris induknya (bukan cuma
+// mengandalkan urutan alfabet, karena nama varian bisa saja tidak berdekatan).
+// Varian yang induknya kebetulan tidak lolos filter pencarian saat ini tetap
+// tampil apa adanya sebagai baris biasa.
+function kelompokkanVarian(data: VStokProduk[]) {
+  const anak = new Map<string, VStokProduk[]>()
+  for (const p of data) {
+    if (p.induk_id) {
+      const arr = anak.get(p.induk_id) ?? []
+      arr.push(p)
+      anak.set(p.induk_id, arr)
+    }
+  }
+  const sudahDitampilkan = new Set<string>()
+  const hasil: { produk: VStokProduk; varian: boolean }[] = []
+  for (const p of data) {
+    if (sudahDitampilkan.has(p.produk_id)) continue
+    if (p.induk_id && data.some((x) => x.produk_id === p.induk_id)) continue // dirender di bawah induknya
+    hasil.push({ produk: p, varian: !!p.induk_id })
+    sudahDitampilkan.add(p.produk_id)
+    for (const v of anak.get(p.produk_id) ?? []) {
+      if (sudahDitampilkan.has(v.produk_id)) continue
+      hasil.push({ produk: v, varian: true })
+      sudahDitampilkan.add(v.produk_id)
+    }
+  }
+  return hasil
+}
+
 export function Produk() {
   const [cari, setCari] = useState('')
   const { data, isLoading, error, isFetching } = useProduk(cari)
+  const baris = useMemo(() => kelompokkanVarian(data ?? []), [data])
+  const jumlahVarian = useMemo(() => {
+    const peta = new Map<string, number>()
+    for (const p of data ?? []) {
+      if (p.induk_id) peta.set(p.induk_id, (peta.get(p.induk_id) ?? 0) + 1)
+    }
+    return peta
+  }, [data])
 
   return (
     <div className="space-y-4">
@@ -104,14 +141,20 @@ export function Produk() {
                 </Tr>
               </Thead>
               <Tbody>
-                {data.map((p) => (
+                {baris.map(({ produk: p, varian }) => (
                   <Tr key={p.produk_id}>
-                    <Td className="font-mono text-xs">{p.kode}</Td>
+                    <Td className={`font-mono text-xs ${varian ? 'pl-6 text-muted-foreground/70' : ''}`}>{p.kode}</Td>
                     <Td className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Link to={`/produk/${p.produk_id}`} className="text-primary hover:underline">
+                      <div className={`flex items-center gap-2 ${varian ? 'pl-6' : ''}`}>
+                        <Link to={`/produk/${p.produk_id}`} className={varian ? 'text-muted-foreground hover:underline' : 'text-primary hover:underline'}>
                           {p.nama}
                         </Link>
+                        {varian ? <Badge variant="netral">{tt('Varian')}</Badge> : null}
+                        {!varian && (jumlahVarian.get(p.produk_id) ?? 0) > 0 ? (
+                          <span className="text-xs text-muted-foreground">
+                            ({tt('{n} varian').replace('{n}', String(jumlahVarian.get(p.produk_id)))})
+                          </span>
+                        ) : null}
                         {p.perlu_restock ? (
                           <Badge variant={Number(p.qty) <= 0 ? 'bahaya' : 'peringatan'}>
                             {Number(p.qty) <= 0 ? 'Habis' : 'Menipis'}

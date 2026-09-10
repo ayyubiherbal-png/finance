@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 5174
+    },
+    {
+      "name": "ayyubi-dev-test",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--mode", "test", "--port", "5175"],
+      "port": 5175
     }
   ]
 }

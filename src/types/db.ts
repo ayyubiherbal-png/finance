@@ -84,6 +84,8 @@ export interface Produk {
   pakai_batch: boolean
   aktif: boolean
   catatan: string | null
+  /** Link opsional ke produk induk kalau baris ini adalah varian kemasan/ukurannya. */
+  induk_id: string | null
 }
 
 export interface ProdukSatuan {
@@ -269,6 +271,7 @@ export interface VStokProduk {
   produk_id: string
   kode: string
   nama: string
+  induk_id: string | null
   kategori: string | null
   satuan_dasar: string
   qty: number

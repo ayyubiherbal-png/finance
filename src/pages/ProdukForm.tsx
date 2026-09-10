@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/components/Toast'
 import { useTierHarga } from '@/lib/queries'
@@ -15,6 +15,7 @@ import {
   CardTitle,
   Input,
   InputAngka,
+  KondisiKosong,
   Label,
   PesanError,
   Select,
@@ -94,8 +95,39 @@ function FormBaru() {
   const queryClient = useQueryClient()
   const { data: satuan } = useSatuan()
   const { data: kategori } = useKategori()
+  const [searchParams] = useSearchParams()
+  const indukId = searchParams.get('induk')
+
+  // Membuat varian dari produk lain -- form ini di-prefill dari data produk
+  // induk supaya tidak perlu ketik ulang kategori/satuan/dll dari nol.
+  const { data: indukProduk } = useQuery({
+    queryKey: ['produk-induk', indukId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('produk')
+        .select('kode, nama, kategori_id, satuan_dasar_id, berat_gram, catatan')
+        .eq('id', indukId as string)
+        .single()
+      if (error) throw error
+      return data
+    },
+    enabled: !!indukId,
+  })
 
   const [form, setForm] = useState<DetailForm>(KOSONG)
+
+  useEffect(() => {
+    if (!indukProduk) return
+    setForm((f) => ({
+      ...f,
+      nama: f.nama || indukProduk.nama,
+      kategori_id: f.kategori_id || indukProduk.kategori_id || '',
+      satuan_dasar_id: f.satuan_dasar_id || indukProduk.satuan_dasar_id,
+      berat_gram: f.berat_gram || (indukProduk.berat_gram?.toString() ?? ''),
+      catatan: f.catatan || indukProduk.catatan || '',
+      kode: f.kode || `${indukProduk.kode}-`,
+    }))
+  }, [indukProduk])
   const [kategoriBaru, setKategoriBaru] = useState('')
   const [kodeKategoriBaru, setKodeKategoriBaru] = useState('')
   const [tampilkanKategoriBaru, setTampilkanKategoriBaru] = useState(false)
@@ -171,6 +203,7 @@ function FormBaru() {
           stok_min: form.stok_min,
           berat_gram: form.berat_gram ? Number(form.berat_gram) : null,
           catatan: form.catatan || null,
+          induk_id: indukId || null,
         })
         .select('id')
         .single()
@@ -205,6 +238,12 @@ function FormBaru() {
         </Button>
         <h1 className="text-2xl font-bold tracking-tight">{tt('Produk Baru')}</h1>
       </div>
+
+      {indukId ? (
+        <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+          {tt('Membuat varian dari:')} <span className="font-medium text-foreground">{indukProduk?.nama ?? '...'}</span>
+        </div>
+      ) : null}
 
       <Card>
         <CardContent className="space-y-4 p-4">
@@ -402,6 +441,27 @@ function FormEdit({ produkId }: { produkId: string }) {
     queryClient.invalidateQueries({ queryKey: ['produk'] })
     queryClient.invalidateQueries({ queryKey: ['produk-satuan'] }) // dipakai form transaksi
   }
+
+  // ---------- Varian produk (grup SKU kemasan/ukuran berbeda) ----------
+  // Maks 2 level: kalau produk ini sendiri varian (induk_id terisi), "keluarga"-
+  // nya dipusatkan di induknya, bukan di dirinya sendiri.
+  const rootId = produk?.induk_id ?? produk?.id
+  const { data: produkKeluarga } = useQuery({
+    queryKey: ['produk-varian', rootId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('produk')
+        .select('id, kode, nama, induk_id')
+        .or(`id.eq.${rootId},induk_id.eq.${rootId}`)
+        .neq('id', produkId)
+        .order('nama')
+      if (error) throw error
+      return (data ?? []) as { id: string; kode: string; nama: string; induk_id: string | null }[]
+    },
+    enabled: !!produk,
+  })
+  const indukRow = produk?.induk_id ? produkKeluarga?.find((v) => v.id === produk.induk_id) : undefined
+  const daftarVarian = (produkKeluarga ?? []).filter((v) => v.id !== produk?.induk_id)
 
   const [form, setForm] = useState<Omit<DetailForm, 'satuan_dasar_id'> | null>(null)
   const [aktif, setAktif] = useState(true)
@@ -859,6 +919,44 @@ function FormEdit({ produkId }: { produkId: string }) {
           <p className="px-3 pb-2 text-xs text-muted-foreground">
             {tt('Isi min. qty lebih dari 1 untuk diskon bertingkat (mis. beli 12+ dapat harga lebih murah).')}
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{tt('Varian Produk')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 p-4 pt-0">
+          {produk.induk_id ? (
+            <p className="text-sm text-muted-foreground">
+              {tt('Varian dari:')}{' '}
+              <Link to={`/produk/${produk.induk_id}`} className="font-medium text-primary hover:underline">
+                {indukRow?.nama ?? '...'}
+              </Link>
+            </p>
+          ) : null}
+
+          {daftarVarian.length === 0 ? (
+            <KondisiKosong pesan="Belum ada varian lain." />
+          ) : (
+            <ul className="space-y-1.5">
+              {daftarVarian.map((v) => (
+                <li key={v.id}>
+                  <Link to={`/produk/${v.id}`} className="flex items-center gap-2 text-sm hover:underline">
+                    <span className="font-mono text-xs text-muted-foreground">{v.kode}</span>
+                    <span className="text-primary">{v.nama}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <Button variant="outline" asChild>
+            <Link to={`/produk/baru?induk=${rootId}`}>
+              <Plus className="h-4 w-4" />
+              {tt('Tambah Varian')}
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </div>
