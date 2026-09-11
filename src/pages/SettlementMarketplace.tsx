@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -21,15 +22,15 @@ interface SettlementRow {
 interface PesananRow {
   id: string; kanal: KanalSettlement; nomor_pesanan_platform: string
   faktur: { id: string; total: number; terbayar: number; nomor: string; status: string } | null
-  settlement_item: { id: string }[]
 }
 
 export function SettlementMarketplace() {
+  const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const konfirmasi = useKonfirmasi()
   const { data: akun } = useAkunKasBankAktif()
   const [halaman, setHalaman] = useState(1)
-  const [bukaForm, setBukaForm] = useState(false)
+  const [bukaForm, setBukaForm] = useState(searchParams.get('baru') === '1')
   const [kanal, setKanal] = useState<KanalSettlement>('shopee')
   const [nomor, setNomor] = useState('')
   const [tanggalNilai, setTanggalNilai] = useState(tanggalISO())
@@ -58,11 +59,16 @@ export function SettlementMarketplace() {
     queryKey: ['pesanan-belum-settlement', kanal],
     enabled: bukaForm,
     queryFn: async () => {
-      const { data, error } = await supabase.from('pesanan_marketplace_impor')
-        .select('id, kanal, nomor_pesanan_platform, faktur:faktur_id(id, nomor, total, terbayar, status), settlement_item:settlement_marketplace_item(id)')
+      const [daftarPesanan, itemSettlement] = await Promise.all([
+        supabase.from('pesanan_marketplace_impor')
+        .select('id, kanal, nomor_pesanan_platform, faktur:faktur_id(id, nomor, total, terbayar, status)')
         .eq('kanal', kanal).order('diimpor_pada', { ascending: false }).limit(500)
-      if (error) throw error
-      return ((data ?? []) as unknown as PesananRow[]).filter((x) => x.faktur && x.settlement_item.length === 0 && x.faktur.total > x.faktur.terbayar && x.faktur.status !== 'dibatalkan')
+        , supabase.from('settlement_marketplace_item').select('pesanan_id').limit(1000)
+      ])
+      if (daftarPesanan.error) throw daftarPesanan.error
+      if (itemSettlement.error) throw itemSettlement.error
+      const sudahSettlement = new Set((itemSettlement.data ?? []).map((x) => x.pesanan_id))
+      return ((daftarPesanan.data ?? []) as unknown as PesananRow[]).filter((x) => x.faktur && !sudahSettlement.has(x.id) && x.faktur.total > x.faktur.terbayar && x.faktur.status !== 'dibatalkan')
     },
   })
 

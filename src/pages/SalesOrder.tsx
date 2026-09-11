@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal, tanggalISO, terlihatSepertiNama } from '@/lib/format'
@@ -110,8 +110,9 @@ const KOLOM_EKSPOR_SO: KolomEkspor<BarisSO>[] = [
 ]
 
 export function SalesOrder() {
+  const [searchParams] = useSearchParams()
   const [cari, setCari] = useState('')
-  const [status, setStatus] = useState('')
+  const [status, setStatus] = useState(searchParams.get('status') ?? '')
   const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
   const [halaman, setHalaman] = useState(0)
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set())

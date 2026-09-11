@@ -1309,6 +1309,7 @@ export const TEKS: Record<string, string> = {
   'Belum ada settlement. Catat pencairan Shopee, TikTok, atau marketplace lain di sini.': 'No settlements yet. Record Shopee, TikTok, or other marketplace payouts here.',
   Bruto: 'Gross',
   Potongan: 'Deductions',
+  'Perlu restock': 'Needs restocking',
 
   // ---------- Surat Jalan: nama penerima = nama pelanggan (murni frontend) ----------
   'Sama dengan nama pelanggan': 'Same as customer name',

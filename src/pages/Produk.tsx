@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { angka, rupiah, tanggalISO } from '@/lib/format'
@@ -29,9 +29,9 @@ import type { VStokProduk } from '@/types/db'
 import { daftarBerhalaman } from '@/lib/pagination'
 
 const UKURAN_HALAMAN = 50
-function useProduk(cari: string, halaman: number) {
+function useProduk(cari: string, halaman: number, hanyaRestock: boolean) {
   return useQuery({
-    queryKey: ['produk', cari, halaman],
+    queryKey: ['produk', cari, halaman, hanyaRestock],
     queryFn: async () => {
       // Filter (.or) harus dipasang sebelum .order/.limit, karena setelah itu
       // builder-nya berubah jadi transform builder yang tidak punya .or().
@@ -42,6 +42,7 @@ function useProduk(cari: string, halaman: number) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
+      if (hanyaRestock) q = q.eq('perlu_restock', true)
 
       const { data, count, error } = await q.order('nama').range(mulai, mulai + UKURAN_HALAMAN - 1).returns<VStokProduk[]>()
       if (error) throw error
@@ -81,9 +82,11 @@ function kelompokkanVarian(data: VStokProduk[]) {
 }
 
 export function Produk() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const hanyaRestock = searchParams.get('stok') === 'restock'
   const [cari, setCari] = useState('')
   const [halaman, setHalaman] = useState(1)
-  const { data, isLoading, error, isFetching } = useProduk(cari, halaman)
+  const { data, isLoading, error, isFetching } = useProduk(cari, halaman, hanyaRestock)
   useEffect(() => setHalaman(1), [cari])
   const baris = useMemo(() => kelompokkanVarian(data ?? []), [data])
   const jumlahVarian = useMemo(() => {
@@ -119,6 +122,7 @@ export function Produk() {
         </div>
 
         <div className="flex flex-1 justify-end gap-2 sm:flex-none">
+          {hanyaRestock ? <Button variant="outline" size="sm" onClick={() => { setSearchParams({}); setHalaman(1) }}>{tt('Perlu restock')} ×</Button> : null}
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -135,6 +139,7 @@ export function Produk() {
                 const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
                 q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
               }
+              if (hanyaRestock) q = q.eq('perlu_restock', true)
               const { data, error } = await q.order('nama').limit(10000).returns<VStokProduk[]>()
               if (error) throw error
               return data ?? []

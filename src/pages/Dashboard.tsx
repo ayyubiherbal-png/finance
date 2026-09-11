@@ -137,7 +137,7 @@ function useRingkasan(periode: PeriodeDasbor) {
         supabase
           .from('sales_order')
           .select('id', { count: 'exact', head: true })
-          .in('status', ['draf', 'menunggu']),
+          .eq('status', 'menunggu'),
         supabase
           .from('pesanan_marketplace_impor')
           .select('id, faktur:faktur_id(id, status, sisa)')
@@ -332,20 +332,20 @@ export function Dashboard() {
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('dasbor.perluTindakanHariIni')}</p>
         <div className={cn('grid gap-3 sm:grid-cols-2', bolehLihatBiaya && data.settlementTersedia ? 'xl:grid-cols-4' : 'lg:grid-cols-3')}>
-          <Link to="/produk" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.perluRestock.length > 0 && 'border-amber-500/30')}>
+          <Link to="/produk?stok=restock" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.perluRestock.length > 0 && 'border-amber-500/30')}>
             <AlertTriangle className={cn('h-5 w-5', data.perluRestock.length > 0 ? 'text-amber-500' : 'text-success')} />
             <span className="flex-1 text-sm font-medium">{data.perluRestock.length > 0 ? `${data.perluRestock.length} ${t('dasbor.produkPerluRestock')}` : t('dasbor.semuaStokAman')}</span>
           </Link>
-          <Link to="/faktur-penjualan" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.jumlahJatuhTempo > 0 && 'border-destructive/30')}>
+          <Link to="/faktur-penjualan?jatuhTempo=1" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.jumlahJatuhTempo > 0 && 'border-destructive/30')}>
             {data.jumlahJatuhTempo > 0 ? <CalendarClock className="h-5 w-5 text-destructive" /> : <CheckCircle2 className="h-5 w-5 text-success" />}
             <span className="flex-1 text-sm font-medium">{data.jumlahJatuhTempo > 0 ? t('dasbor.fakturJatuhTempo').replace('{n}', String(data.jumlahJatuhTempo)) : t('dasbor.tidakAdaJatuhTempo')}</span>
           </Link>
-          <Link to="/sales-order" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.pesananMenunggu > 0 && 'border-amber-500/30')}>
+          <Link to="/sales-order?status=menunggu" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.pesananMenunggu > 0 && 'border-amber-500/30')}>
             {data.pesananMenunggu > 0 ? <ShoppingCart className="h-5 w-5 text-amber-500" /> : <CheckCircle2 className="h-5 w-5 text-success" />}
             <span className="flex-1 text-sm font-medium">{data.pesananMenunggu > 0 ? t('dasbor.pesananMenunggu').replace('{n}', String(data.pesananMenunggu)) : t('dasbor.tidakAdaPesananMenunggu')}</span>
           </Link>
           {bolehLihatBiaya && data.settlementTersedia ? (
-            <Link to="/settlement-marketplace" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.settlementMenunggu > 0 && 'border-amber-500/30')}>
+            <Link to="/settlement-marketplace?baru=1" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.settlementMenunggu > 0 && 'border-amber-500/30')}>
               {data.settlementMenunggu > 0 ? <BadgeDollarSign className="h-5 w-5 text-amber-500" /> : <CheckCircle2 className="h-5 w-5 text-success" />}
               <span className="flex-1 text-sm font-medium">{data.settlementMenunggu > 0 ? t('dasbor.settlementMenunggu').replace('{n}', String(data.settlementMenunggu)) : t('dasbor.tidakAdaSettlementMenunggu')}</span>
             </Link>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal, tanggalISO, terlihatSepertiNama } from '@/lib/format'
@@ -62,9 +62,9 @@ const VARIAN_BAYAR: Record<StatusBayar, 'netral' | 'peringatan' | 'sukses'> = {
   lunas: 'sukses',
 }
 
-function useDaftarFaktur(cari: string, statusBayar: string, periode: RentangTanggal, halaman: number) {
+function useDaftarFaktur(cari: string, statusBayar: string, periode: RentangTanggal, halaman: number, hanyaJatuhTempo: boolean) {
   return useQuery({
-    queryKey: ['faktur-penjualan', cari, statusBayar, periode, halaman],
+    queryKey: ['faktur-penjualan', cari, statusBayar, periode, halaman, hanyaJatuhTempo],
     queryFn: async () => {
       let q = supabase
         .from('faktur_penjualan')
@@ -74,6 +74,7 @@ function useDaftarFaktur(cari: string, statusBayar: string, periode: RentangTang
         )
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (statusBayar) q = q.eq('status_bayar', statusBayar)
+      if (hanyaJatuhTempo) q = q.neq('status_bayar', 'lunas').neq('status', 'dibatalkan').lte('jatuh_tempo', tanggalISO())
       if (periode.dari) q = q.gte('tanggal', periode.dari)
       if (periode.sampai) q = q.lte('tanggal', periode.sampai)
       const mulai = halaman * UKURAN_HALAMAN
@@ -104,12 +105,14 @@ const KOLOM_EKSPOR_FAKTUR: KolomEkspor<BarisFaktur>[] = [
 ]
 
 export function FakturPenjualan() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const hanyaJatuhTempo = searchParams.get('jatuhTempo') === '1'
   const [cari, setCari] = useState('')
   const [statusBayar, setStatusBayar] = useState('')
   const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
   const [halaman, setHalaman] = useState(0)
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set())
-  const { data, isLoading, error, isFetching } = useDaftarFaktur(cari, statusBayar, periode, halaman)
+  const { data, isLoading, error, isFetching } = useDaftarFaktur(cari, statusBayar, periode, halaman, hanyaJatuhTempo)
   const baris = data?.baris ?? []
   const barisTerpilih = baris.filter((r) => terpilih.has(r.id))
   const semuaTerpilih = baris.length > 0 && baris.every((r) => terpilih.has(r.id))
@@ -140,6 +143,7 @@ export function FakturPenjualan() {
                 )
               if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
               if (statusBayar) q = q.eq('status_bayar', statusBayar)
+              if (hanyaJatuhTempo) q = q.neq('status_bayar', 'lunas').neq('status', 'dibatalkan').lte('jatuh_tempo', tanggalISO())
               if (periode.dari) q = q.gte('tanggal', periode.dari)
               if (periode.sampai) q = q.lte('tanggal', periode.sampai)
               const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(10000)
@@ -163,6 +167,7 @@ export function FakturPenjualan() {
       </div>
 
       <div className="flex flex-wrap gap-2">
+        {hanyaJatuhTempo ? <Button variant="outline" size="sm" onClick={() => { setSearchParams({}); setHalaman(0) }}>{tt('Jatuh tempo')} ×</Button> : null}
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-8" placeholder="Cari nomor faktur..." value={cari} onChange={(e) => { setCari(e.target.value); setHalaman(0); setTerpilih(new Set()) }} />
