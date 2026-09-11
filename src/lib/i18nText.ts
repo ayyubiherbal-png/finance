@@ -330,6 +330,8 @@ export const TEKS: Record<string, string> = {
   // ---------- Placeholder ----------
   'Cari nama atau ID...': 'Search name or ID...',
   'Cari pelanggan atau nomor faktur...': 'Search customer or invoice number...',
+  'Cari nomor pesanan atau faktur...': 'Search order or invoice number...',
+  'Cari nomor settlement...': 'Search settlement number...',
   'Cari nama atau kode...': 'Search name or code...',
   'Cari nama atau kode pelanggan...': 'Search customer name or code...',
   'Cari nama atau kode supplier...': 'Search supplier name or code...',
@@ -459,6 +461,7 @@ export const TEKS: Record<string, string> = {
   // ---------- Isi dropdown ----------
   'Semua status': 'All statuses',
   'Semua umur piutang': 'All receivable ages',
+  'Semua kanal': 'All channels',
   'Semua status bayar': 'All payment statuses',
   'Semua gudang': 'All warehouses',
   'Tanpa faktur': 'Without invoice',

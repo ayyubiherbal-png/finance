@@ -59,4 +59,12 @@ test.describe('workflow P1', () => {
     }
     await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
   })
+
+  test('settlement dapat dicari dan difilter di server', async ({ page }) => {
+    await page.goto('/settlement-marketplace')
+    await expect(page.getByRole('heading', { name: 'Settlement Marketplace' })).toBeVisible()
+    await expect(page.getByPlaceholder('Cari nomor settlement...')).toBeVisible()
+    await expect(page.getByRole('combobox').first()).toHaveValue('')
+    await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
+  })
 })
