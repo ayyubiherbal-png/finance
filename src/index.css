@@ -31,6 +31,15 @@
     --accent-foreground: 24 10% 15%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
+    --success: 157 69% 28%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 151 45% 90%;
+    --warning: 40 100% 30%;
+    --warning-foreground: 0 0% 100%;
+    --warning-soft: 44 100% 89%;
+    --info: 212 64% 40%;
+    --info-foreground: 0 0% 100%;
+    --info-soft: 211 70% 92%;
     --border: 90 15% 88%;
     --input: 90 15% 88%;
     --ring: 100 59% 31%;
@@ -40,6 +49,11 @@
        Dipakai sesekali (aksen dekoratif, badge), bukan token utama shadcn. */
     --brand-brown: 24 40% 22%;
     --brand-gold: 38 86% 56%;
+    --chart-1: 100 59% 31%;
+    --chart-2: 213 67% 50%;
+    --chart-3: 248 49% 44%;
+    --chart-4: 41 100% 46%;
+    --chart-5: 0 61% 52%;
   }
 
   .dark {
@@ -64,12 +78,26 @@
     --accent-foreground: 60 9% 92%;
     --destructive: 0 63% 51%;
     --destructive-foreground: 210 40% 98%;
+    --success: 151 55% 55%;
+    --success-foreground: 157 70% 10%;
+    --success-soft: 151 28% 20%;
+    --warning: 42 90% 62%;
+    --warning-foreground: 36 80% 12%;
+    --warning-soft: 42 32% 20%;
+    --info: 211 75% 67%;
+    --info-foreground: 215 65% 12%;
+    --info-soft: 211 30% 21%;
     --border: 100 12% 20%;
     --input: 100 12% 20%;
     --ring: 100 45% 52%;
 
     --brand-brown: 30 30% 70%;
     --brand-gold: 38 80% 62%;
+    --chart-1: 100 45% 52%;
+    --chart-2: 211 75% 67%;
+    --chart-3: 248 65% 70%;
+    --chart-4: 42 90% 62%;
+    --chart-5: 0 75% 68%;
   }
 
   * {

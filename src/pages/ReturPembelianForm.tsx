@@ -38,6 +38,29 @@ interface PBRingkas {
   tanggal: string
 }
 
+interface PBItemUntukRetur {
+  produk_id: string
+  satuan_id: string
+  konversi: number
+  qty: number
+  harga_satuan: number
+}
+
+async function muatSemuaItemPB(returId: string, pbId: string) {
+  const { data, error } = await supabase
+    .from('penerimaan_barang_item')
+    .select('produk_id, satuan_id, konversi, qty, harga_satuan')
+    .eq('pb_id', pbId)
+  if (error) throw error
+  const items = (data ?? []) as PBItemUntukRetur[]
+  if (items.length === 0) return 0
+  const { error: errorItem } = await supabase.from('retur_pembelian_item').insert(
+    items.map((item) => ({ ...item, retur_id: returId })),
+  )
+  if (errorItem) throw errorItem
+  return items.length
+}
+
 export function ReturPembelianForm() {
   const { id } = useParams<{ id: string }>()
   const isBaru = !id || id === 'baru'
@@ -105,7 +128,15 @@ function FormBaru() {
         .select('id')
         .single()
       if (error) throw error
-      toast('Draf retur tersimpan.')
+      if (header.pb_id) {
+        const jumlah = await muatSemuaItemPB(data.id, header.pb_id)
+        if (jumlah <= 0) throw new Error(tt('Penerimaan Barang tidak memiliki item yang dapat diretur.'))
+        const { error: errorStatus } = await supabase.from('retur_pembelian').update({ status: 'selesai' }).eq('id', data.id)
+        if (errorStatus) throw errorStatus
+        toast(tt('Retur seluruh barang tersimpan dan diposting.'))
+      } else {
+        toast('Draf retur tersimpan.')
+      }
       navigate(`/retur-pembelian/${data.id}`, { replace: true })
     } catch (e) {
       setError(e)
@@ -187,7 +218,7 @@ function FormBaru() {
             </Button>
             <Button onClick={simpan} disabled={menyimpan}>
               {menyimpan ? <Spinner /> : null}
-              Simpan sebagai Draf
+              {header.pb_id ? tt('Retur Semua & Posting') : tt('Lanjut Isi Barang')}
             </Button>
           </div>
         </CardContent>

@@ -231,7 +231,7 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
   return (
     <div
       className={cn(
-        'rounded-2xl border-none bg-card text-card-foreground shadow-[0_2px_24px_-8px_rgba(0,0,0,0.12)]',
+        'rounded-2xl border-none bg-card text-card-foreground shadow-panel',
         className,
       )}
       {...props}
@@ -269,9 +269,9 @@ const badgeVariants = cva(
       variant: {
         default: 'border-transparent bg-primary/10 text-primary',
         netral: 'border-transparent bg-muted text-muted-foreground',
-        sukses: 'border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300',
-        peringatan: 'border-transparent bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
-        bahaya: 'border-transparent bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-300',
+        sukses: 'border-transparent bg-success-soft text-success',
+        peringatan: 'border-transparent bg-warning-soft text-warning',
+        bahaya: 'border-transparent bg-destructive/10 text-destructive',
       },
     },
     defaultVariants: { variant: 'default' },

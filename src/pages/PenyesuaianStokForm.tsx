@@ -58,6 +58,10 @@ function FormBaru() {
   })
   const [menyimpan, setMenyimpan] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  const [itemsBaru, setItemsBaru] = useState<BarisTambah[]>([])
+  const [addRow, setAddRow] = useState<BarisTambah>(BARIS_KOSONG)
+  const [errorItem, setErrorItem] = useState<unknown>(null)
+  const { data: satuanProduk } = useProdukSatuan(addRow.produk_id)
 
   useEffect(() => {
     if (gudangAktif?.length === 1 && !header.gudang_id) {
@@ -65,13 +69,47 @@ function FormBaru() {
     }
   }, [gudangAktif, header.gudang_id])
 
+  useEffect(() => {
+    if (!addRow.produk_id || addRow.satuan_id || !satuanProduk?.length) return
+    const pertama = satuanProduk[0]!
+    setAddRow((r) => ({ ...r, satuan_id: pertama.satuan_id, konversi: pertama.konversi }))
+  }, [satuanProduk, addRow.produk_id, addRow.satuan_id])
+
+  function pilihProdukBaru(idProduk: string, opsi: OpsiCombobox) {
+    setAddRow({ ...BARIS_KOSONG, produk_id: idProduk, produkLabel: opsi })
+  }
+
+  function ubahSatuanBaru(satuanId: string) {
+    const entri = satuanProduk?.find((s) => s.satuan_id === satuanId)
+    setAddRow((r) => ({ ...r, satuan_id: satuanId, konversi: entri?.konversi ?? 1 }))
+  }
+
+  function tambahBaris() {
+    setErrorItem(null)
+    if (!addRow.produk_id || !addRow.satuan_id || addRow.qty === 0) {
+      setErrorItem(new Error('Pilih produk, satuan, dan isi qty (tidak boleh 0).'))
+      return
+    }
+    if (header.jenis === 'saldo_awal' && addRow.qty > 0 && addRow.hpp_satuan <= 0) {
+      setErrorItem(new Error('Saldo awal dengan qty positif wajib mengisi HPP per satuan dasar.'))
+      return
+    }
+    setItemsBaru((lama) => [...lama, addRow])
+    setAddRow(BARIS_KOSONG)
+  }
+
   async function simpan() {
     setError(null)
     if (!header.gudang_id) {
       setError(new Error('Belum ada gudang aktif.'))
       return
     }
+    if (itemsBaru.length === 0) {
+      setError(new Error(tt('Tambahkan minimal satu produk.')))
+      return
+    }
     setMenyimpan(true)
+    let penyesuaianBaruId: string | null = null
     try {
       const { data, error } = await supabase
         .from('penyesuaian_stok')
@@ -85,9 +123,27 @@ function FormBaru() {
         .select('id')
         .single()
       if (error) throw error
-      toast('Draf tersimpan.')
+      penyesuaianBaruId = data.id
+
+      const { error: errorItemSimpan } = await supabase.from('penyesuaian_stok_item').insert(
+        itemsBaru.map((item) => ({
+          penyesuaian_id: data.id,
+          produk_id: item.produk_id!,
+          satuan_id: item.satuan_id!,
+          konversi: item.konversi,
+          qty: item.qty,
+          hpp_satuan: item.qty > 0 ? item.hpp_satuan || null : null,
+        })),
+      )
+      if (errorItemSimpan) throw errorItemSimpan
+
+      const { error: errorStatus } = await supabase.from('penyesuaian_stok').update({ status: 'selesai' }).eq('id', data.id)
+      if (errorStatus) throw errorStatus
+
+      toast(tt('Penyesuaian tersimpan dan diposting.'))
       navigate(`/penyesuaian-stok/${data.id}`, { replace: true })
     } catch (e) {
+      if (penyesuaianBaruId) await supabase.from('penyesuaian_stok').delete().eq('id', penyesuaianBaruId).eq('status', 'draf')
       setError(e)
     } finally {
       setMenyimpan(false)
@@ -146,18 +202,37 @@ function FormBaru() {
             />
           </div>
 
+          <div className="space-y-2 border-t border-border pt-4">
+            <Label>Produk</Label>
+            {itemsBaru.map((item, index) => (
+              <div key={`${item.produk_id}-${index}`} className="flex items-center gap-3 rounded-md border border-border px-3 py-2 text-sm">
+                <span className="min-w-0 flex-1 truncate font-medium">{item.produkLabel?.label}</span>
+                <span className={item.qty < 0 ? 'tabular text-destructive' : 'tabular text-emerald-600'}>{item.qty > 0 ? '+' : ''}{angka(item.qty)}</span>
+                {item.qty > 0 && item.hpp_satuan > 0 ? <span className="tabular text-muted-foreground">HPP {angka(item.hpp_satuan)}</span> : null}
+                <Button variant="ghost" size="icon" onClick={() => setItemsBaru((lama) => lama.filter((_, i) => i !== index))}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              </div>
+            ))}
+            <div className="grid gap-2 sm:grid-cols-[2fr_1fr_1fr_1fr_auto] sm:items-end">
+              <div className="space-y-1"><Label className="text-xs">Produk</Label><Combobox value={addRow.produk_id} opsiTerpilih={addRow.produkLabel} onChange={pilihProdukBaru} cariOpsi={cariProduk} placeholder="Cari produk..." /></div>
+              <div className="space-y-1"><Label className="text-xs">Satuan</Label><Select value={addRow.satuan_id ?? ''} onChange={(e) => ubahSatuanBaru(e.target.value)}><option value="" disabled>-</option>{(satuanProduk ?? []).map((s) => <option key={s.satuan_id} value={s.satuan_id}>{s.satuan.kode}</option>)}</Select></div>
+              <div className="space-y-1"><Label className="text-xs">{tt('Qty (+/-)')}</Label><Input type="number" value={addRow.qty} onChange={(e) => setAddRow((r) => ({ ...r, qty: Number(e.target.value) }))} /></div>
+              {addRow.qty > 0 ? <div className="space-y-1"><Label className="text-xs">HPP</Label><InputAngka value={addRow.hpp_satuan} onChange={(nilai) => setAddRow((r) => ({ ...r, hpp_satuan: nilai }))} /></div> : <div />}
+              <Button onClick={tambahBaris}>Tambah</Button>
+            </div>
+            {errorItem ? <PesanError error={errorItem} /> : null}
+          </div>
+
           {error ? <PesanError error={error} /> : null}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" asChild>
               <Link to="/penyesuaian-stok">Batal</Link>
             </Button>
-            <Button onClick={simpan} disabled={menyimpan}>
+            <Button onClick={simpan} disabled={menyimpan || itemsBaru.length === 0}>
               {menyimpan ? <Spinner /> : null}
-              Simpan sebagai Draf
+              {tt('Simpan & Posting')}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">{tt('Item produk ditambahkan setelah draf tersimpan.')}</p>
         </CardContent>
       </Card>
     </div>

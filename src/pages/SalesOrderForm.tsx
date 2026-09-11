@@ -239,7 +239,7 @@ export function SalesOrderForm() {
     }
   }
 
-  async function simpanDraf() {
+  async function simpanLangsung(itemsBaru: BarisTambah[]) {
     setErrorSimpan(null)
     if (!header.pelanggan_id) {
       setErrorSimpan(new Error('Pilih pelanggan dulu.'))
@@ -249,8 +249,13 @@ export function SalesOrderForm() {
       setErrorSimpan(new Error('Belum ada gudang aktif. Tambahkan gudang di master data dulu.'))
       return
     }
+    if (itemsBaru.length === 0) {
+      setErrorSimpan(new Error(tt('Tambahkan minimal satu produk.')))
+      return
+    }
 
     setMenyimpanHeader(true)
+    let soBaruId: string | null = null
     try {
       const { data, error } = await supabase
         .from('sales_order')
@@ -272,9 +277,30 @@ export function SalesOrderForm() {
         .select('id')
         .single()
       if (error) throw error
-      toast('Draf Sales Order tersimpan.')
+      soBaruId = data.id
+
+      const { error: errorItem } = await supabase.from('sales_order_item').insert(
+        itemsBaru.map((item, urutan) => ({
+          so_id: data.id,
+          produk_id: item.produk_id!,
+          satuan_id: item.satuan_id!,
+          konversi: item.konversi,
+          qty: item.qty,
+          harga_satuan: item.harga_satuan,
+          diskon_persen: item.diskon_persen,
+          diskon_nilai: item.diskon_nilai,
+          urutan,
+        })),
+      )
+      if (errorItem) throw errorItem
+
+      const { error: errorStatus } = await supabase.from('sales_order').update({ status: 'disetujui' }).eq('id', data.id)
+      if (errorStatus) throw errorStatus
+
+      toast(tt('Sales Order tersimpan dan disetujui.'))
       navigate(`/sales-order/${data.id}`, { replace: true })
     } catch (e) {
+      if (soBaruId) await supabase.from('sales_order').delete().eq('id', soBaruId).eq('status', 'draf')
       setErrorSimpan(e)
     } finally {
       setMenyimpanHeader(false)
@@ -290,7 +316,7 @@ export function SalesOrderForm() {
         tierHarga={tierHarga ?? []}
         pilihPelanggan={pilihPelanggan}
         ubahKanal={ubahKanal}
-        onSimpan={simpanDraf}
+        onSimpan={simpanLangsung}
         menyimpan={menyimpanHeader}
         error={errorSimpan}
       />
@@ -319,14 +345,68 @@ function FormBaru({
   tierHarga: { id: string; nama: string }[]
   pilihPelanggan: (id: string, opsi: OpsiCombobox) => void
   ubahKanal: (k: KanalPenjualan) => void
-  onSimpan: () => void
+  onSimpan: (items: BarisTambah[]) => void
   menyimpan: boolean
   error: unknown
 }) {
   const bukanCanvassing = header.kanal !== 'canvassing'
+  const [itemsBaru, setItemsBaru] = useState<BarisTambah[]>([])
+  const [addRow, setAddRow] = useState<BarisTambah>(BARIS_KOSONG)
+  const [errorItem, setErrorItem] = useState<unknown>(null)
+  const { data: satuanProduk } = useProdukSatuan(addRow.produk_id)
+
+  async function segarkanHarga(satuanId: string | null, qty: number) {
+    if (!addRow.produk_id || !satuanId || !header.tier_harga_id) return
+    try {
+      const harga = await ambilHargaJual({
+        produkId: addRow.produk_id,
+        tierId: header.tier_harga_id,
+        satuanId,
+        qty,
+        tanggal: header.tanggal,
+      })
+      if (harga != null) setAddRow((r) => ({ ...r, harga_satuan: harga }))
+    } catch {
+      // Harga manual tetap dapat dipakai bila aturan harga tidak ditemukan.
+    }
+  }
+
+  useEffect(() => {
+    if (!addRow.produk_id || addRow.satuan_id || !satuanProduk?.length) return
+    const pertama = satuanProduk[0]!
+    setAddRow((r) => ({ ...r, satuan_id: pertama.satuan_id, konversi: pertama.konversi }))
+    void segarkanHarga(pertama.satuan_id, addRow.qty)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [satuanProduk, addRow.produk_id])
+
+  function pilihProdukBaru(idProduk: string, opsi: OpsiCombobox) {
+    setAddRow({ ...BARIS_KOSONG, produk_id: idProduk, produkLabel: opsi })
+  }
+
+  function ubahSatuanBaru(satuanId: string) {
+    const entri = satuanProduk?.find((s) => s.satuan_id === satuanId)
+    setAddRow((r) => ({ ...r, satuan_id: satuanId, konversi: entri?.konversi ?? 1 }))
+    void segarkanHarga(satuanId, addRow.qty)
+  }
+
+  function tambahBaris() {
+    setErrorItem(null)
+    if (!addRow.produk_id || !addRow.satuan_id || addRow.qty <= 0) {
+      setErrorItem(new Error('Pilih produk, satuan, dan isi qty lebih dari 0.'))
+      return
+    }
+    setItemsBaru((lama) => [...lama, addRow])
+    setAddRow(BARIS_KOSONG)
+  }
+
+  const subtotal = itemsBaru.reduce(
+    (total, item) =>
+      total + Math.round(item.qty * item.harga_satuan * (1 - item.diskon_persen / 100) * 100) / 100 - item.diskon_nilai,
+    0,
+  )
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
+    <div className="mx-auto max-w-5xl space-y-4">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild>
           <Link to="/sales-order">
@@ -466,20 +546,49 @@ function FormBaru({
             <Input value={header.catatan} onChange={(e) => setHeader((h) => ({ ...h, catatan: e.target.value }))} />
           </div>
 
+          <div className="space-y-2 border-t border-border pt-4">
+            <Label>Produk</Label>
+            {itemsBaru.length > 0 ? (
+              <div className="divide-y divide-border rounded-md border border-border">
+                {itemsBaru.map((item, index) => (
+                  <div key={`${item.produk_id}-${index}`} className="flex items-center gap-3 px-3 py-2 text-sm">
+                    <span className="min-w-0 flex-1 truncate font-medium">{item.produkLabel?.label}</span>
+                    <span className="tabular text-muted-foreground">{item.qty}</span>
+                    <span className="tabular">{rupiah(item.qty * item.harga_satuan)}</span>
+                    <Button variant="ghost" size="icon" onClick={() => setItemsBaru((lama) => lama.filter((_, i) => i !== index))}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="grid gap-2 sm:grid-cols-[2fr_1fr_0.7fr_1fr] sm:items-end">
+              <div className="space-y-1"><Label className="text-xs">Produk</Label><Combobox value={addRow.produk_id} opsiTerpilih={addRow.produkLabel} onChange={pilihProdukBaru} cariOpsi={cariProduk} placeholder="Cari produk..." /></div>
+              <div className="space-y-1"><Label className="text-xs">Satuan</Label><Select value={addRow.satuan_id ?? ''} onChange={(e) => ubahSatuanBaru(e.target.value)}><option value="" disabled>-</option>{(satuanProduk ?? []).map((s) => <option key={s.satuan_id} value={s.satuan_id}>{s.satuan.kode}</option>)}</Select></div>
+              <div className="space-y-1"><Label className="text-xs">Qty</Label><Input type="number" min={0} value={addRow.qty} onChange={(e) => setAddRow((r) => ({ ...r, qty: Number(e.target.value) }))} onBlur={() => segarkanHarga(addRow.satuan_id, addRow.qty)} /></div>
+              <div className="space-y-1"><Label className="text-xs">Harga</Label><InputAngka value={addRow.harga_satuan} onChange={(nilai) => setAddRow((r) => ({ ...r, harga_satuan: nilai }))} /></div>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-[0.7fr_1fr_auto] sm:items-end">
+              <div className="space-y-1"><Label className="text-xs">Diskon%</Label><Input type="number" min={0} max={100} value={addRow.diskon_persen} onChange={(e) => setAddRow((r) => ({ ...r, diskon_persen: Number(e.target.value) }))} /></div>
+              <div className="space-y-1"><Label className="text-xs">Diskon (Rp)</Label><InputAngka value={addRow.diskon_nilai} onChange={(nilai) => setAddRow((r) => ({ ...r, diskon_nilai: nilai }))} /></div>
+              <Button onClick={tambahBaris}>{tt('Tambah Produk')}</Button>
+            </div>
+            {errorItem ? <PesanError error={errorItem} /> : null}
+            {itemsBaru.length > 0 ? <p className="text-right text-sm font-semibold">{tt('Total')}: {rupiah(subtotal)}</p> : null}
+          </div>
+
           {error ? <PesanError error={error} /> : null}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" asChild>
               <Link to="/sales-order">Batal</Link>
             </Button>
-            <Button onClick={onSimpan} disabled={menyimpan}>
+            <Button onClick={() => onSimpan(itemsBaru)} disabled={menyimpan || itemsBaru.length === 0}>
               {menyimpan ? <Spinner /> : null}
-              Simpan sebagai Draf
+              {tt('Simpan & Setujui')}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            {tt('Item produk ditambahkan setelah draf tersimpan.')}
-          </p>
         </CardContent>
       </Card>
     </div>

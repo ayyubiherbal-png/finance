@@ -33,7 +33,7 @@ test.describe('Retur Penjualan (freeform, tanpa faktur asal)', () => {
     await page.getByPlaceholder('Ketik untuk cari...').fill(data.pelangganNama)
     await page.getByRole('button', { name: data.pelangganNama }).click()
 
-    await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
+    await page.getByRole('button', { name: 'Lanjut Isi Barang' }).click()
     await expect(page).toHaveURL(/\/retur-penjualan\/[0-9a-f-]+$/, { timeout: 15_000 })
     await expect(page.getByText('Draf', { exact: true })).toBeVisible()
 
@@ -51,9 +51,9 @@ test.describe('Retur Penjualan (freeform, tanpa faktur asal)', () => {
     await expect(page.getByText('Selesai', { exact: true })).toBeVisible()
   })
 
-  test('gagal: simpan draf retur tanpa pilih pelanggan', async ({ page }) => {
+  test('gagal: lanjut retur tanpa pilih pelanggan', async ({ page }) => {
     await page.goto('/retur-penjualan/baru')
-    await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
+    await page.getByRole('button', { name: 'Lanjut Isi Barang' }).click()
     await expect(page.getByTestId('pesan-error')).toHaveText('Pilih pelanggan dan gudang dulu.')
   })
 
@@ -62,14 +62,14 @@ test.describe('Retur Penjualan (freeform, tanpa faktur asal)', () => {
     await page.getByRole('button', { name: 'Cari nama atau kode pelanggan...' }).click()
     await page.getByPlaceholder('Ketik untuk cari...').fill(data.pelangganNama)
     await page.getByRole('button', { name: data.pelangganNama }).click()
-    await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
+    await page.getByRole('button', { name: 'Lanjut Isi Barang' }).click()
     await expect(page).toHaveURL(/\/retur-penjualan\/[0-9a-f-]+$/, { timeout: 15_000 })
 
     await page.getByRole('button', { name: 'Tambah', exact: true }).click()
     await expect(page.getByTestId('pesan-error')).toHaveText('Pilih produk, satuan, dan isi qty lebih dari 0.')
   })
 
-  test('gagal: network error saat menyimpan draf retur', async ({ page }) => {
+  test('gagal: network error saat memulai retur', async ({ page }) => {
     await page.goto('/retur-penjualan/baru')
     await page.getByRole('button', { name: 'Cari nama atau kode pelanggan...' }).click()
     await page.getByPlaceholder('Ketik untuk cari...').fill(data.pelangganNama)
@@ -78,7 +78,7 @@ test.describe('Retur Penjualan (freeform, tanpa faktur asal)', () => {
     // Regex, bukan glob string -- request insert Supabase selalu bawa query string
     // (mis. "?select=id"), glob "**/rest/v1/retur_penjualan" tanpa akhiran tidak cocok itu.
     await page.route(/\/rest\/v1\/retur_penjualan(\?|$)/, (route) => route.abort('failed'))
-    await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
+    await page.getByRole('button', { name: 'Lanjut Isi Barang' }).click()
 
     await expect(page.getByTestId('pesan-error')).toBeVisible({ timeout: 10_000 })
     await expect(page).toHaveURL(/\/retur-penjualan\/baru$/)

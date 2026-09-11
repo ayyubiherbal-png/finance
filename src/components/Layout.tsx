@@ -16,6 +16,8 @@ import {
   Bell,
   Boxes,
   Wallet,
+  Menu,
+  X,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -157,6 +159,7 @@ export function Layout() {
   const { profil, keluar } = useAuth()
   const { t } = useI18n()
   const { pathname } = useLocation()
+  const [menuMobileTerbuka, setMenuMobileTerbuka] = useState(false)
 
   const bolehLihat = (x: { peran?: PeranPengguna[] }) =>
     !x.peran || (profil?.peran ? x.peran.includes(profil.peran) : false)
@@ -170,61 +173,122 @@ export function Layout() {
   const seksiAktif = MENU.flatMap((g) => g.item).find((m) => m.tab.some((x) => x.ke === pathname))
   const tabAktif = seksiAktif ? tabTampil(seksiAktif) : []
 
+  // Navigasi mobile ditutup setelah berpindah halaman dan bisa ditutup dengan
+  // Escape. Sidebar desktop tetap tidak berubah; tablet memakai rail ikon agar
+  // area kerja transaksi tidak habis oleh sidebar penuh.
+  useEffect(() => setMenuMobileTerbuka(false), [pathname])
+  useEffect(() => {
+    if (!menuMobileTerbuka) return
+    function tutupDenganEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuMobileTerbuka(false)
+    }
+    window.addEventListener('keydown', tutupDenganEscape)
+    return () => window.removeEventListener('keydown', tutupDenganEscape)
+  }, [menuMobileTerbuka])
+
+  function isiMenu(ringkas: boolean, setelahPilih?: () => void) {
+    return MENU.map((grup) => {
+      const item = grup.item.filter((m) => tabTampil(m).length > 0)
+      if (item.length === 0) return null
+
+      return (
+        <div key={grup.judul}>
+          <p className={cn('px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground', ringkas && 'md:hidden lg:block')}>
+            {t(grup.judul)}
+          </p>
+          <ul className="space-y-0.5">
+            {item.map((m) => {
+              const tab = tabTampil(m)
+              const tujuan = tab[0]!.ke
+              const aktif = m.tab.some((x) => didalamTab(pathname, x))
+              return (
+                <li key={m.label}>
+                  <NavLink
+                    to={tujuan}
+                    onClick={setelahPilih}
+                    aria-label={ringkas ? t(m.label) : undefined}
+                    title={ringkas ? t(m.label) : undefined}
+                    className={cn(
+                      'flex min-h-[40px] items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors',
+                      ringkas && 'md:justify-center md:px-2 lg:justify-start lg:px-3',
+                      aktif
+                        ? 'bg-primary font-medium text-primary-foreground shadow-sm'
+                        : 'text-foreground/70 hover:bg-accent',
+                    )}
+                  >
+                    <m.ikon className="h-4 w-4 shrink-0" />
+                    <span className={cn(ringkas && 'md:hidden lg:inline')}>{t(m.label)}</span>
+                  </NavLink>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )
+    })
+  }
+
   return (
     // Sidebar & topbar sengaja jadi PANEL MENGAMBANG (kartu putih membulat
     // dengan jarak di sekelilingnya), bukan menempel rata ke tepi layar --
     // ini yang membedakan tampilan referensi: tiap area punya "wadah"
     // sendiri di atas latar abu-abu, bukan bidang putih tanpa batas.
-    <div className="flex h-screen gap-4 overflow-hidden bg-background p-4">
-      <aside className="hidden w-64 shrink-0 flex-col overflow-hidden rounded-2xl bg-card shadow-[0_2px_24px_-8px_rgba(0,0,0,0.12)] md:flex">
-        <div className="flex h-16 items-center gap-2.5 px-5">
+    <div className="flex h-screen gap-2 overflow-hidden bg-background p-2 sm:gap-3 sm:p-3 md:gap-4 md:p-4">
+      <aside
+        data-testid="sidebar-desktop"
+        className="hidden w-16 shrink-0 flex-col overflow-hidden rounded-2xl bg-card shadow-panel md:flex lg:w-64"
+      >
+        <div className="flex h-16 items-center justify-center gap-2.5 px-2 lg:justify-start lg:px-5">
           <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-9 w-9 shrink-0 rounded-xl object-cover ring-1 ring-border" />
-          <span className="font-semibold">Ayyubi Finance</span>
+          <span className="hidden font-semibold lg:inline">Ayyubi Finance</span>
         </div>
 
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-3">
-          {MENU.map((grup) => {
-            const item = grup.item.filter((m) => tabTampil(m).length > 0)
-            if (item.length === 0) return null
-
-            return (
-              <div key={grup.judul}>
-                <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t(grup.judul)}
-                </p>
-                <ul className="space-y-0.5">
-                  {item.map((m) => {
-                    const tab = tabTampil(m)
-                    // Tujuan klik = tab pertama yang boleh dilihat perannya
-                    // (mis. sales yang tidak boleh lihat Omzet langsung mendarat di Piutang).
-                    const tujuan = tab[0]!.ke
-                    const aktif = m.tab.some((x) => didalamTab(pathname, x))
-                    return (
-                      <li key={m.label}>
-                        <NavLink
-                          to={tujuan}
-                          className={cn(
-                            'flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors',
-                            aktif
-                              ? 'bg-primary font-medium text-primary-foreground shadow-sm'
-                              : 'text-foreground/70 hover:bg-accent',
-                          )}
-                        >
-                          <m.ikon className="h-4 w-4 shrink-0" />
-                          {t(m.label)}
-                        </NavLink>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            )
-          })}
+        <nav className="flex-1 space-y-5 overflow-y-auto px-2 pb-3 lg:px-3" aria-label={t('topbar.menuUtama')}>
+          {isiMenu(true)}
         </nav>
       </aside>
 
+      {menuMobileTerbuka ? (
+        <div className="fixed inset-0 z-50 md:hidden" data-testid="mobile-menu-drawer">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default bg-foreground/35"
+            aria-label={t('topbar.tutupMenu')}
+            onClick={() => setMenuMobileTerbuka(false)}
+          />
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('topbar.menuUtama')}
+            className="relative z-10 flex h-full w-[min(82vw,280px)] flex-col bg-card shadow-lg"
+          >
+            <div className="flex h-16 items-center gap-2.5 border-b border-border px-4">
+              <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-9 w-9 shrink-0 rounded-xl object-cover ring-1 ring-border" />
+              <span className="font-semibold">Ayyubi Finance</span>
+              <button
+                type="button"
+                className="ml-auto flex h-[44px] w-[44px] items-center justify-center rounded-full text-foreground/70 hover:bg-accent"
+                aria-label={t('topbar.tutupMenu')}
+                onClick={() => setMenuMobileTerbuka(false)}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4" aria-label={t('topbar.menuUtama')}>
+              {isiMenu(false, () => setMenuMobileTerbuka(false))}
+            </nav>
+          </aside>
+        </div>
+      ) : null}
+
       <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-hidden">
-        <TopBar nama={profil?.nama ?? '...'} peran={profil?.peran ?? ''} keluar={keluar} />
+        <TopBar
+          nama={profil?.nama ?? '...'}
+          peran={profil?.peran ?? ''}
+          keluar={keluar}
+          menuTerbuka={menuMobileTerbuka}
+          bukaMenu={() => setMenuMobileTerbuka(true)}
+        />
 
         <main className="min-w-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-7xl space-y-4">
@@ -249,7 +313,7 @@ function TabSeksi({ tab, pathname }: { tab: Tab[]; pathname: string }) {
   const { t } = useI18n()
   return (
     <div className="-mx-1 overflow-x-auto px-1 pb-0.5">
-      <div className="inline-flex gap-1 rounded-full bg-card p-1 shadow-[0_2px_24px_-8px_rgba(0,0,0,0.12)]">
+      <div className="inline-flex gap-1 rounded-full bg-card p-1 shadow-panel">
         {tab.map((x) => (
           <NavLink
             key={x.ke}
@@ -271,9 +335,32 @@ function TabSeksi({ tab, pathname }: { tab: Tab[]; pathname: string }) {
 
 /* --------------------------------------------------------------- TopBar */
 
-function TopBar({ nama, peran, keluar }: { nama: string; peran: string; keluar: () => void }) {
+function TopBar({
+  nama,
+  peran,
+  keluar,
+  menuTerbuka,
+  bukaMenu,
+}: {
+  nama: string
+  peran: string
+  keluar: () => void
+  menuTerbuka: boolean
+  bukaMenu: () => void
+}) {
+  const { t } = useI18n()
   return (
-    <header className="flex h-16 shrink-0 items-center gap-3 rounded-2xl bg-card px-4 shadow-[0_2px_24px_-8px_rgba(0,0,0,0.12)] md:px-5">
+    <header className="flex h-16 shrink-0 items-center gap-2 rounded-2xl bg-card px-2 shadow-panel sm:px-3 md:gap-3 md:px-5">
+      <button
+        type="button"
+        data-testid="mobile-menu-button"
+        className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-muted/70 text-foreground/70 hover:bg-accent md:hidden"
+        aria-label={t('topbar.bukaMenu')}
+        aria-expanded={menuTerbuka}
+        onClick={bukaMenu}
+      >
+        <Menu className="h-5 w-5" />
+      </button>
       <PencarianGlobal />
       <div className="ml-auto flex shrink-0 items-center gap-2">
         <ToggleBahasa />
@@ -294,7 +381,7 @@ function TopBar({ nama, peran, keluar }: { nama: string; peran: string; keluar: 
 function ToggleBahasa() {
   const { bahasa, setBahasa } = useI18n()
   return (
-    <div className="flex items-center rounded-full bg-muted/70 p-0.5 text-xs font-semibold">
+    <div className="hidden items-center rounded-full bg-muted/70 p-0.5 text-xs font-semibold sm:flex">
       {(['id', 'en'] as const).map((b) => (
         <button
           key={b}
@@ -387,7 +474,7 @@ function PencarianGlobal() {
   }
 
   return (
-    <div ref={boxRef} className="relative w-full max-w-sm">
+    <div ref={boxRef} className="relative min-w-0 flex-1 sm:max-w-sm">
       <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <input
         value={kueri}
@@ -397,7 +484,7 @@ function PencarianGlobal() {
         }}
         onFocus={() => setTerbuka(true)}
         placeholder={t('topbar.cari')}
-        className="h-9 w-full rounded-full border border-transparent bg-muted/70 pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-input focus:bg-card focus:ring-2 focus:ring-ring"
+        className="h-[44px] w-full rounded-full border border-transparent bg-muted/70 pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-input focus:bg-card focus:ring-2 focus:ring-ring md:h-9"
       />
 
       {terbuka && kueri.trim() ? (
@@ -477,7 +564,7 @@ function Lonceng() {
       <button
         type="button"
         onClick={() => setTerbuka((v) => !v)}
-        className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-muted/70 text-foreground/70 transition-colors hover:bg-accent"
+        className="relative flex h-[44px] w-[44px] cursor-pointer items-center justify-center rounded-full bg-muted/70 text-foreground/70 transition-colors hover:bg-accent md:h-9 md:w-9"
         aria-label={t('topbar.notifikasi')}
       >
         <Bell className="h-4 w-4" />
@@ -553,7 +640,7 @@ function ProfilChip({ nama, peran, onKeluar }: { nama: string; peran: string; on
       <button
         type="button"
         onClick={() => setTerbuka((v) => !v)}
-        className="flex cursor-pointer items-center gap-2.5 rounded-full py-1 pl-1 pr-1.5 transition-colors hover:bg-accent sm:pr-3"
+        className="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center gap-2.5 rounded-full py-1 pl-1 pr-1.5 transition-colors hover:bg-accent sm:justify-start sm:pr-3 md:min-h-0 md:min-w-0"
       >
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
           {(nama || '?').slice(0, 1).toUpperCase()}

@@ -153,11 +153,10 @@ function FormBaru() {
       if (header.faktur_id) {
         try {
           const jumlah = await muatItemDariFaktur(data.id, header.faktur_id)
-          toast(
-            jumlah > 0
-              ? tt('Draf retur tersimpan, {n} item dari faktur ikut dimuat. Hapus/sesuaikan yang tidak diretur.').replace('{n}', String(jumlah))
-              : 'Draf retur tersimpan.',
-          )
+          if (jumlah <= 0) throw new Error(tt('Faktur tidak memiliki item yang dapat diretur.'))
+          const { error: errorStatus } = await supabase.from('retur_penjualan').update({ status: 'selesai' }).eq('id', data.id)
+          if (errorStatus) throw errorStatus
+          toast(tt('Retur seluruh barang tersimpan dan diposting.'))
         } catch {
           // Header retur sudah terlanjur tersimpan -- jangan blokir navigasi,
           // cukup beri tahu supaya user muat manual lewat tombol di halaman berikutnya.
@@ -257,7 +256,7 @@ function FormBaru() {
             </Button>
             <Button onClick={simpan} disabled={menyimpan}>
               {menyimpan ? <Spinner /> : null}
-              Simpan sebagai Draf
+              {header.faktur_id ? tt('Retur Semua & Posting') : tt('Lanjut Isi Barang')}
             </Button>
           </div>
         </CardContent>

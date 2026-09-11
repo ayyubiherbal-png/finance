@@ -29,26 +29,22 @@ test.describe('Siklus Sales Order penuh (Order to Cash)', () => {
     // 1) Buat & setujui Sales Order
     await page.goto('/sales-order/baru')
     await pilihComboboxUji(page, 'Cari nama atau kode pelanggan...', data.pelangganNama, data.pelangganNama)
-    await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
-    await expect(page).toHaveURL(/\/sales-order\/[0-9a-f-]+$/, { timeout: 15_000 })
-    const soUrl = page.url()
-    await expect(page.getByText('Draf', { exact: true })).toBeVisible()
-
     await page.getByRole('button', { name: 'Cari produk...' }).click()
     const responHarga = page.waitForResponse((r) => r.url().includes('/rpc/harga_produk'))
     await page.getByPlaceholder('Ketik untuk cari...').fill(data.produkNama)
     await page.getByRole('button', { name: data.produkNama }).click()
     await responHarga
-    await page.getByRole('button', { name: 'Tambah', exact: true }).click()
+    await page.getByRole('button', { name: 'Tambah Produk', exact: true }).click()
     await expect(page.getByText(data.produkNama)).toBeVisible()
-
-    await page.getByRole('button', { name: 'Setujui' }).click()
+    await page.getByRole('button', { name: 'Simpan & Setujui' }).click()
+    await expect(page).toHaveURL(/\/sales-order\/[0-9a-f-]+$/, { timeout: 15_000 })
+    const soUrl = page.url()
     await expect(page.getByText('Disetujui', { exact: true })).toBeVisible()
 
     // 2) Buat Surat Jalan, kirim langsung
     await page.getByRole('link', { name: 'Buat Surat Jalan' }).click()
     await expect(page).toHaveURL(/\/surat-jalan\/baru\?so=/)
-    await page.getByRole('button', { name: 'Kirim Sekarang' }).click()
+    await page.getByRole('button', { name: 'Simpan & Kirim Barang' }).click()
     await expect(page).toHaveURL(/\/surat-jalan\/[0-9a-f-]+$/, { timeout: 15_000 })
     await expect(page.getByText('Selesai', { exact: true })).toBeVisible()
 
@@ -73,30 +69,39 @@ test.describe('Siklus Sales Order penuh (Order to Cash)', () => {
     void soUrl // dipakai untuk debugging manual kalau test ini gagal di tengah jalan
   })
 
-  test('gagal: simpan draf SO tanpa pilih pelanggan', async ({ page }) => {
+  test('gagal: simpan SO tanpa pilih pelanggan', async ({ page }) => {
     await page.goto('/sales-order/baru')
-    await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
+    await page.getByRole('button', { name: 'Cari produk...' }).click()
+    const responSatuan = page.waitForResponse((r) => r.url().includes('/rest/v1/produk_satuan'))
+    await page.getByPlaceholder('Ketik untuk cari...').fill(data.produkNama)
+    await page.getByRole('button', { name: data.produkNama }).click()
+    await responSatuan
+    await page.getByRole('button', { name: 'Tambah Produk' }).click()
+    await page.getByRole('button', { name: 'Simpan & Setujui' }).click()
     await expect(page.getByTestId('pesan-error')).toHaveText('Pilih pelanggan dulu.')
   })
 
   test('gagal: tambah item SO tanpa pilih produk', async ({ page }) => {
     await page.goto('/sales-order/baru')
     await pilihComboboxUji(page, 'Cari nama atau kode pelanggan...', data.pelangganNama, data.pelangganNama)
-    await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
-    await expect(page).toHaveURL(/\/sales-order\/[0-9a-f-]+$/, { timeout: 15_000 })
-
-    await page.getByRole('button', { name: 'Tambah', exact: true }).click()
+    await page.getByRole('button', { name: 'Tambah Produk', exact: true }).click()
     await expect(page.getByTestId('pesan-error')).toHaveText('Pilih produk, satuan, dan isi qty lebih dari 0.')
   })
 
-  test('gagal: network error saat menyimpan draf SO', async ({ page }) => {
+  test('gagal: network error saat menyimpan SO', async ({ page }) => {
     await page.goto('/sales-order/baru')
     await pilihComboboxUji(page, 'Cari nama atau kode pelanggan...', data.pelangganNama, data.pelangganNama)
+    await page.getByRole('button', { name: 'Cari produk...' }).click()
+    const responSatuan = page.waitForResponse((r) => r.url().includes('/rest/v1/produk_satuan'))
+    await page.getByPlaceholder('Ketik untuk cari...').fill(data.produkNama)
+    await page.getByRole('button', { name: data.produkNama }).click()
+    await responSatuan
+    await page.getByRole('button', { name: 'Tambah Produk' }).click()
 
     // Regex, bukan glob string -- request insert Supabase selalu bawa query string
     // (mis. "?select=id"), glob "**/rest/v1/sales_order" tanpa akhiran tidak cocok itu.
     await page.route(/\/rest\/v1\/sales_order(\?|$)/, (route) => route.abort('failed'))
-    await page.getByRole('button', { name: 'Simpan sebagai Draf' }).click()
+    await page.getByRole('button', { name: 'Simpan & Setujui' }).click()
 
     await expect(page.getByTestId('pesan-error')).toBeVisible({ timeout: 10_000 })
     await expect(page).toHaveURL(/\/sales-order\/baru$/)

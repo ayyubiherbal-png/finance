@@ -49,11 +49,11 @@ const NAMA_BULAN_PENDEK = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu
  * CVD-safe & normal-vision (lihat riwayat kerja) sebelum dipakai di sini.
  */
 const AKSEN = {
-  hijau: '#3F7D20',
-  biru: '#2a78d6',
-  ungu: '#4a3aa7',
-  kuning: '#eda100',
-  merah: '#d03b3b',
+  hijau: 'hsl(var(--chart-1))',
+  biru: 'hsl(var(--chart-2))',
+  ungu: 'hsl(var(--chart-3))',
+  kuning: 'hsl(var(--chart-4))',
+  merah: 'hsl(var(--chart-5))',
 } as const
 
 /**

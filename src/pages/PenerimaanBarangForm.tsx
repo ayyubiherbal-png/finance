@@ -329,17 +329,13 @@ function FormBaru({ poId }: { poId: string | null }) {
           {error ? <PesanError error={error} /> : null}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => simpan(false)} disabled={memproses !== null}>
-              {memproses === 'draf' ? <Spinner /> : null}
-              Simpan sebagai Draf
-            </Button>
             <Button onClick={() => simpan(true)} disabled={memproses !== null}>
               {memproses === 'terima' ? <Spinner /> : null}
-              Terima Sekarang
+              {tt('Simpan & Terima Barang')}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            {tt('"Terima Sekarang" langsung menambah stok gudang')} {po.gudang?.nama} {tt('dan menghitung ulang HPP.')}
+            {tt('"Simpan & Terima Barang" langsung menambah stok gudang')} {po.gudang?.nama} {tt('dan menghitung ulang HPP.')}
           </p>
         </CardContent>
       </Card>
