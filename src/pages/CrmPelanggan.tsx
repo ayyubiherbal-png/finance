@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -16,6 +16,7 @@ import {
   Input,
   KondisiKosong,
   PesanError,
+  Paginasi,
   Spinner,
   Table,
   Tbody,
@@ -24,7 +25,7 @@ import {
   Thead,
   Tr,
 } from '@/components/ui'
-import { cn } from '@/lib/utils'
+import { cn, kutipFilterPostgrest } from '@/lib/utils'
 import type { SegmenPelanggan, VPelangganCrm } from '@/types/db'
 
 /** Urutan sengaja dari "paling sehat" ke "paling perlu dikejar". */
@@ -42,20 +43,42 @@ export const INFO_SEGMEN = Object.fromEntries(SEGMEN.map((s) => [s.kunci, s])) a
   (typeof SEGMEN)[number]
 >
 
-function usePelangganCrm() {
+const UKURAN_HALAMAN = 50
+
+function usePelangganCrm(cari: string, segmen: SegmenPelanggan | null, halaman: number) {
   return useQuery({
-    queryKey: ['crm-pelanggan'],
+    queryKey: ['crm-pelanggan', cari, segmen, halaman],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('v_pelanggan_crm')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('aktif', true)
         .eq('akun_agregat', false) // akun agregat marketplace bukan orang, tidak bisa di-follow up
+      if (segmen) q = q.eq('segmen', segmen)
+      if (cari.trim()) {
+        const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+        q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+      }
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      const { data, error, count } = await q
         .order('total_belanja', { ascending: false })
-        .limit(500)
+        .range(mulai, mulai + UKURAN_HALAMAN - 1)
         .returns<VPelangganCrm[]>()
       if (error) throw error
-      return data ?? []
+      return { baris: data ?? [], total: count ?? 0 }
+    },
+    placeholderData: (sebelumnya) => sebelumnya,
+  })
+}
+
+function useHitunganSegmen() {
+  return useQuery({
+    queryKey: ['crm-pelanggan', 'hitungan-segmen'],
+    queryFn: async () => {
+      const hasil = await Promise.all(SEGMEN.map((s) => supabase.from('v_pelanggan_crm').select('pelanggan_id', { count: 'exact', head: true }).eq('aktif', true).eq('akun_agregat', false).eq('segmen', s.kunci)))
+      const gagal = hasil.find((x) => x.error)
+      if (gagal?.error) throw gagal.error
+      return Object.fromEntries(SEGMEN.map((s, i) => [s.kunci, hasil[i]!.count ?? 0])) as Record<SegmenPelanggan, number>
     },
   })
 }
@@ -72,17 +95,13 @@ const KOLOM_EKSPOR_CRM: KolomEkspor<VPelangganCrm>[] = [
 export function CrmPelanggan() {
   const [cari, setCari] = useState('')
   const [segmenAktif, setSegmenAktif] = useState<SegmenPelanggan | null>(null)
-  const { data, isLoading, error } = usePelangganCrm()
-
-  const semua = data ?? []
-  const hitungan = SEGMEN.map((s) => ({ ...s, jumlah: semua.filter((p) => p.segmen === s.kunci).length }))
-
-  const pola = cari.trim().toLowerCase()
-  const tersaring = semua.filter((p) => {
-    if (segmenAktif && p.segmen !== segmenAktif) return false
-    if (!pola) return true
-    return p.nama.toLowerCase().includes(pola) || p.kode.toLowerCase().includes(pola)
-  })
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = usePelangganCrm(cari, segmenAktif, halaman)
+  const hitunganQuery = useHitunganSegmen()
+  const errorHalaman = error ?? hitunganQuery.error
+  useEffect(() => setHalaman(1), [cari, segmenAktif])
+  const tersaring = data?.baris ?? []
+  const hitungan = SEGMEN.map((s) => ({ ...s, jumlah: hitunganQuery.data?.[s.kunci] ?? 0 }))
 
   return (
     <div className="space-y-4">
@@ -94,7 +113,17 @@ export function CrmPelanggan() {
           </p>
         </div>
         <TombolEkspor
-          ambilData={async () => tersaring}
+          ambilData={async () => {
+            let q = supabase.from('v_pelanggan_crm').select('*').eq('aktif', true).eq('akun_agregat', false)
+            if (segmenAktif) q = q.eq('segmen', segmenAktif)
+            if (cari.trim()) {
+              const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+              q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+            }
+            const { data, error } = await q.order('total_belanja', { ascending: false }).limit(10000).returns<VPelangganCrm[]>()
+            if (error) throw error
+            return data ?? []
+          }}
           kolom={KOLOM_EKSPOR_CRM}
           opsi={{ namaFile: `crm-pelanggan-${tanggalISO()}`, judul: tt('CRM Pelanggan') }}
         />
@@ -104,8 +133,8 @@ export function CrmPelanggan() {
         <div className="flex justify-center py-16">
           <Spinner className="h-6 w-6" />
         </div>
-      ) : error ? (
-        <PesanError error={error} />
+      ) : errorHalaman ? (
+        <PesanError error={errorHalaman} />
       ) : (
         <>
           <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -154,7 +183,7 @@ export function CrmPelanggan() {
               {tersaring.length === 0 ? (
                 <KondisiKosong pesan="Tidak ada pelanggan yang cocok." />
               ) : (
-                <Table>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                   <Thead>
                     <Tr>
                       <Th>Nama</Th>
@@ -211,6 +240,7 @@ export function CrmPelanggan() {
               )}
             </CardContent>
           </Card>
+          <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
         </>
       )}
     </div>
