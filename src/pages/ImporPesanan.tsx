@@ -17,6 +17,7 @@ import {
   KondisiKosong,
   Label,
   PesanError,
+  Paginasi,
   Select,
   Spinner,
   Table,
@@ -41,6 +42,8 @@ import {
   type PesananDikelompokkan,
 } from '@/lib/importPesanan'
 import type { KanalPenjualan } from '@/types/db'
+
+const UKURAN_PRATINJAU = 100
 
 /** Satu produk unik dari file (dikunci SKU kalau ada, kalau tidak nama produk). */
 interface ProdukSumber {
@@ -107,6 +110,7 @@ export function ImporPesanan() {
   const [dicentang, setDicentang] = useState<Set<string>>(new Set())
   const [memproses, setMemproses] = useState(false)
   const [hasilProses, setHasilProses] = useState<{ berhasil: number; dilewati: number; gagal: { nomor: string; pesan: string }[] } | null>(null)
+  const [halamanPratinjau, setHalamanPratinjau] = useState(1)
 
   // Pesanan yang SUDAH pernah diimpor tapi statusnya di file BERUBAH
   // dari yang tersimpan (mis. "Dikirim" -> "Selesai"). User: "kalau
@@ -119,6 +123,7 @@ export function ImporPesanan() {
   const [dicentangUpdate, setDicentangUpdate] = useState<Set<string>>(new Set())
   const [memprosesUpdate, setMemprosesUpdate] = useState(false)
   const [hasilUpdate, setHasilUpdate] = useState<{ berhasil: number; gagal: { nomor: string; pesan: string }[] } | null>(null)
+  const [halamanUpdate, setHalamanUpdate] = useState(1)
 
   const gudangTunggal = (gudangAktif?.length ?? 0) <= 1
   if (gudangTunggal && !gudangId && gudangAktif?.[0]) setGudangId(gudangAktif[0].id)
@@ -171,6 +176,8 @@ export function ImporPesanan() {
   )
 
   const nomorStatusBerubah = useMemo(() => new Set(pesananStatusBerubah.map((p) => p.nomorPesanan)), [pesananStatusBerubah])
+  const pesananHalaman = useMemo(() => pesanan.slice((halamanPratinjau - 1) * UKURAN_PRATINJAU, halamanPratinjau * UKURAN_PRATINJAU), [pesanan, halamanPratinjau])
+  const statusBerubahHalaman = useMemo(() => pesananStatusBerubah.slice((halamanUpdate - 1) * UKURAN_PRATINJAU, halamanUpdate * UKURAN_PRATINJAU), [pesananStatusBerubah, halamanUpdate])
 
   const produkSumber = useMemo<ProdukSumber[]>(() => {
     const peta2 = new Map<string, ProdukSumber>()
@@ -197,6 +204,8 @@ export function ImporPesanan() {
       setNamaFile(file.name)
       setHeaderKolom(hasil.headerKolom)
       setBarisMentah(hasil.baris)
+      setHalamanPratinjau(1)
+      setHalamanUpdate(1)
       setPeta(tebakPemetaan(hasil.headerKolom))
       setLangkah('petakan')
     } catch (err) {
@@ -286,6 +295,8 @@ export function ImporPesanan() {
     setDicentang(new Set(pesanan.filter((p) => pesananSiap(p) && statusAmanDiimpor(p.statusPesanan)).map((p) => p.nomorPesanan)))
     setDicentangUpdate(new Set(pesananStatusBerubah.map((p) => p.nomorPesanan)))
     setHasilUpdate(null)
+    setHalamanPratinjau(1)
+    setHalamanUpdate(1)
     setLangkah('pratinjau')
   }
 
@@ -667,7 +678,7 @@ export function ImporPesanan() {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {pesanan.map((p) => {
+                  {pesananHalaman.map((p) => {
                     const duplikat = sudahDiimpor.has(p.nomorPesanan)
                     const statusBerubah = nomorStatusBerubah.has(p.nomorPesanan)
                     const siap = pesananSiap(p)
@@ -717,6 +728,7 @@ export function ImporPesanan() {
                 </Tbody>
               </Table>
             )}
+            <Paginasi halaman={halamanPratinjau} ukuranHalaman={UKURAN_PRATINJAU} total={pesanan.length} onUbah={setHalamanPratinjau} />
 
             {errorFile ? (
               <div className="p-3">
@@ -783,7 +795,7 @@ export function ImporPesanan() {
                 </Tr>
               </Thead>
               <Tbody>
-                {pesananStatusBerubah.map((p) => {
+                {statusBerubahHalaman.map((p) => {
                   const statusLama = sudahDiimpor.get(p.nomorPesanan) ?? ''
                   const jadiFinal = statusSudahFinal(p.statusPesanan)
                   return (
@@ -807,6 +819,7 @@ export function ImporPesanan() {
                 })}
               </Tbody>
             </Table>
+            <Paginasi halaman={halamanUpdate} ukuranHalaman={UKURAN_PRATINJAU} total={pesananStatusBerubah.length} onUbah={setHalamanUpdate} />
 
             {hasilUpdate ? (
               <div className="m-3 space-y-1 rounded-lg border border-border p-3 text-sm">
