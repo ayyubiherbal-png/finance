@@ -76,6 +76,7 @@ export const KAMUS = {
   'menu.penyesuaianStok': { id: 'Penyesuaian Stok', en: 'Stock Adjustment' },
   'menu.segmenPelanggan': { id: 'Segmen Pelanggan', en: 'Customer Segments' },
   'menu.asistenJawabPelanggan': { id: 'Asisten Jawab Pelanggan', en: 'Customer Reply Assistant' },
+  'menu.drafKonten': { id: 'Draf Konten', en: 'Content Draft' },
   'menu.produk': { id: 'Produk', en: 'Products' },
   'menu.kategoriProduk': { id: 'Kategori Produk', en: 'Product Categories' },
   'menu.kategoriBiaya': { id: 'Kategori Biaya', en: 'Expense Categories' },
@@ -1368,6 +1369,16 @@ export const TEKS: Record<string, string> = {
   'Tempel dulu teks pesanannya.': 'Paste the order text first.',
   'Gagal membaca pesanan.': 'Failed to read the order.',
   '{n} barang terisi dari chat -- cek dulu sebelum diproses.': '{n} items filled in from chat -- review before processing.',
+
+  // ---------- Draf Konten ----------
+  'Draf Konten': 'Content Draft',
+  'Draf caption promosi dari data produk asli, per kanal -- Anda yang tinjau & posting sendiri.':
+    'Promo caption drafts from real product data, per channel -- you review and post it yourself.',
+  'Buat Draf Konten': 'Create Content Draft',
+  'Belum ada draf konten. Pilih produk & kanal di atas untuk membuat yang pertama.':
+    'No content drafts yet. Pick a product & channel above to create the first one.',
+  'Produk sudah dihapus': 'Product deleted',
+  'Pilih produk dulu.': 'Pick a product first.',
 }
 
 
