@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { tt } from '@/lib/i18nText'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Plus, Search } from 'lucide-react'
+import { CheckCircle2, Plus, Search, XCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal, tanggalISO } from '@/lib/format'
 import { TombolEkspor } from '@/components/TombolEkspor'
@@ -28,6 +28,8 @@ import {
 } from '@/components/ui'
 import { LABEL_STATUS, VARIAN_STATUS } from '@/pages/SalesOrder'
 import type { StatusDokumen } from '@/types/db'
+import { useKonfirmasi } from '@/components/Konfirmasi'
+import { toast } from '@/components/Toast'
 
 interface BarisPO {
   id: string
@@ -36,6 +38,7 @@ interface BarisPO {
   status: StatusDokumen
   total: number
   supplier: { nama: string } | null
+  items: { id: string }[]
 }
 
 const UKURAN_HALAMAN = 50
@@ -44,7 +47,7 @@ function useDaftarPO(cari: string, status: string, halaman: number) {
   return useQuery({
     queryKey: ['purchase-order', cari, status, halaman],
     queryFn: async () => {
-      let q = supabase.from('purchase_order').select('id, nomor, tanggal, status, total, supplier:supplier_id(nama)', { count: 'exact' })
+      let q = supabase.from('purchase_order').select('id, nomor, tanggal, status, total, supplier:supplier_id(nama), items:purchase_order_item(id)', { count: 'exact' })
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
       const mulai = halaman * UKURAN_HALAMAN
@@ -68,10 +71,13 @@ const KOLOM_EKSPOR_PO: KolomEkspor<BarisPO>[] = [
 ]
 
 export function PurchaseOrder() {
+  const queryClient = useQueryClient()
+  const konfirmasi = useKonfirmasi()
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
   const [halaman, setHalaman] = useState(0)
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set())
+  const [memprosesMassal, setMemprosesMassal] = useState(false)
   const { data, isLoading, error, isFetching } = useDaftarPO(cari, status, halaman)
   const baris = data?.baris ?? []
   const barisTerpilih = baris.filter((r) => terpilih.has(r.id))
@@ -84,6 +90,20 @@ export function PurchaseOrder() {
       else baru.delete(id)
       return baru
     })
+  }
+
+  async function ubahStatusMassal(statusBaru: 'disetujui' | 'dibatalkan') {
+    const kandidat = barisTerpilih.filter((x) => statusBaru === 'disetujui' ? x.status === 'draf' && x.items.length > 0 : ['draf', 'menunggu'].includes(x.status))
+    if (kandidat.length === 0) return
+    const aksi = statusBaru === 'disetujui' ? tt('setujui') : tt('batalkan')
+    if (!(await konfirmasi(tt('{aksi} {n} Purchase Order terpilih?').replace('{aksi}', aksi).replace('{n}', String(kandidat.length)), { berbahaya: statusBaru === 'dibatalkan' }))) return
+    setMemprosesMassal(true)
+    const { error } = await supabase.from('purchase_order').update({ status: statusBaru }).in('id', kandidat.map((x) => x.id))
+    setMemprosesMassal(false)
+    if (error) return toast(error.message, 'error')
+    toast(tt('{n} Purchase Order berhasil diperbarui.').replace('{n}', String(kandidat.length)))
+    setTerpilih(new Set())
+    await queryClient.invalidateQueries({ queryKey: ['purchase-order'] })
   }
 
   return (
@@ -131,6 +151,8 @@ export function PurchaseOrder() {
       </div>
 
       <BarPilihanMassal jumlah={barisTerpilih.length} onBersihkan={() => setTerpilih(new Set())}>
+        {barisTerpilih.some((x) => x.status === 'draf' && x.items.length > 0) ? <Button size="sm" onClick={() => ubahStatusMassal('disetujui')} disabled={memprosesMassal}><CheckCircle2 className="h-4 w-4" />{tt('Setujui')}</Button> : null}
+        {barisTerpilih.some((x) => ['draf', 'menunggu'].includes(x.status)) ? <Button size="sm" variant="outline" onClick={() => ubahStatusMassal('dibatalkan')} disabled={memprosesMassal}><XCircle className="h-4 w-4" />{tt('Batalkan')}</Button> : null}
         <TombolEkspor
           ambilData={async () => barisTerpilih}
           kolom={KOLOM_EKSPOR_PO}

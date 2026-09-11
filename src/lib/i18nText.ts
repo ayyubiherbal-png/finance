@@ -1310,6 +1310,12 @@ export const TEKS: Record<string, string> = {
   Bruto: 'Gross',
   Potongan: 'Deductions',
   'Perlu restock': 'Needs restocking',
+  setujui: 'approve',
+  batalkan: 'cancel',
+  '{aksi} {n} Sales Order terpilih?': '{aksi} {n} selected Sales Orders?',
+  '{aksi} {n} Purchase Order terpilih?': '{aksi} {n} selected Purchase Orders?',
+  '{n} Sales Order berhasil diperbarui.': '{n} Sales Orders updated successfully.',
+  '{n} Purchase Order berhasil diperbarui.': '{n} Purchase Orders updated successfully.',
 
   // ---------- Surat Jalan: nama penerima = nama pelanggan (murni frontend) ----------
   'Sama dengan nama pelanggan': 'Same as customer name',
