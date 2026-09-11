@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
@@ -9,6 +9,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   Label,
   PesanError,
   Select,
@@ -23,6 +24,7 @@ import {
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import type { VKartuKasBank, VSaldoKasBank } from '@/types/db'
+import { daftarBerhalaman } from '@/lib/pagination'
 
 function useDaftarAkun() {
   return useQuery({
@@ -41,16 +43,18 @@ function useDaftarAkun() {
   })
 }
 
-function useKartuKasBank(akunId: string, dari: string, sampai: string) {
+const UKURAN_HALAMAN = 50
+function useKartuKasBank(akunId: string, dari: string, sampai: string, halaman: number) {
   return useQuery({
-    queryKey: ['kartu-kas-bank', akunId, dari, sampai],
+    queryKey: ['kartu-kas-bank', akunId, dari, sampai, halaman],
     queryFn: async () => {
-      let q = supabase.from('v_kartu_kas_bank').select('*').eq('akun_id', akunId)
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      let q = supabase.from('v_kartu_kas_bank').select('*', { count: 'exact' }).eq('akun_id', akunId)
       if (dari) q = q.gte('tanggal', dari)
       if (sampai) q = q.lte('tanggal', sampai)
-      const { data, error } = await q.order('tanggal').order('ref_id').limit(500).returns<VKartuKasBank[]>()
+      const { data, count, error } = await q.order('tanggal').order('ref_id').range(mulai, mulai + UKURAN_HALAMAN - 1).returns<VKartuKasBank[]>()
       if (error) throw error
-      return data ?? []
+      return daftarBerhalaman(data ?? [], count)
     },
     enabled: !!akunId,
   })
@@ -79,7 +83,9 @@ export function KartuKasBank() {
   const [dari, setDari] = useState(tanggalISO(batasAwal))
   const [sampai, setSampai] = useState(tanggalISO())
 
-  const { data, isLoading, error, isFetching } = useKartuKasBank(akunId, dari, sampai)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useKartuKasBank(akunId, dari, sampai, halaman)
+  useEffect(() => setHalaman(1), [akunId, dari, sampai])
 
   return (
     <div className="space-y-4">
@@ -184,6 +190,7 @@ export function KartuKasBank() {
           </CardContent>
         </Card>
       )}
+      {akunId ? <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} /> : null}
     </div>
   )
 }

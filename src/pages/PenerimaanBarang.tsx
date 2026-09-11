@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -13,6 +13,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Select,
   Spinner,
@@ -25,6 +26,7 @@ import {
 } from '@/components/ui'
 import { LABEL_STATUS, VARIAN_STATUS } from '@/pages/SalesOrder'
 import type { StatusDokumen } from '@/types/db'
+import { daftarBerhalaman } from '@/lib/pagination'
 
 interface BarisPB {
   id: string
@@ -35,18 +37,20 @@ interface BarisPB {
   gudang: { nama: string } | null
 }
 
-function useDaftarPB(cari: string, status: string) {
+const UKURAN_HALAMAN = 50
+function useDaftarPB(cari: string, status: string, halaman: number) {
   return useQuery({
-    queryKey: ['penerimaan-barang', cari, status],
+    queryKey: ['penerimaan-barang', cari, status, halaman],
     queryFn: async () => {
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
       let q = supabase
         .from('penerimaan_barang')
-        .select('id, nomor, tanggal, status, supplier:supplier_id(nama), gudang:gudang_id(nama)')
+        .select('id, nomor, tanggal, status, supplier:supplier_id(nama), gudang:gudang_id(nama)', { count: 'exact' })
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
-      const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(100)
+      const { data, count, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).range(mulai, mulai + UKURAN_HALAMAN - 1)
       if (error) throw error
-      return (data ?? []) as unknown as BarisPB[]
+      return daftarBerhalaman((data ?? []) as unknown as BarisPB[], count)
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -63,7 +67,9 @@ const KOLOM_EKSPOR_PB: KolomEkspor<BarisPB>[] = [
 export function PenerimaanBarang() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
-  const { data, isLoading, error, isFetching } = useDaftarPB(cari, status)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useDaftarPB(cari, status, halaman)
+  useEffect(() => setHalaman(1), [cari, status])
 
   return (
     <div className="space-y-4">
@@ -149,6 +155,7 @@ export function PenerimaanBarang() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
   )
 }

@@ -34,3 +34,21 @@ test.describe('layout responsif', () => {
     await expect(sidebar.getByText('Inventori')).toBeVisible()
   })
 })
+
+test.describe('perlindungan entri data', () => {
+  test('memperingatkan saat meninggalkan form yang belum disimpan', async ({ page }) => {
+    await page.goto('/produk/baru')
+    await page.locator('input').first().fill('P0-UNSAVED')
+    await page.locator('a[href="/produk"]').first().click()
+
+    const dialog = page.getByRole('alertdialog')
+    await expect(dialog).toBeVisible()
+    await expect(dialog).toContainText('Perubahan belum disimpan')
+    await dialog.getByRole('button', { name: 'Batal' }).click()
+    await expect(page).toHaveURL(/\/produk\/baru$/)
+
+    await page.locator('a[href="/produk"]').first().click()
+    await dialog.getByRole('button', { name: 'Lanjutkan' }).click()
+    await expect(page).toHaveURL(/\/produk$/)
+  })
+})

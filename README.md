@@ -15,26 +15,11 @@ memengaruhi bentuk form.
 
 ## ✅ Status migrasi
 
-Migrasi 0001-0012 dan 0014-0019 sudah dijalankan di database live Anda,
-termasuk 3 file CSV wilayah (`supabase/seed-data/`) lewat Table Editor.
-(Nomor 0013 sengaja tidak ada -- dibatalkan sebelum sempat dijalankan,
-bukan ada yang hilang.)
-
-> ⏳ **Belum dijalankan: `0038` s.d. `0042` (jalankan BERURUTAN sesuai
-> nomor)**
-> — `0038_surat_jalan_resi.sql`: tambah 1 kolom `surat_jalan.no_resi`.
-> `0039_tingkat_fu_selesai.sql`: view `v_tingkat_fu_selesai` untuk
-> kartu statistik di Riwayat Follow-Up. `0040_poin_loyalitas.sql`:
-> program poin (tabel + trigger akrual + RPC `tukar_poin()`).
-> `0041_kode_referral.sql`: kode referral sungguhan (**butuh 0040**
-> duluan, triggernya menulis ke tabel poin). `0042_umpan_balik_pelanggan.sql`:
-> survei kepuasan + testimoni lewat tautan publik `/u/:token` (tabel +
-> 2 RPC + halaman publik baru). (0020-0037 terkonfirmasi sudah jalan.)
-> (0020-0034 terkonfirmasi sudah jalan.)
-
-Migrasi tidak pernah dijalankan otomatis, selalu manual lewat SQL
-Editor Supabase, dan setiap file aman dijalankan berkali-kali
-(idempotent).
+Migrasi 0001–0054 sudah diterapkan di database live. Riwayat migrasi yang
+sebelumnya dijalankan manual melalui SQL Editor telah diselaraskan ke
+`supabase_migrations`, sehingga migrasi berikutnya dapat diterapkan secara
+aman dengan `npx supabase db push`. Nomor 0013 memang tidak ada karena
+dibatalkan sebelum diterapkan.
 
 ---
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -44,6 +45,7 @@ function tahapKosong(kategori: KategoriTreatmentFu): FormTahap {
 }
 
 export function TahapanTreatmentFu() {
+  const konfirmasi = useKonfirmasi()
   const { profil } = useAuth()
   const bolehAkses = profil?.peran === 'owner' || profil?.peran === 'admin'
   const queryClient = useQueryClient()
@@ -120,7 +122,7 @@ export function TahapanTreatmentFu() {
   }
 
   async function hapus(t: TahapRow) {
-    if (!window.confirm(`Hapus tahap "${t.label}"?`)) return
+    if (!(await konfirmasi(`Hapus tahap "${t.label}"?`, { labelSetuju: 'Hapus', berbahaya: true }))) return
     const { error: err } = await supabase.from('tahapan_treatment_fu').delete().eq('id', t.id)
     if (err) {
       setErrorSimpan(err)

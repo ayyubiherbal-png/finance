@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, History, MessageCircle, RefreshCw, Search, UserPlus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -120,6 +121,7 @@ const KOLOM_EKSPOR_PEMBELI_MP: KolomEkspor<BarisPembeli>[] = [
 ]
 
 export function PembeliMarketplace() {
+  const konfirmasi = useKonfirmasi()
   const navigate = useNavigate()
   const [cari, setCari] = useState('')
   const { data, isLoading, error, isFetching } = usePembeliMarketplace(cari)
@@ -204,7 +206,7 @@ export function PembeliMarketplace() {
 
   async function hapus(p: BarisPembeli) {
     const label = p.nama || p.telepon || p.kunci
-    if (!window.confirm(tt('Hapus {nama} dari daftar ini? Data pesanan/Faktur asli TIDAK ikut terhapus, ini cuma daftar follow-up.').replace('{nama}', label)))
+    if (!(await konfirmasi(tt('Hapus {nama} dari daftar ini? Data pesanan/Faktur asli TIDAK ikut terhapus, ini cuma daftar follow-up.').replace('{nama}', label), { labelSetuju: 'Hapus', berbahaya: true })))
       return
     setErrorAksi(null)
     try {

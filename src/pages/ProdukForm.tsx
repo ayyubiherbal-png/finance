@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
@@ -91,6 +92,7 @@ export function ProdukForm() {
 /* ------------------------------------------------------------- Buat baru */
 
 function FormBaru() {
+  const konfirmasi = useKonfirmasi()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data: satuan } = useSatuan()
@@ -162,7 +164,7 @@ function FormBaru() {
     // tidak diam-diam bikin "Makaroni" dobel cuma karena beda kapitalisasi/spasi.
     const namaBaru = kategoriBaru.trim().toLowerCase()
     const sudahAda = (kategori ?? []).find((k) => k.nama.trim().toLowerCase() === namaBaru)
-    if (sudahAda && !window.confirm(tt('Kategori "{nama}" sudah ada -- tetap buat baru?').replace('{nama}', sudahAda.nama))) {
+    if (sudahAda && !(await konfirmasi(tt('Kategori "{nama}" sudah ada -- tetap buat baru?').replace('{nama}', sudahAda.nama)))) {
       return
     }
     const kode = kodeKategoriBaru.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-').slice(0, 10)
@@ -390,6 +392,7 @@ interface ProdukHargaBaris {
 }
 
 function FormEdit({ produkId }: { produkId: string }) {
+  const konfirmasi = useKonfirmasi()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data: satuanSemua } = useSatuan()
@@ -533,7 +536,7 @@ function FormEdit({ produkId }: { produkId: string }) {
       jumlahAnak > 0
         ? tt('{n} varian produk ini akan kehilangan link ke sini (jadi produk mandiri). Yakin hapus?').replace('{n}', String(jumlahAnak))
         : tt('Hapus produk ini? Produk yang sudah pernah ada transaksi/stok tidak akan bisa dihapus.')
-    if (!window.confirm(peringatan)) return
+    if (!(await konfirmasi(peringatan, { labelSetuju: 'Hapus', berbahaya: true }))) return
     setError(null)
     setMenghapus(true)
     try {
@@ -623,7 +626,7 @@ function FormEdit({ produkId }: { produkId: string }) {
       setError(new Error('Satuan dasar tidak bisa dihapus.'))
       return
     }
-    if (!window.confirm(tt('Hapus satuan ini?'))) return
+    if (!(await konfirmasi(tt('Hapus satuan ini?'), { labelSetuju: 'Hapus', berbahaya: true }))) return
     const { error } = await supabase.from('produk_satuan').delete().eq('id', baris.id)
     if (error) setError(error)
     else {
@@ -662,7 +665,7 @@ function FormEdit({ produkId }: { produkId: string }) {
     }
   }
   async function hapusHarga(id: string) {
-    if (!window.confirm(tt('Hapus aturan harga ini?'))) return
+    if (!(await konfirmasi(tt('Hapus aturan harga ini?'), { labelSetuju: 'Hapus', berbahaya: true }))) return
     const { error } = await supabase.from('produk_harga').delete().eq('id', id)
     if (error) setError(error)
     else {

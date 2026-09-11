@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -16,6 +16,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Select,
   Spinner,
@@ -27,6 +28,7 @@ import {
   Tr,
 } from '@/components/ui'
 import type { PrioritasTiket, StatusTiket } from '@/types/db'
+import { daftarBerhalaman } from '@/lib/pagination'
 
 interface BarisTiket {
   id: string
@@ -65,13 +67,15 @@ export const VARIAN_PRIORITAS: Record<PrioritasTiket, 'netral' | 'default' | 'su
   tinggi: 'bahaya',
 }
 
-function useDaftarTiket(cari: string, status: string, periode: RentangTanggal) {
+const UKURAN_HALAMAN = 50
+function useDaftarTiket(cari: string, status: string, periode: RentangTanggal, halaman: number) {
   return useQuery({
-    queryKey: ['tiket', cari, status, periode],
+    queryKey: ['tiket', cari, status, periode, halaman],
     queryFn: async () => {
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
       let q = supabase
         .from('tiket')
-        .select('id, nomor, tanggal, judul, status, prioritas, pelanggan:pelanggan_id(nama), ditugaskan:ditugaskan_ke(nama)')
+        .select('id, nomor, tanggal, judul, status, prioritas, pelanggan:pelanggan_id(nama), ditugaskan:ditugaskan_ke(nama)', { count: 'exact' })
 
       if (cari.trim()) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
@@ -81,9 +85,9 @@ function useDaftarTiket(cari: string, status: string, periode: RentangTanggal) {
       if (periode.dari) q = q.gte('tanggal', periode.dari)
       if (periode.sampai) q = q.lte('tanggal', periode.sampai)
 
-      const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(100)
+      const { data, count, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).range(mulai, mulai + UKURAN_HALAMAN - 1)
       if (error) throw error
-      return (data ?? []) as unknown as BarisTiket[]
+      return daftarBerhalaman((data ?? []) as unknown as BarisTiket[], count)
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -103,7 +107,9 @@ export function Tiket() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
   const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
-  const { data, isLoading, error, isFetching } = useDaftarTiket(cari, status, periode)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useDaftarTiket(cari, status, periode, halaman)
+  useEffect(() => setHalaman(1), [cari, status, periode])
 
   return (
     <div className="space-y-4">
@@ -219,6 +225,7 @@ export function Tiket() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
   )
 }

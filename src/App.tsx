@@ -5,6 +5,8 @@ import { I18nProvider } from '@/lib/i18n'
 import { Layout } from '@/components/Layout'
 import { Spinner } from '@/components/ui'
 import { Toaster } from '@/components/Toast'
+import { PenyediaKonfirmasi } from '@/components/Konfirmasi'
+import { PelindungRuteForm } from '@/components/PelindungRuteForm'
 import { Login } from '@/pages/Login'
 import { Dashboard } from '@/pages/Dashboard'
 import { Produk } from '@/pages/Produk'
@@ -68,6 +70,8 @@ import { ReturPembelian } from '@/pages/ReturPembelian'
 import { ReturPembelianForm } from '@/pages/ReturPembelianForm'
 import { PenyesuaianStok } from '@/pages/PenyesuaianStok'
 import { PenyesuaianStokForm } from '@/pages/PenyesuaianStokForm'
+import { RiwayatPerubahan } from '@/pages/RiwayatPerubahan'
+import { SettlementMarketplace } from '@/pages/SettlementMarketplace'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -113,6 +117,7 @@ function Rute() {
         <Route path="supplier/:id" element={<SupplierForm />} />
         <Route path="gudang" element={<Gudang />} />
         <Route path="gudang/:id" element={<GudangForm />} />
+        <Route path="riwayat-perubahan" element={<RiwayatPerubahan />} />
         <Route path="crm" element={<CrmPelanggan />} />
         <Route path="crm/pelanggan/:id" element={<CrmPelangganProfil />} />
         <Route path="tugas-follow-up" element={<TugasFollowUp />} />
@@ -145,6 +150,7 @@ function Rute() {
         <Route path="penerimaan-kas/:id" element={<PenerimaanKasForm />} />
         <Route path="pengeluaran-kas" element={<PengeluaranKas />} />
         <Route path="pengeluaran-kas/:id" element={<PengeluaranKasForm />} />
+        <Route path="settlement-marketplace" element={<SettlementMarketplace />} />
         <Route path="purchase-order" element={<PurchaseOrder />} />
         <Route path="purchase-order/:id" element={<PurchaseOrderForm />} />
         <Route path="penerimaan-barang" element={<PenerimaanBarang />} />
@@ -185,11 +191,15 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <I18nProvider>
-          <Routes>
-            <Route path="/u/:token" element={<UmpanBalikPublik />} />
-            <Route path="/*" element={<AutentikasiDanRute />} />
-          </Routes>
-          <Toaster />
+          <PenyediaKonfirmasi>
+            <PelindungRuteForm>
+              <Routes>
+                <Route path="/u/:token" element={<UmpanBalikPublik />} />
+                <Route path="/*" element={<AutentikasiDanRute />} />
+              </Routes>
+            </PelindungRuteForm>
+            <Toaster />
+          </PenyediaKonfirmasi>
         </I18nProvider>
       </BrowserRouter>
     </QueryClientProvider>

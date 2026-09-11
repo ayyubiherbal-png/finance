@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -15,6 +15,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Spinner,
   Table,
@@ -25,23 +26,26 @@ import {
   Tr,
 } from '@/components/ui'
 import type { Supplier as SupplierRow } from '@/types/db'
+import { daftarBerhalaman } from '@/lib/pagination'
 
 type SupplierBaris = SupplierRow & { kabupaten_kota: { nama: string } | null }
 
 const SELECT_SUPPLIER = '*, kabupaten_kota:kabupaten_kode(nama)'
 
-function useSupplier(cari: string) {
+const UKURAN_HALAMAN = 50
+function useSupplier(cari: string, halaman: number) {
   return useQuery({
-    queryKey: ['supplier', cari],
+    queryKey: ['supplier', cari, halaman],
     queryFn: async () => {
-      let q = supabase.from('supplier').select(SELECT_SUPPLIER)
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      let q = supabase.from('supplier').select(SELECT_SUPPLIER, { count: 'exact' })
       if (cari.trim()) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
-      const { data, error } = await q.order('nama').limit(200).returns<SupplierBaris[]>()
+      const { data, count, error } = await q.order('nama').range(mulai, mulai + UKURAN_HALAMAN - 1).returns<SupplierBaris[]>()
       if (error) throw error
-      return data ?? []
+      return daftarBerhalaman(data ?? [], count)
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -58,7 +62,9 @@ const KOLOM_EKSPOR_SUPPLIER: KolomEkspor<SupplierBaris>[] = [
 
 export function Supplier() {
   const [cari, setCari] = useState('')
-  const { data, isLoading, error, isFetching } = useSupplier(cari)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useSupplier(cari, halaman)
+  useEffect(() => setHalaman(1), [cari])
 
   return (
     <div className="space-y-4">
@@ -139,6 +145,7 @@ export function Supplier() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
   )
 }

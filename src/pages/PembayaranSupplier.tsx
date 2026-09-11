@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -14,6 +14,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Select,
   Spinner,
@@ -27,6 +28,7 @@ import {
 import { LABEL_STATUS, VARIAN_STATUS } from '@/pages/SalesOrder'
 import { LABEL_METODE } from '@/pages/PenerimaanKas'
 import type { MetodeBayar, StatusDokumen } from '@/types/db'
+import { daftarBerhalaman } from '@/lib/pagination'
 
 interface BarisBayar {
   id: string
@@ -38,16 +40,18 @@ interface BarisBayar {
   supplier: { nama: string } | null
 }
 
-function useDaftarBayar(cari: string, status: string) {
+const UKURAN_HALAMAN = 50
+function useDaftarBayar(cari: string, status: string, halaman: number) {
   return useQuery({
-    queryKey: ['pembayaran-supplier', cari, status],
+    queryKey: ['pembayaran-supplier', cari, status, halaman],
     queryFn: async () => {
-      let q = supabase.from('pembayaran_supplier').select('id, nomor, tanggal, metode, jumlah, status, supplier:supplier_id(nama)')
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      let q = supabase.from('pembayaran_supplier').select('id, nomor, tanggal, metode, jumlah, status, supplier:supplier_id(nama)', { count: 'exact' })
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
-      const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(100)
+      const { data, count, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).range(mulai, mulai + UKURAN_HALAMAN - 1)
       if (error) throw error
-      return (data ?? []) as unknown as BarisBayar[]
+      return daftarBerhalaman((data ?? []) as unknown as BarisBayar[], count)
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -65,7 +69,9 @@ const KOLOM_EKSPOR_BAYAR: KolomEkspor<BarisBayar>[] = [
 export function PembayaranSupplier() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
-  const { data, isLoading, error, isFetching } = useDaftarBayar(cari, status)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useDaftarBayar(cari, status, halaman)
+  useEffect(() => setHalaman(1), [cari, status])
 
   return (
     <div className="space-y-4">
@@ -154,6 +160,7 @@ export function PembayaranSupplier() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
   )
 }

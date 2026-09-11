@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
@@ -370,6 +371,7 @@ const VARIAN_BAYAR: Record<StatusBayar, 'netral' | 'peringatan' | 'sukses'> = {
 }
 
 function FormDetail({ fakturId }: { fakturId: string }) {
+  const konfirmasi = useKonfirmasi()
   const queryClient = useQueryClient()
   const [error, setError] = useState<unknown>(null)
   const [memproses, setMemproses] = useState(false)
@@ -417,7 +419,7 @@ function FormDetail({ fakturId }: { fakturId: string }) {
   })
 
   async function batalkan() {
-    if (!window.confirm(tt('Batalkan faktur ini? Hanya bisa kalau belum ada pembayaran tercatat.'))) return
+    if (!(await konfirmasi(tt('Batalkan faktur ini? Hanya bisa kalau belum ada pembayaran tercatat.'), { berbahaya: true }))) return
     setError(null)
     setMemproses(true)
     try {

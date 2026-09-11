@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
@@ -417,6 +418,7 @@ function FormBaruPO({
 /* ------------------------------------------------------------- Form: edit / detail */
 
 function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType<typeof useQueryClient> }) {
+  const konfirmasi = useKonfirmasi()
   const { data: po, isLoading, error } = useQuery({
     queryKey: ['po-detail', poId],
     queryFn: async () => {
@@ -509,7 +511,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
   }
 
   async function hapusItem(itemId: string) {
-    if (!window.confirm(tt('Hapus baris ini dari Purchase Order?'))) return
+    if (!(await konfirmasi(tt('Hapus baris ini dari Purchase Order?'), { labelSetuju: 'Hapus', berbahaya: true }))) return
     const { error } = await supabase.from('purchase_order_item').delete().eq('id', itemId)
     if (!error) {
       toast('Item dihapus.')
@@ -518,7 +520,7 @@ function FormEdit({ poId, queryClient }: { poId: string; queryClient: ReturnType
   }
 
   async function ubahStatus(statusBaru: 'disetujui' | 'dibatalkan' | 'draf') {
-    if (statusBaru === 'dibatalkan' && !window.confirm(tt('Batalkan Purchase Order ini?'))) return
+    if (statusBaru === 'dibatalkan' && !(await konfirmasi(tt('Batalkan Purchase Order ini?'), { berbahaya: true }))) return
     setErrorStatus(null)
     setMemprosesStatus(true)
     try {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
@@ -13,6 +13,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Select,
   Spinner,
@@ -23,6 +24,7 @@ import {
   Thead,
   Tr,
 } from '@/components/ui'
+import { daftarBerhalaman } from '@/lib/pagination'
 
 interface BarisStokGudang {
   produk_id: string
@@ -36,19 +38,21 @@ interface BarisStokGudang {
   nilai: number
 }
 
-function useStokGudang(gudangId: string, cari: string) {
+const UKURAN_HALAMAN = 50
+function useStokGudang(gudangId: string, cari: string, halaman: number) {
   return useQuery({
-    queryKey: ['stok-gudang', gudangId, cari],
+    queryKey: ['stok-gudang', gudangId, cari, halaman],
     queryFn: async () => {
-      let q = supabase.from('v_stok_gudang').select('*')
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      let q = supabase.from('v_stok_gudang').select('*', { count: 'exact' })
       if (gudangId) q = q.eq('gudang_id', gudangId)
       if (cari.trim()) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
-      const { data, error } = await q.order('nama_gudang').order('nama').limit(500).returns<BarisStokGudang[]>()
+      const { data, count, error } = await q.order('nama_gudang').order('nama').range(mulai, mulai + UKURAN_HALAMAN - 1).returns<BarisStokGudang[]>()
       if (error) throw error
-      return data ?? []
+      return daftarBerhalaman(data ?? [], count)
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -67,7 +71,9 @@ export function Stok() {
   const { data: gudang } = useGudangAktif()
   const [gudangId, setGudangId] = useState('')
   const [cari, setCari] = useState('')
-  const { data, isLoading, error, isFetching } = useStokGudang(gudangId, cari)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useStokGudang(gudangId, cari, halaman)
+  useEffect(() => setHalaman(1), [gudangId, cari])
 
   const totalNilai = (data ?? []).reduce((t, b) => t + Number(b.nilai), 0)
 
@@ -152,6 +158,7 @@ export function Stok() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
 
       {data && data.length > 0 ? (
         <p className="text-right text-sm text-muted-foreground">

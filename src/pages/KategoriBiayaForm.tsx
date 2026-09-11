@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { toast } from '@/components/Toast'
 import { Button, Card, CardContent, Input, Label, PesanError, Spinner } from '@/components/ui'
 import type { KategoriBiaya } from '@/types/db'
@@ -17,6 +18,7 @@ interface FormState {
 const KOSONG: FormState = { kode: '', nama: '', operasional: true }
 
 export function KategoriBiayaForm() {
+  const konfirmasi = useKonfirmasi()
   const { id } = useParams<{ id: string }>()
   const isBaru = !id || id === 'baru'
   const navigate = useNavigate()
@@ -119,7 +121,7 @@ export function KategoriBiayaForm() {
       setError(new Error(tt('Masih ada {n} nama pengeluaran di kategori ini -- hapus atau pindahkan dulu sebelum menghapus kategorinya.').replace('{n}', String(jumlahItem))))
       return
     }
-    if (!window.confirm(tt('Hapus kategori ini?'))) return
+    if (!(await konfirmasi(tt('Hapus kategori ini?'), { labelSetuju: 'Hapus', berbahaya: true }))) return
     setError(null)
     setMenghapus(true)
     try {

@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { useKategoriBiayaAktif } from '@/lib/queries'
 import { toast } from '@/components/Toast'
 import { Button, Card, CardContent, Input, Label, PesanError, Select, Spinner } from '@/components/ui'
@@ -32,6 +33,7 @@ function saranKodeBerikutnya(kodeKategori: string, kodeTerpakai: string[]): stri
 }
 
 export function NamaPengeluaranForm() {
+  const konfirmasi = useKonfirmasi()
   const { id } = useParams<{ id: string }>()
   const isBaru = !id || id === 'baru'
   const navigate = useNavigate()
@@ -174,7 +176,7 @@ export function NamaPengeluaranForm() {
       )
       return
     }
-    if (!window.confirm(tt('Hapus nama pengeluaran ini?'))) return
+    if (!(await konfirmasi(tt('Hapus nama pengeluaran ini?'), { labelSetuju: 'Hapus', berbahaya: true }))) return
     setError(null)
     setMenghapus(true)
     try {

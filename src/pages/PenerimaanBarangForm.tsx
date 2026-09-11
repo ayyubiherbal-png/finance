@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
@@ -371,6 +372,7 @@ interface PBItem {
 }
 
 function FormDetail({ pbId }: { pbId: string }) {
+  const konfirmasi = useKonfirmasi()
   const queryClient = useQueryClient()
   const [error, setError] = useState<unknown>(null)
   const [memproses, setMemproses] = useState(false)
@@ -406,7 +408,7 @@ function FormDetail({ pbId }: { pbId: string }) {
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
     if (
       statusBaru === 'dibatalkan' &&
-      !window.confirm(tt('Batalkan Penerimaan Barang ini? Stok yang sudah masuk akan dikurangi lagi.'))
+      !(await konfirmasi(tt('Batalkan Penerimaan Barang ini? Stok yang sudah masuk akan dikurangi lagi.'), { berbahaya: true }))
     ) {
       return
     }

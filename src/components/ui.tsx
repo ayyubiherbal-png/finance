@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { MoreVertical, type LucideIcon } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import { pesanKesalahan } from '@/lib/format'
@@ -377,6 +377,95 @@ export function Th({ className, children, ...props }: React.ThHTMLAttributes<HTM
 
 export function Td({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return <td className={cn('px-3 py-2 align-middle', className)} {...props} />
+}
+
+/* -------------------------------------------------------------- Paginasi */
+
+export function Paginasi({
+  halaman,
+  ukuranHalaman,
+  total,
+  onUbah,
+}: {
+  halaman: number
+  ukuranHalaman: number
+  total: number
+  onUbah: (halaman: number) => void
+}) {
+  const { tt } = useI18n()
+  const jumlahHalaman = Math.max(1, Math.ceil(total / ukuranHalaman))
+  const halamanAman = Math.min(halaman, jumlahHalaman - 1)
+  const awal = total === 0 ? 0 : halamanAman * ukuranHalaman + 1
+  const akhir = Math.min((halamanAman + 1) * ukuranHalaman, total)
+  const ringkasan = tt('Menampilkan {awal}-{akhir} dari {total}')
+    .replace('{awal}', String(awal))
+    .replace('{akhir}', String(akhir))
+    .replace('{total}', String(total))
+
+  return (
+    <div
+      data-testid="paginasi"
+      className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2 text-sm"
+    >
+      <span className="text-muted-foreground">{ringkasan}</span>
+      <div className="flex items-center gap-1.5">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-[36px] w-[36px] md:h-8 md:w-8"
+          aria-label={tt('Halaman sebelumnya')}
+          disabled={halamanAman <= 0}
+          onClick={() => onUbah(halamanAman - 1)}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="tabular min-w-[5rem] text-center text-muted-foreground">
+          {tt('Halaman {halaman} dari {total}')
+            .replace('{halaman}', String(halamanAman + 1))
+            .replace('{total}', String(jumlahHalaman))}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-[36px] w-[36px] md:h-8 md:w-8"
+          aria-label={tt('Halaman berikutnya')}
+          disabled={halamanAman >= jumlahHalaman - 1}
+          onClick={() => onUbah(halamanAman + 1)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export function BarPilihanMassal({
+  jumlah,
+  onBersihkan,
+  children,
+}: {
+  jumlah: number
+  onBersihkan: () => void
+  children?: React.ReactNode
+}) {
+  const { tt } = useI18n()
+  if (jumlah <= 0) return null
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-xl bg-primary-soft px-3 py-2 text-primary-soft-foreground">
+      <span className="font-medium">
+        {tt('{jumlah} baris dipilih').replace('{jumlah}', String(jumlah))}
+      </span>
+      <div className="ml-auto flex items-center gap-2">
+        {children}
+        <Button type="button" variant="ghost" size="sm" onClick={onBersihkan}>
+          <X className="h-4 w-4" />
+          Batalkan pilihan
+        </Button>
+      </div>
+    </div>
+  )
 }
 
 /* --------------------------------------------------------- Status tampilan */

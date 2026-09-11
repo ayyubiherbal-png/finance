@@ -10,12 +10,14 @@ import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
   Badge,
+  BarPilihanMassal,
   Button,
   Card,
   CardContent,
   Input,
   KondisiKosong,
   PesanError,
+  Paginasi,
   Select,
   Spinner,
   Table,
@@ -37,6 +39,8 @@ interface BarisSO {
   nama_penerima: string | null
   pelanggan: { nama: string } | null
 }
+
+const UKURAN_HALAMAN = 50
 
 const LABEL_STATUS: Record<StatusDokumen, string> = {
   draf: 'Draf',
@@ -67,22 +71,26 @@ const LABEL_KANAL: Record<KanalPenjualan, string> = {
   lainnya: 'Lainnya',
 }
 
-function useDaftarSO(cari: string, status: string, periode: RentangTanggal) {
+function useDaftarSO(cari: string, status: string, periode: RentangTanggal, halaman: number) {
   return useQuery({
-    queryKey: ['sales-order', cari, status, periode],
+    queryKey: ['sales-order', cari, status, periode, halaman],
     queryFn: async () => {
       let q = supabase
         .from('sales_order')
-        .select('id, nomor, tanggal, status, kanal, total, nama_penerima, pelanggan:pelanggan_id(nama)')
+        .select('id, nomor, tanggal, status, kanal, total, nama_penerima, pelanggan:pelanggan_id(nama)', { count: 'exact' })
 
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
       if (periode.dari) q = q.gte('tanggal', periode.dari)
       if (periode.sampai) q = q.lte('tanggal', periode.sampai)
 
-      const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(100)
+      const mulai = halaman * UKURAN_HALAMAN
+      const { data, error, count } = await q
+        .order('tanggal', { ascending: false })
+        .order('nomor', { ascending: false })
+        .range(mulai, mulai + UKURAN_HALAMAN - 1)
       if (error) throw error
-      return (data ?? []) as unknown as BarisSO[]
+      return { baris: (data ?? []) as unknown as BarisSO[], total: count ?? 0 }
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -105,7 +113,25 @@ export function SalesOrder() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
   const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
-  const { data, isLoading, error, isFetching } = useDaftarSO(cari, status, periode)
+  const [halaman, setHalaman] = useState(0)
+  const [terpilih, setTerpilih] = useState<Set<string>>(new Set())
+  const { data, isLoading, error, isFetching } = useDaftarSO(cari, status, periode, halaman)
+  const baris = data?.baris ?? []
+  const barisTerpilih = baris.filter((r) => terpilih.has(r.id))
+  const semuaTerpilih = baris.length > 0 && baris.every((r) => terpilih.has(r.id))
+
+  function pilihBaris(id: string, dipilih: boolean) {
+    setTerpilih((lama) => {
+      const baru = new Set(lama)
+      if (dipilih) baru.add(id)
+      else baru.delete(id)
+      return baru
+    })
+  }
+
+  function pilihSemua(dipilih: boolean) {
+    setTerpilih(dipilih ? new Set(baris.map((r) => r.id)) : new Set())
+  }
 
   return (
     <div className="space-y-4">
@@ -151,10 +177,14 @@ export function SalesOrder() {
             className="pl-8"
             placeholder="Cari nomor SO..."
             value={cari}
-            onChange={(e) => setCari(e.target.value)}
+            onChange={(e) => {
+              setCari(e.target.value)
+              setHalaman(0)
+              setTerpilih(new Set())
+            }}
           />
         </div>
-        <Select className="w-full sm:w-48" value={status} onChange={(e) => setStatus(e.target.value)}>
+        <Select className="w-full sm:w-48" value={status} onChange={(e) => { setStatus(e.target.value); setHalaman(0); setTerpilih(new Set()) }}>
           <option value="">Semua status</option>
           {Object.entries(LABEL_STATUS).map(([v, l]) => (
             <option key={v} value={v}>
@@ -162,8 +192,16 @@ export function SalesOrder() {
             </option>
           ))}
         </Select>
-        <FilterPeriode onChange={setPeriode} />
+        <FilterPeriode onChange={(rentang) => { setPeriode(rentang); setHalaman(0); setTerpilih(new Set()) }} />
       </div>
+
+      <BarPilihanMassal jumlah={barisTerpilih.length} onBersihkan={() => setTerpilih(new Set())}>
+        <TombolEkspor
+          ambilData={async () => barisTerpilih}
+          kolom={KOLOM_EKSPOR_SO}
+          opsi={{ namaFile: `sales-order-terpilih-${tanggalISO()}`, judul: tt('Sales Order') }}
+        />
+      </BarPilihanMassal>
 
       <Card>
         <CardContent className="p-0 pb-2">
@@ -175,13 +213,18 @@ export function SalesOrder() {
             <div className="p-4">
               <PesanError error={error} />
             </div>
-          ) : !data || data.length === 0 ? (
+          ) : baris.length === 0 ? (
             <KondisiKosong pesan="Belum ada Sales Order." />
           ) : (
             <>
               <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 <Thead>
                   <Tr>
+                    <Th className="w-[44px]">
+                      <label className="flex h-[36px] w-[36px] cursor-pointer items-center justify-center">
+                        <input type="checkbox" className="h-4 w-4 accent-primary" checked={semuaTerpilih} onChange={(e) => pilihSemua(e.target.checked)} aria-label={tt('Pilih semua di halaman ini')} />
+                      </label>
+                    </Th>
                     <Th>Nomor</Th>
                     <Th>Tanggal</Th>
                     <Th>Pelanggan</Th>
@@ -191,8 +234,13 @@ export function SalesOrder() {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {data.map((so) => (
+                  {baris.map((so) => (
                     <Tr key={so.id} className="cursor-pointer">
+                      <Td>
+                        <label className="flex h-[36px] w-[36px] cursor-pointer items-center justify-center">
+                          <input type="checkbox" className="h-4 w-4 accent-primary" checked={terpilih.has(so.id)} onChange={(e) => pilihBaris(so.id, e.target.checked)} aria-label={tt('Pilih baris {nomor}').replace('{nomor}', so.nomor)} />
+                        </label>
+                      </Td>
                       <Td>
                         <Link to={`/sales-order/${so.id}`} className="font-mono text-xs text-primary hover:underline">
                           {so.nomor}
@@ -226,10 +274,11 @@ export function SalesOrder() {
               </Table>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
-                  {data.length >= 100 ? tt('Total 100 SO teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('SO')}`}
+                  {`${tt('Total')} ${baris.length} ${tt('SO')}`}
                 </span>
-                <span className="tabular font-semibold">{rupiah(data.reduce((t, so) => t + so.total, 0))}</span>
+                <span className="tabular font-semibold">{rupiah(baris.reduce((t, so) => t + so.total, 0))}</span>
               </div>
+              <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={(h) => { setHalaman(h); setTerpilih(new Set()) }} />
             </>
           )}
         </CardContent>

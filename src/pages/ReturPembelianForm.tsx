@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
@@ -261,6 +262,7 @@ interface BarisTambah {
 const BARIS_KOSONG: BarisTambah = { produk_id: null, produkLabel: null, satuan_id: null, konversi: 1, qty: 1, harga_satuan: 0 }
 
 function FormEdit({ returId }: { returId: string }) {
+  const konfirmasi = useKonfirmasi()
   const queryClient = useQueryClient()
   const [error, setError] = useState<unknown>(null)
 
@@ -347,7 +349,7 @@ function FormEdit({ returId }: { returId: string }) {
   }
 
   async function hapusItem(itemId: string) {
-    if (!window.confirm(tt('Hapus baris ini?'))) return
+    if (!(await konfirmasi(tt('Hapus baris ini?'), { labelSetuju: 'Hapus', berbahaya: true }))) return
     const { error } = await supabase.from('retur_pembelian_item').delete().eq('id', itemId)
     if (!error) {
       toast('Item dihapus.')
@@ -356,7 +358,7 @@ function FormEdit({ returId }: { returId: string }) {
   }
 
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
-    if (statusBaru === 'dibatalkan' && !window.confirm(tt('Batalkan retur ini? Efek stoknya akan dibalik.'))) return
+    if (statusBaru === 'dibatalkan' && !(await konfirmasi(tt('Batalkan retur ini? Efek stoknya akan dibalik.'), { berbahaya: true }))) return
     setError(null)
     setMemprosesStatus(true)
     try {

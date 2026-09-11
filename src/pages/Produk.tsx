@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -15,6 +15,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Spinner,
   Table,
@@ -25,23 +26,26 @@ import {
   Tr,
 } from '@/components/ui'
 import type { VStokProduk } from '@/types/db'
+import { daftarBerhalaman } from '@/lib/pagination'
 
-function useProduk(cari: string) {
+const UKURAN_HALAMAN = 50
+function useProduk(cari: string, halaman: number) {
   return useQuery({
-    queryKey: ['produk', cari],
+    queryKey: ['produk', cari, halaman],
     queryFn: async () => {
       // Filter (.or) harus dipasang sebelum .order/.limit, karena setelah itu
       // builder-nya berubah jadi transform builder yang tidak punya .or().
-      let q = supabase.from('v_stok_produk').select('*')
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      let q = supabase.from('v_stok_produk').select('*', { count: 'exact' })
 
       if (cari.trim()) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
 
-      const { data, error } = await q.order('nama').limit(200).returns<VStokProduk[]>()
+      const { data, count, error } = await q.order('nama').range(mulai, mulai + UKURAN_HALAMAN - 1).returns<VStokProduk[]>()
       if (error) throw error
-      return data ?? []
+      return daftarBerhalaman(data ?? [], count)
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -78,7 +82,9 @@ function kelompokkanVarian(data: VStokProduk[]) {
 
 export function Produk() {
   const [cari, setCari] = useState('')
-  const { data, isLoading, error, isFetching } = useProduk(cari)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useProduk(cari, halaman)
+  useEffect(() => setHalaman(1), [cari])
   const baris = useMemo(() => kelompokkanVarian(data ?? []), [data])
   const jumlahVarian = useMemo(() => {
     const peta = new Map<string, number>()
@@ -204,6 +210,7 @@ export function Produk() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
   )
 }

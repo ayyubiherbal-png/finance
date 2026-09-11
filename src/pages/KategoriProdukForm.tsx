@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { toast } from '@/components/Toast'
 import { Button, Card, CardContent, Input, Label, PesanError, Spinner } from '@/components/ui'
 import type { KategoriProduk } from '@/types/db'
@@ -16,6 +17,7 @@ interface FormState {
 const KOSONG: FormState = { kode: '', nama: '' }
 
 export function KategoriProdukForm() {
+  const konfirmasi = useKonfirmasi()
   const { id } = useParams<{ id: string }>()
   const isBaru = !id || id === 'baru'
   const navigate = useNavigate()
@@ -116,7 +118,7 @@ export function KategoriProdukForm() {
       jumlahProduk && jumlahProduk > 0
         ? tt('{n} produk masih pakai kategori ini -- semuanya akan jadi "Tanpa kategori". Yakin hapus?').replace('{n}', String(jumlahProduk))
         : tt('Hapus kategori ini?')
-    if (!window.confirm(peringatan)) return
+    if (!(await konfirmasi(peringatan, { labelSetuju: 'Hapus', berbahaya: true }))) return
     setError(null)
     setMenghapus(true)
     try {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -15,6 +15,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Select,
   Spinner,
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui'
 import { LABEL_STATUS, VARIAN_STATUS } from '@/pages/SalesOrder'
 import type { StatusDokumen } from '@/types/db'
+import { daftarBerhalaman } from '@/lib/pagination'
 
 interface Baris {
   id: string
@@ -37,18 +39,20 @@ interface Baris {
   pelanggan: { nama: string } | null
 }
 
-function useDaftar(cari: string, status: string, periode: RentangTanggal) {
+const UKURAN_HALAMAN = 50
+function useDaftar(cari: string, status: string, periode: RentangTanggal, halaman: number) {
   return useQuery({
-    queryKey: ['retur-penjualan', cari, status, periode],
+    queryKey: ['retur-penjualan', cari, status, periode, halaman],
     queryFn: async () => {
-      let q = supabase.from('retur_penjualan').select('id, nomor, tanggal, status, total, pelanggan:pelanggan_id(nama)')
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      let q = supabase.from('retur_penjualan').select('id, nomor, tanggal, status, total, pelanggan:pelanggan_id(nama)', { count: 'exact' })
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
       if (periode.dari) q = q.gte('tanggal', periode.dari)
       if (periode.sampai) q = q.lte('tanggal', periode.sampai)
-      const { data, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).limit(100)
+      const { data, count, error } = await q.order('tanggal', { ascending: false }).order('nomor', { ascending: false }).range(mulai, mulai + UKURAN_HALAMAN - 1)
       if (error) throw error
-      return (data ?? []) as unknown as Baris[]
+      return daftarBerhalaman((data ?? []) as unknown as Baris[], count)
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -66,7 +70,9 @@ export function ReturPenjualan() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
   const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
-  const { data, isLoading, error, isFetching } = useDaftar(cari, status, periode)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useDaftar(cari, status, periode, halaman)
+  useEffect(() => setHalaman(1), [cari, status, periode])
 
   return (
     <div className="space-y-4">
@@ -171,6 +177,7 @@ export function ReturPenjualan() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
   )
 }

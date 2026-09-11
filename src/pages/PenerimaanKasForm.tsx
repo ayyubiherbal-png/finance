@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
@@ -359,6 +360,7 @@ interface AlokasiBaris {
 }
 
 function FormDetail({ kasId }: { kasId: string }) {
+  const konfirmasi = useKonfirmasi()
   const queryClient = useQueryClient()
   const [error, setError] = useState<unknown>(null)
   const [memproses, setMemproses] = useState(false)
@@ -392,7 +394,7 @@ function FormDetail({ kasId }: { kasId: string }) {
   })
 
   async function batalkan() {
-    if (!window.confirm(tt('Batalkan penerimaan kas ini? Sisa tagihan di faktur terkait akan naik lagi.'))) return
+    if (!(await konfirmasi(tt('Batalkan penerimaan kas ini? Sisa tagihan di faktur terkait akan naik lagi.'), { berbahaya: true }))) return
     setError(null)
     setMemproses(true)
     try {

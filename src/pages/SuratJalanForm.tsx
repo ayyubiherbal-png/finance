@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Printer } from 'lucide-react'
@@ -399,6 +400,7 @@ interface SJItem {
 }
 
 function FormDetail({ sjId }: { sjId: string }) {
+  const konfirmasi = useKonfirmasi()
   const queryClient = useQueryClient()
   const [error, setError] = useState<unknown>(null)
   const [memproses, setMemproses] = useState(false)
@@ -453,7 +455,7 @@ function FormDetail({ sjId }: { sjId: string }) {
   }
 
   async function ubahStatus(statusBaru: 'selesai' | 'dibatalkan') {
-    if (statusBaru === 'dibatalkan' && !window.confirm(tt('Batalkan Surat Jalan ini? Stok yang sudah terkirim akan dikembalikan.'))) {
+    if (statusBaru === 'dibatalkan' && !(await konfirmasi(tt('Batalkan Surat Jalan ini? Stok yang sudah terkirim akan dikembalikan.'), { berbahaya: true }))) {
       return
     }
     setError(null)

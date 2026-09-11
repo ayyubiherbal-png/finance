@@ -15,6 +15,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Spinner,
   Table,
@@ -25,22 +26,25 @@ import {
   Tr,
 } from '@/components/ui'
 import type { SumberPelanggan, TipePelanggan, VPelangganRingkas } from '@/types/db'
+import { daftarBerhalaman } from '@/lib/pagination'
 
-function usePelanggan(cari: string) {
+const UKURAN_HALAMAN = 50
+function usePelanggan(cari: string, halaman: number) {
   return useQuery({
-    queryKey: ['pelanggan', cari],
+    queryKey: ['pelanggan', cari, halaman],
     queryFn: async () => {
       // Filter (.or) harus dipasang sebelum .order/.limit.
-      let q = supabase.from('v_pelanggan_ringkas').select('*')
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      let q = supabase.from('v_pelanggan_ringkas').select('*', { count: 'exact' })
 
       if (cari.trim()) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
 
-      const { data, error } = await q.order('nama').limit(200).returns<VPelangganRingkas[]>()
+      const { data, count, error } = await q.order('nama').range(mulai, mulai + UKURAN_HALAMAN - 1).returns<VPelangganRingkas[]>()
       if (error) throw error
-      return data ?? []
+      return daftarBerhalaman(data ?? [], count)
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -156,7 +160,9 @@ const KOLOM_EKSPOR_PELANGGAN: KolomEkspor<VPelangganRingkas>[] = [
 
 export function Pelanggan() {
   const [cari, setCari] = useState('')
-  const { data, isLoading, error, isFetching } = usePelanggan(cari)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = usePelanggan(cari, halaman)
+  useEffect(() => setHalaman(1), [cari])
   const [kolomAktif, setKolomAktif] = useState<Set<KunciKolom>>(muatKolomAktif)
 
   function ubahKolom(kunci: KunciKolom, tampil: boolean) {
@@ -279,6 +285,7 @@ export function Pelanggan() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
   )
 }

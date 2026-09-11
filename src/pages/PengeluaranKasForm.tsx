@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
+import { useKonfirmasi } from '@/components/Konfirmasi'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
@@ -234,6 +235,7 @@ interface PengeluaranDetail {
 }
 
 function FormDetail({ pengeluaranId }: { pengeluaranId: string }) {
+  const konfirmasi = useKonfirmasi()
   const queryClient = useQueryClient()
   const [error, setError] = useState<unknown>(null)
   const [memproses, setMemproses] = useState(false)
@@ -254,7 +256,7 @@ function FormDetail({ pengeluaranId }: { pengeluaranId: string }) {
   })
 
   async function batalkan() {
-    if (!window.confirm(tt('Batalkan pengeluaran kas ini?'))) return
+    if (!(await konfirmasi(tt('Batalkan pengeluaran kas ini?'), { berbahaya: true }))) return
     setError(null)
     setMemproses(true)
     try {

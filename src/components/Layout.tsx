@@ -105,6 +105,7 @@ const MENU: Grup[] = [
           { ke: '/kas-bank', label: 'menu.akunKasBank' },
           { ke: '/kartu-kas-bank', label: 'menu.kartuKasBank' },
           { ke: '/pengeluaran-kas', label: 'menu.pengeluaranKas', peran: ['owner', 'admin', 'finance'] },
+          { ke: '/settlement-marketplace', label: 'menu.settlementMarketplace', peran: ['owner', 'admin', 'finance'] },
         ],
       },
     ],
@@ -134,6 +135,7 @@ const MENU: Grup[] = [
           { ke: '/pelanggan', label: 'menu.pelanggan' },
           { ke: '/supplier', label: 'menu.supplier', peran: ['owner', 'admin'] },
           { ke: '/gudang', label: 'menu.gudang', peran: ['owner', 'admin'] },
+          { ke: '/riwayat-perubahan', label: 'menu.riwayatPerubahan', peran: ['owner', 'admin'] },
         ],
       },
       {

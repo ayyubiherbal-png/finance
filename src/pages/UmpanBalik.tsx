@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -6,7 +6,8 @@ import { Star } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggalWaktu } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { Badge, Card, CardContent, KondisiKosong, PesanError, Select, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import { Badge, Card, CardContent, KondisiKosong, Paginasi, PesanError, Select, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import { daftarBerhalaman } from '@/lib/pagination'
 
 interface BarisUmpanBalik {
   id: string
@@ -17,19 +18,21 @@ interface BarisUmpanBalik {
   link: { nama: string | null; entitas_tipe: string; entitas_id: string } | null
 }
 
-function useDaftarUmpanBalik(filterSkor: string) {
+const UKURAN_HALAMAN = 50
+function useDaftarUmpanBalik(filterSkor: string, halaman: number) {
   return useQuery({
-    queryKey: ['umpan-balik', filterSkor],
+    queryKey: ['umpan-balik', filterSkor, halaman],
     queryFn: async () => {
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
       let q = supabase
         .from('umpan_balik')
-        .select('id, skor, testimoni, boleh_dipublikasikan, dibuat_pada, link:link_id(nama, entitas_tipe, entitas_id)')
+        .select('id, skor, testimoni, boleh_dipublikasikan, dibuat_pada, link:link_id(nama, entitas_tipe, entitas_id)', { count: 'exact' })
         .order('dibuat_pada', { ascending: false })
-        .limit(200)
+        .range(mulai, mulai + UKURAN_HALAMAN - 1)
       if (filterSkor) q = q.eq('skor', Number(filterSkor))
-      const { data, error } = await q
+      const { data, count, error } = await q
       if (error) throw error
-      return (data ?? []) as unknown as BarisUmpanBalik[]
+      return daftarBerhalaman((data ?? []) as unknown as BarisUmpanBalik[], count)
     },
   })
 }
@@ -47,7 +50,9 @@ function Bintang({ skor }: { skor: number | null }) {
 
 export function UmpanBalik() {
   const [filterSkor, setFilterSkor] = useState('')
-  const { data, isLoading, error } = useDaftarUmpanBalik(filterSkor)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error } = useDaftarUmpanBalik(filterSkor, halaman)
+  useEffect(() => setHalaman(1), [filterSkor])
 
   const rataRata = data && data.length > 0 ? data.reduce((t, u) => t + (u.skor ?? 0), 0) / data.filter((u) => u.skor).length : null
 
@@ -144,6 +149,7 @@ export function UmpanBalik() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
   )
 }
