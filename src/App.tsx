@@ -41,6 +41,7 @@ import { LaporanPiutang } from '@/pages/LaporanPiutang'
 import { LaporanLaba } from '@/pages/LaporanLaba'
 import { LaporanLabaRugi } from '@/pages/LaporanLabaRugi'
 import { RisetPasar } from '@/pages/RisetPasar'
+import { AsistenJawabPelanggan } from '@/pages/AsistenJawabPelanggan'
 import { LaporanOmzet } from '@/pages/LaporanOmzet'
 import { SalesOrder } from '@/pages/SalesOrder'
 import { SalesOrderForm } from '@/pages/SalesOrderForm'
@@ -138,6 +139,7 @@ function Rute() {
         <Route path="laporan/laba" element={<LaporanLaba />} />
         <Route path="laporan/laba-rugi" element={<LaporanLabaRugi />} />
         <Route path="riset-pasar" element={<RisetPasar />} />
+        <Route path="asisten-jawab-pelanggan" element={<AsistenJawabPelanggan />} />
         <Route path="laporan/omzet" element={<LaporanOmzet />} />
 
         <Route path="penjualan-cepat" element={<PenjualanCepat />} />

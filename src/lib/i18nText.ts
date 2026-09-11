@@ -75,6 +75,7 @@ export const KAMUS = {
   'menu.kartuStok': { id: 'Kartu Stok', en: 'Stock Card' },
   'menu.penyesuaianStok': { id: 'Penyesuaian Stok', en: 'Stock Adjustment' },
   'menu.segmenPelanggan': { id: 'Segmen Pelanggan', en: 'Customer Segments' },
+  'menu.asistenJawabPelanggan': { id: 'Asisten Jawab Pelanggan', en: 'Customer Reply Assistant' },
   'menu.produk': { id: 'Produk', en: 'Products' },
   'menu.kategoriProduk': { id: 'Kategori Produk', en: 'Product Categories' },
   'menu.kategoriBiaya': { id: 'Kategori Biaya', en: 'Expense Categories' },
@@ -1342,6 +1343,21 @@ export const TEKS: Record<string, string> = {
   Tutup: 'Close',
   'Baca selengkapnya': 'Read more',
   'Gagal membuat riset.': 'Failed to create research.',
+
+  // ---------- Asisten Jawab Pelanggan ----------
+  'Asisten Jawab Pelanggan': 'Customer Reply Assistant',
+  'Tempel pertanyaan pelanggan, dapat draf jawaban dari katalog & riwayat asli -- Anda yang salin & kirim sendiri.':
+    'Paste the customer question, get a draft reply from the real catalog & history -- you copy and send it yourself.',
+  'Pelanggan (opsional)': 'Customer (optional)',
+  'Pertanyaan pelanggan': 'Customer question',
+  'Tempel pertanyaan dari WhatsApp/DM di sini...': 'Paste the question from WhatsApp/DM here...',
+  'Buat Draf Jawaban': 'Create Draft Reply',
+  Salin: 'Copy',
+  'Catat sebagai Follow-up': 'Log as Follow-up',
+  'Draf disalin ke clipboard.': 'Draft copied to clipboard.',
+  'Dicatat ke riwayat follow-up pelanggan.': 'Logged to the customer follow-up history.',
+  'Isi pertanyaan pelanggan dulu.': 'Enter the customer question first.',
+  'Gagal membuat draf.': 'Failed to create draft.',
 }
 
 

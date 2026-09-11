@@ -119,6 +119,7 @@ const MENU: Grup[] = [
         ikon: HeartHandshake,
         tab: [
           { ke: '/crm', label: 'menu.segmenPelanggan' },
+          { ke: '/asisten-jawab-pelanggan', label: 'menu.asistenJawabPelanggan', peran: ['owner', 'admin', 'sales'] },
           { ke: '/pembeli-marketplace', label: 'menu.pembeliMarketplace' },
           { ke: '/tugas-follow-up', label: 'menu.tugasFollowUp' },
           { ke: '/riwayat-follow-up', label: 'menu.riwayatFollowUp' },
