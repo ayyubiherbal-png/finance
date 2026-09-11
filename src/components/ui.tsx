@@ -394,9 +394,9 @@ export function Paginasi({
 }) {
   const { tt } = useI18n()
   const jumlahHalaman = Math.max(1, Math.ceil(total / ukuranHalaman))
-  const halamanAman = Math.min(halaman, jumlahHalaman - 1)
-  const awal = total === 0 ? 0 : halamanAman * ukuranHalaman + 1
-  const akhir = Math.min((halamanAman + 1) * ukuranHalaman, total)
+  const halamanAman = Math.max(1, Math.min(halaman, jumlahHalaman))
+  const awal = total === 0 ? 0 : (halamanAman - 1) * ukuranHalaman + 1
+  const akhir = Math.min(halamanAman * ukuranHalaman, total)
   const ringkasan = tt('Menampilkan {awal}-{akhir} dari {total}')
     .replace('{awal}', String(awal))
     .replace('{akhir}', String(akhir))
@@ -415,14 +415,14 @@ export function Paginasi({
           size="icon"
           className="h-[36px] w-[36px] md:h-8 md:w-8"
           aria-label={tt('Halaman sebelumnya')}
-          disabled={halamanAman <= 0}
+          disabled={halamanAman <= 1}
           onClick={() => onUbah(halamanAman - 1)}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <span className="tabular min-w-[5rem] text-center text-muted-foreground">
           {tt('Halaman {halaman} dari {total}')
-            .replace('{halaman}', String(halamanAman + 1))
+            .replace('{halaman}', String(halamanAman))
             .replace('{total}', String(jumlahHalaman))}
         </span>
         <Button
@@ -431,7 +431,7 @@ export function Paginasi({
           size="icon"
           className="h-[36px] w-[36px] md:h-8 md:w-8"
           aria-label={tt('Halaman berikutnya')}
-          disabled={halamanAman >= jumlahHalaman - 1}
+          disabled={halamanAman >= jumlahHalaman}
           onClick={() => onUbah(halamanAman + 1)}
         >
           <ChevronRight className="h-4 w-4" />

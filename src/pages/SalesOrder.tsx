@@ -87,7 +87,7 @@ function useDaftarSO(cari: string, status: string, periode: RentangTanggal, hala
       if (periode.dari) q = q.gte('tanggal', periode.dari)
       if (periode.sampai) q = q.lte('tanggal', periode.sampai)
 
-      const mulai = halaman * UKURAN_HALAMAN
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
       const { data, error, count } = await q
         .order('tanggal', { ascending: false })
         .order('nomor', { ascending: false })
@@ -119,7 +119,7 @@ export function SalesOrder() {
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState(searchParams.get('status') ?? '')
   const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
-  const [halaman, setHalaman] = useState(0)
+  const [halaman, setHalaman] = useState(1)
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set())
   const [memprosesMassal, setMemprosesMassal] = useState(false)
   const { data, isLoading, error, isFetching } = useDaftarSO(cari, status, periode, halaman)
@@ -200,12 +200,12 @@ export function SalesOrder() {
             value={cari}
             onChange={(e) => {
               setCari(e.target.value)
-              setHalaman(0)
+              setHalaman(1)
               setTerpilih(new Set())
             }}
           />
         </div>
-        <Select className="w-full sm:w-48" value={status} onChange={(e) => { setStatus(e.target.value); setHalaman(0); setTerpilih(new Set()) }}>
+        <Select className="w-full sm:w-48" value={status} onChange={(e) => { setStatus(e.target.value); setHalaman(1); setTerpilih(new Set()) }}>
           <option value="">Semua status</option>
           {Object.entries(LABEL_STATUS).map(([v, l]) => (
             <option key={v} value={v}>
@@ -213,7 +213,7 @@ export function SalesOrder() {
             </option>
           ))}
         </Select>
-        <FilterPeriode onChange={(rentang) => { setPeriode(rentang); setHalaman(0); setTerpilih(new Set()) }} />
+        <FilterPeriode onChange={(rentang) => { setPeriode(rentang); setHalaman(1); setTerpilih(new Set()) }} />
       </div>
 
       <BarPilihanMassal jumlah={barisTerpilih.length} onBersihkan={() => setTerpilih(new Set())}>

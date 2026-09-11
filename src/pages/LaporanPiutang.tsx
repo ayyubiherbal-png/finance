@@ -47,7 +47,7 @@ function usePiutangAging(cari: string, umur: FilterUmur, halaman: number) {
         .select('*', { count: 'exact' })
       if (cari.trim()) q = q.ilike('nama_pelanggan', `%${cari.trim()}%`)
       if (umur) q = q.gt(KOLOM_UMUR[umur], 0)
-      const mulai = halaman * UKURAN_HALAMAN
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
       const { data, error, count } = await q
         .order('total_piutang', { ascending: false })
         .range(mulai, mulai + UKURAN_HALAMAN - 1)
@@ -84,7 +84,7 @@ function usePiutangJatuhTempo(cari: string, umur: FilterUmur, halaman: number) {
         q = q.or(`nomor.ilike.${pola},nama_pelanggan.ilike.${pola}`)
       }
       if (umur) q = q.eq('bucket_umur', umur)
-      const mulai = halaman * UKURAN_HALAMAN
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
       const { data, error, count } = await q
         .order('hari_lewat', { ascending: false })
         .range(mulai, mulai + UKURAN_HALAMAN - 1)
@@ -117,15 +117,15 @@ const KOLOM_EKSPOR_LEWAT_TEMPO: KolomEkspor<VPiutang>[] = [
 export function LaporanPiutang() {
   const [cari, setCari] = useState('')
   const [umur, setUmur] = useState<FilterUmur>('')
-  const [halamanAging, setHalamanAging] = useState(0)
-  const [halamanLewatTempo, setHalamanLewatTempo] = useState(0)
+  const [halamanAging, setHalamanAging] = useState(1)
+  const [halamanLewatTempo, setHalamanLewatTempo] = useState(1)
   const { data: aging, isLoading, error, isFetching } = usePiutangAging(cari, umur, halamanAging)
   const { data: ringkasan } = useRingkasanPiutang()
   const { data: lewatTempo, error: errorLewatTempo } = usePiutangJatuhTempo(cari, umur, halamanLewatTempo)
 
   useEffect(() => {
-    setHalamanAging(0)
-    setHalamanLewatTempo(0)
+    setHalamanAging(1)
+    setHalamanLewatTempo(1)
   }, [cari, umur])
 
   const total = {

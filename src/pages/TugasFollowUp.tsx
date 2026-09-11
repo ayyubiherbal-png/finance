@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import { cn } from '@/lib/utils'
+import { ambilSemuaBertahap } from '@/lib/ambilSemua'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/components/Toast'
 import { Badge, Button, Card, CardContent, Input, KondisiKosong, Paginasi, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
@@ -198,15 +199,9 @@ function usePelangganUntukTugas() {
   return useQuery({
     queryKey: ['tugas-fu-pelanggan'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('v_pelanggan_crm')
-        .select('*')
-        .eq('aktif', true)
-        .eq('akun_agregat', false)
-        .not('hari_sejak_order', 'is', null)
-        .returns<VPelangganCrm[]>()
-      if (error) throw error
-      return data ?? []
+      return ambilSemuaBertahap<VPelangganCrm>((dari, sampai) => supabase
+        .from('v_pelanggan_crm').select('*').eq('aktif', true).eq('akun_agregat', false)
+        .not('hari_sejak_order', 'is', null).range(dari, sampai).returns<VPelangganCrm[]>())
     },
   })
 }
@@ -232,14 +227,10 @@ function usePelangganUlangTahun() {
   return useQuery({
     queryKey: ['tugas-fu-ulang-tahun'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('pelanggan')
-        .select('id, kode, nama, whatsapp, telepon, tanggal_lahir')
-        .eq('aktif', true)
-        .eq('akun_agregat', false)
-        .not('tanggal_lahir', 'is', null)
-      if (error) throw error
-      return (data ?? []) as PelangganUlangTahun[]
+      return ambilSemuaBertahap<PelangganUlangTahun>((dari, sampai) => supabase
+        .from('pelanggan').select('id, kode, nama, whatsapp, telepon, tanggal_lahir')
+        .eq('aktif', true).eq('akun_agregat', false).not('tanggal_lahir', 'is', null)
+        .range(dari, sampai) as unknown as PromiseLike<{ data: PelangganUlangTahun[] | null; error: unknown }>)
     },
   })
 }
@@ -248,9 +239,8 @@ function usePembeliUntukTugas() {
   return useQuery({
     queryKey: ['tugas-fu-pembeli'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('pembeli_marketplace').select('*').limit(1000)
-      if (error) throw error
-      return (data ?? []) as PembeliMarketplace[]
+      return ambilSemuaBertahap<PembeliMarketplace>((dari, sampai) => supabase
+        .from('pembeli_marketplace').select('*').range(dari, sampai).returns<PembeliMarketplace[]>())
     },
   })
 }
@@ -260,9 +250,9 @@ function useTugasSelesai() {
   return useQuery({
     queryKey: ['tugas-fu-selesai'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('riwayat_follow_up').select('tugas_id')
-      if (error) throw error
-      return new Set((data ?? []).map((r) => r.tugas_id))
+      const data = await ambilSemuaBertahap<{ tugas_id: string }>((dari, sampai) => supabase
+        .from('riwayat_follow_up').select('tugas_id').range(dari, sampai))
+      return new Set(data.map((r) => r.tugas_id))
     },
   })
 }

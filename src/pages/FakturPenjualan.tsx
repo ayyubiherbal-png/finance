@@ -77,7 +77,7 @@ function useDaftarFaktur(cari: string, statusBayar: string, periode: RentangTang
       if (hanyaJatuhTempo) q = q.neq('status_bayar', 'lunas').neq('status', 'dibatalkan').lte('jatuh_tempo', tanggalISO())
       if (periode.dari) q = q.gte('tanggal', periode.dari)
       if (periode.sampai) q = q.lte('tanggal', periode.sampai)
-      const mulai = halaman * UKURAN_HALAMAN
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
       const { data, error, count } = await q
         .order('tanggal', { ascending: false })
         .order('nomor', { ascending: false })
@@ -110,7 +110,7 @@ export function FakturPenjualan() {
   const [cari, setCari] = useState('')
   const [statusBayar, setStatusBayar] = useState('')
   const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
-  const [halaman, setHalaman] = useState(0)
+  const [halaman, setHalaman] = useState(1)
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set())
   const { data, isLoading, error, isFetching } = useDaftarFaktur(cari, statusBayar, periode, halaman, hanyaJatuhTempo)
   const baris = data?.baris ?? []
@@ -167,12 +167,12 @@ export function FakturPenjualan() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {hanyaJatuhTempo ? <Button variant="outline" size="sm" onClick={() => { setSearchParams({}); setHalaman(0) }}>{tt('Jatuh tempo')} ×</Button> : null}
+        {hanyaJatuhTempo ? <Button variant="outline" size="sm" onClick={() => { setSearchParams({}); setHalaman(1) }}>{tt('Jatuh tempo')} ×</Button> : null}
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pl-8" placeholder="Cari nomor faktur..." value={cari} onChange={(e) => { setCari(e.target.value); setHalaman(0); setTerpilih(new Set()) }} />
+          <Input className="pl-8" placeholder="Cari nomor faktur..." value={cari} onChange={(e) => { setCari(e.target.value); setHalaman(1); setTerpilih(new Set()) }} />
         </div>
-        <Select className="w-full sm:w-48" value={statusBayar} onChange={(e) => { setStatusBayar(e.target.value); setHalaman(0); setTerpilih(new Set()) }}>
+        <Select className="w-full sm:w-48" value={statusBayar} onChange={(e) => { setStatusBayar(e.target.value); setHalaman(1); setTerpilih(new Set()) }}>
           <option value="">Semua status bayar</option>
           {Object.entries(LABEL_BAYAR).map(([v, l]) => (
             <option key={v} value={v}>
@@ -180,7 +180,7 @@ export function FakturPenjualan() {
             </option>
           ))}
         </Select>
-        <FilterPeriode onChange={(rentang) => { setPeriode(rentang); setHalaman(0); setTerpilih(new Set()) }} />
+        <FilterPeriode onChange={(rentang) => { setPeriode(rentang); setHalaman(1); setTerpilih(new Set()) }} />
       </div>
 
       <BarPilihanMassal jumlah={barisTerpilih.length} onBersihkan={() => setTerpilih(new Set())}>

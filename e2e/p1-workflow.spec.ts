@@ -1,6 +1,15 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('workflow P1', () => {
+  test('pagination seluruh daftar dimulai dari halaman pertama', async ({ page }) => {
+    await page.goto('/sales-order')
+    await expect(page.getByRole('heading', { name: 'Sales Order' })).toBeVisible()
+    const paginasi = page.getByTestId('paginasi')
+    if (await paginasi.count()) await expect(paginasi).toContainText(/Halaman 1 dari/)
+    else await expect(page.getByText('Belum ada Sales Order.')).toBeVisible()
+    await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
+  })
+
   test('CRM memakai pencarian dan filter segmen tanpa error', async ({ page }) => {
     await page.goto('/crm')
     await expect(page.getByRole('heading', { name: 'CRM Pelanggan' })).toBeVisible()

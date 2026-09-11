@@ -50,7 +50,7 @@ function useDaftarPO(cari: string, status: string, halaman: number) {
       let q = supabase.from('purchase_order').select('id, nomor, tanggal, status, total, supplier:supplier_id(nama), items:purchase_order_item(id)', { count: 'exact' })
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (status) q = q.eq('status', status)
-      const mulai = halaman * UKURAN_HALAMAN
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
       const { data, error, count } = await q
         .order('tanggal', { ascending: false })
         .order('nomor', { ascending: false })
@@ -75,7 +75,7 @@ export function PurchaseOrder() {
   const konfirmasi = useKonfirmasi()
   const [cari, setCari] = useState('')
   const [status, setStatus] = useState('')
-  const [halaman, setHalaman] = useState(0)
+  const [halaman, setHalaman] = useState(1)
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set())
   const [memprosesMassal, setMemprosesMassal] = useState(false)
   const { data, isLoading, error, isFetching } = useDaftarPO(cari, status, halaman)
@@ -138,9 +138,9 @@ export function PurchaseOrder() {
       <div className="flex flex-wrap gap-2">
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pl-8" placeholder="Cari nomor PO..." value={cari} onChange={(e) => { setCari(e.target.value); setHalaman(0); setTerpilih(new Set()) }} />
+          <Input className="pl-8" placeholder="Cari nomor PO..." value={cari} onChange={(e) => { setCari(e.target.value); setHalaman(1); setTerpilih(new Set()) }} />
         </div>
-        <Select className="w-full sm:w-48" value={status} onChange={(e) => { setStatus(e.target.value); setHalaman(0); setTerpilih(new Set()) }}>
+        <Select className="w-full sm:w-48" value={status} onChange={(e) => { setStatus(e.target.value); setHalaman(1); setTerpilih(new Set()) }}>
           <option value="">Semua status</option>
           {Object.entries(LABEL_STATUS).map(([v, l]) => (
             <option key={v} value={v}>

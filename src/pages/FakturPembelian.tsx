@@ -63,7 +63,7 @@ function useDaftarFaktur(cari: string, statusBayar: string, halaman: number) {
         .select('id, nomor, tanggal, jatuh_tempo, status, status_bayar, total, sisa, supplier:supplier_id(nama)', { count: 'exact' })
       if (cari.trim()) q = q.ilike('nomor', `%${cari.trim()}%`)
       if (statusBayar) q = q.eq('status_bayar', statusBayar)
-      const mulai = halaman * UKURAN_HALAMAN
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
       const { data, error, count } = await q
         .order('tanggal', { ascending: false })
         .order('nomor', { ascending: false })
@@ -89,7 +89,7 @@ const KOLOM_EKSPOR_FAKTUR_BELI: KolomEkspor<BarisFaktur>[] = [
 export function FakturPembelian() {
   const [cari, setCari] = useState('')
   const [statusBayar, setStatusBayar] = useState('')
-  const [halaman, setHalaman] = useState(0)
+  const [halaman, setHalaman] = useState(1)
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set())
   const { data, isLoading, error, isFetching } = useDaftarFaktur(cari, statusBayar, halaman)
   const baris = data?.baris ?? []
@@ -139,9 +139,9 @@ export function FakturPembelian() {
       <div className="flex flex-wrap gap-2">
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pl-8" placeholder="Cari nomor faktur..." value={cari} onChange={(e) => { setCari(e.target.value); setHalaman(0); setTerpilih(new Set()) }} />
+          <Input className="pl-8" placeholder="Cari nomor faktur..." value={cari} onChange={(e) => { setCari(e.target.value); setHalaman(1); setTerpilih(new Set()) }} />
         </div>
-        <Select className="w-full sm:w-48" value={statusBayar} onChange={(e) => { setStatusBayar(e.target.value); setHalaman(0); setTerpilih(new Set()) }}>
+        <Select className="w-full sm:w-48" value={statusBayar} onChange={(e) => { setStatusBayar(e.target.value); setHalaman(1); setTerpilih(new Set()) }}>
           <option value="">Semua status bayar</option>
           {Object.entries(LABEL_BAYAR).map(([v, l]) => (
             <option key={v} value={v}>

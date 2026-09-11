@@ -10,6 +10,7 @@ import { useKonfirmasi } from '@/components/Konfirmasi'
 import { Badge, Button, Card, CardContent, Input, InputAngka, KondisiKosong, Label, Paginasi, PesanError, Select, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
 import type { KanalPenjualan } from '@/types/db'
 import { tt } from '@/lib/i18nText'
+import { ambilSemuaBertahap } from '@/lib/ambilSemua'
 
 const UKURAN_HALAMAN = 50
 type KanalSettlement = Extract<KanalPenjualan, 'shopee' | 'tiktok' | 'tokopedia' | 'lainnya'>
@@ -60,15 +61,14 @@ export function SettlementMarketplace() {
     enabled: bukaForm,
     queryFn: async () => {
       const [daftarPesanan, itemSettlement] = await Promise.all([
-        supabase.from('pesanan_marketplace_impor')
-        .select('id, kanal, nomor_pesanan_platform, faktur:faktur_id(id, nomor, total, terbayar, status)')
-        .eq('kanal', kanal).order('diimpor_pada', { ascending: false }).limit(500)
-        , supabase.from('settlement_marketplace_item').select('pesanan_id').limit(1000)
+        ambilSemuaBertahap<PesananRow>((dari, sampai) => supabase.from('pesanan_marketplace_impor')
+          .select('id, kanal, nomor_pesanan_platform, faktur:faktur_id(id, nomor, total, terbayar, status)')
+          .eq('kanal', kanal).order('diimpor_pada', { ascending: false }).range(dari, sampai) as unknown as PromiseLike<{ data: PesananRow[] | null; error: unknown }>),
+        ambilSemuaBertahap<{ pesanan_id: string }>((dari, sampai) => supabase
+          .from('settlement_marketplace_item').select('pesanan_id').range(dari, sampai)),
       ])
-      if (daftarPesanan.error) throw daftarPesanan.error
-      if (itemSettlement.error) throw itemSettlement.error
-      const sudahSettlement = new Set((itemSettlement.data ?? []).map((x) => x.pesanan_id))
-      return ((daftarPesanan.data ?? []) as unknown as PesananRow[]).filter((x) => x.faktur && !sudahSettlement.has(x.id) && x.faktur.total > x.faktur.terbayar && x.faktur.status !== 'dibatalkan')
+      const sudahSettlement = new Set(itemSettlement.map((x) => x.pesanan_id))
+      return daftarPesanan.filter((x) => x.faktur && !sudahSettlement.has(x.id) && x.faktur.total > x.faktur.terbayar && x.faktur.status !== 'dibatalkan')
     },
   })
 
