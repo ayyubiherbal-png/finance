@@ -26,11 +26,11 @@ test.describe('layout responsif', () => {
     const sidebar = page.getByTestId('sidebar-desktop')
     await expect(sidebar).toBeVisible()
     await expect(page.getByTestId('mobile-menu-button')).toBeHidden()
-    await expect(sidebar.getByText('Ayyubi Finance')).toBeHidden()
+    await expect(sidebar.getByText('Ayyubi Food')).toBeHidden()
     await expect(sidebar.getByRole('link', { name: 'Inventori' })).toBeVisible()
 
     await page.setViewportSize({ width: 1280, height: 900 })
-    await expect(sidebar.getByText('Ayyubi Finance')).toBeVisible()
+    await expect(sidebar.getByText('Ayyubi Food')).toBeVisible()
     await expect(sidebar.getByText('Inventori')).toBeVisible()
   })
 })

@@ -243,7 +243,7 @@ export function Layout() {
       >
         <div className="flex h-16 items-center justify-center gap-2.5 px-2 lg:justify-start lg:px-5">
           <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-9 w-9 shrink-0 rounded-xl object-cover ring-1 ring-border" />
-          <span className="hidden font-semibold lg:inline">Ayyubi Finance</span>
+          <span className="hidden font-semibold lg:inline">Ayyubi Food</span>
         </div>
 
         <nav className="flex-1 space-y-5 overflow-y-auto px-2 pb-3 lg:px-3" aria-label={t('topbar.menuUtama')}>
@@ -267,7 +267,7 @@ export function Layout() {
           >
             <div className="flex h-16 items-center gap-2.5 border-b border-border px-4">
               <img src="/ayyubi-logo.jpeg" alt="Ayyubi Food" className="h-9 w-9 shrink-0 rounded-xl object-cover ring-1 ring-border" />
-              <span className="font-semibold">Ayyubi Finance</span>
+              <span className="font-semibold">Ayyubi Food</span>
               <button
                 type="button"
                 className="ml-auto flex h-[44px] w-[44px] items-center justify-center rounded-full text-foreground/70 hover:bg-accent"

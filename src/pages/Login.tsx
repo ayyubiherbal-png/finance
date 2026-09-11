@@ -52,7 +52,7 @@ export function Login() {
             alt="Ayyubi Food"
             className="h-16 w-16 rounded-2xl object-cover shadow-md ring-1 ring-border"
           />
-          <h1 className="mt-1 text-lg font-semibold">Ayyubi Finance</h1>
+          <h1 className="mt-1 text-lg font-semibold">Ayyubi Food</h1>
           <p className="text-sm text-muted-foreground">{t('login.subjudul')}</p>
         </div>
 

@@ -9,7 +9,7 @@ test.use({ storageState: { cookies: [], origins: [] } })
 test.describe('Login', () => {
   test('kredensial benar -> masuk ke dashboard', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Ayyubi Finance' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Ayyubi Food' })).toBeVisible()
 
     await page.getByLabel('Email').fill(process.env.E2E_EMAIL_OWNER!)
     await page.getByLabel('Kata sandi').fill(process.env.E2E_PASSWORD_OWNER!)
