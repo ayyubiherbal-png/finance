@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggalISO } from '@/lib/format'
+import { ambilSemuaBertahap } from '@/lib/ambilSemua'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
@@ -14,6 +15,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Spinner,
   Table,
@@ -29,13 +31,13 @@ function useKategoriBiayaDenganItem() {
   return useQuery({
     queryKey: ['kategori-biaya-list'],
     queryFn: async () => {
-      const [kategoriRes, itemRes] = await Promise.all([
-        supabase.from('kategori_biaya').select('*').order('kode').returns<KategoriRow[]>(),
-        supabase.from('nama_pengeluaran').select('*').order('kode').returns<NamaPengeluaran[]>(),
+      const [kategori, item] = await Promise.all([
+        ambilSemuaBertahap<KategoriRow>((dari, sampai) => supabase
+          .from('kategori_biaya').select('*').order('kode').range(dari, sampai).returns<KategoriRow[]>()),
+        ambilSemuaBertahap<NamaPengeluaran>((dari, sampai) => supabase
+          .from('nama_pengeluaran').select('*').order('kode').range(dari, sampai).returns<NamaPengeluaran[]>()),
       ])
-      if (kategoriRes.error) throw kategoriRes.error
-      if (itemRes.error) throw itemRes.error
-      return { kategori: kategoriRes.data ?? [], item: itemRes.data ?? [] }
+      return { kategori, item }
     },
   })
 }
@@ -49,6 +51,8 @@ interface BarisEksporKategoriBiaya {
   aktif: boolean
 }
 
+const UKURAN_HALAMAN = 20
+
 const KOLOM_EKSPOR_KATEGORI_BIAYA: KolomEkspor<BarisEksporKategoriBiaya>[] = [
   { header: 'Kode Kategori', nilai: (r) => r.kodeKategori },
   { header: 'Kategori', nilai: (r) => r.namaKategori },
@@ -60,6 +64,7 @@ const KOLOM_EKSPOR_KATEGORI_BIAYA: KolomEkspor<BarisEksporKategoriBiaya>[] = [
 
 export function KategoriBiaya() {
   const [cari, setCari] = useState('')
+  const [halaman, setHalaman] = useState(1)
   const { data, isLoading, error } = useKategoriBiayaDenganItem()
 
   const itemPerKategori = useMemo(() => {
@@ -78,6 +83,13 @@ export function KategoriBiaya() {
     if (k.nama.toLowerCase().includes(pola) || k.kode.toLowerCase().includes(pola)) return true
     return (itemPerKategori.get(k.id) ?? []).some((i) => i.nama.toLowerCase().includes(pola) || i.kode.toLowerCase().includes(pola))
   })
+  const mulai = (halaman - 1) * UKURAN_HALAMAN
+  const kategoriHalaman = kategoriTersaring.slice(mulai, mulai + UKURAN_HALAMAN)
+  useEffect(() => setHalaman(1), [cari])
+  useEffect(() => {
+    const terakhir = Math.max(1, Math.ceil(kategoriTersaring.length / UKURAN_HALAMAN))
+    if (halaman > terakhir) setHalaman(terakhir)
+  }, [halaman, kategoriTersaring.length])
 
   return (
     <div className="space-y-4">
@@ -136,14 +148,14 @@ export function KategoriBiaya() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {kategoriTersaring.map((k, idx) => {
+          {kategoriHalaman.map((k, idx) => {
             const item = itemPerKategori.get(k.id) ?? []
             return (
               <div key={k.id} className="space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-base font-semibold">
                     <Link to={`/kategori-biaya/${k.id}`} className="hover:underline">
-                      {idx + 1}. {k.nama} &middot; {k.kode}
+                      {mulai + idx + 1}. {k.nama} &middot; {k.kode}
                     </Link>
                     {!k.operasional ? (
                       <Badge variant="peringatan" className="ml-2">
@@ -196,6 +208,7 @@ export function KategoriBiaya() {
               </div>
             )
           })}
+          <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={kategoriTersaring.length} onUbah={setHalaman} />
         </div>
       )}
     </div>

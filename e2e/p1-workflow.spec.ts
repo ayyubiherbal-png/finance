@@ -80,4 +80,11 @@ test.describe('workflow P1', () => {
       await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
     })
   }
+
+  test('Kategori Biaya mempertahankan struktur induk dengan pagination', async ({ page }) => {
+    await page.goto('/kategori-biaya')
+    await expect(page.getByRole('heading', { name: 'Kategori Biaya' })).toBeVisible()
+    await expect(page.getByTestId('paginasi')).toContainText(/Halaman 1 dari/)
+    await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
+  })
 })
