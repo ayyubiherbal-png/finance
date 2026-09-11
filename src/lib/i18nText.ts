@@ -1358,6 +1358,16 @@ export const TEKS: Record<string, string> = {
   'Dicatat ke riwayat follow-up pelanggan.': 'Logged to the customer follow-up history.',
   'Isi pertanyaan pelanggan dulu.': 'Enter the customer question first.',
   'Gagal membuat draf.': 'Failed to create draft.',
+
+  // ---------- Penjualan Cepat: Isi cepat dari chat (Closing Agent) ----------
+  'Isi cepat dari chat (opsional)': 'Quick-fill from chat (optional)',
+  'Tempel pesan chat pesanan pelanggan di sini, mis. "5 pcs Makaroni Balado 250g, 2 box Kurma Sukari"...':
+    'Paste the customer\'s order chat here, e.g. "5 pcs Balado 250g Macaroni, 2 box Kurma Sukari Dates"...',
+  'Baca dari Chat': 'Read from Chat',
+  'Tidak berhasil dicocokkan, tambahkan manual:': 'Could not be matched, add manually:',
+  'Tempel dulu teks pesanannya.': 'Paste the order text first.',
+  'Gagal membaca pesanan.': 'Failed to read the order.',
+  '{n} barang terisi dari chat -- cek dulu sebelum diproses.': '{n} items filled in from chat -- review before processing.',
 }
 
 

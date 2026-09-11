@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Pencil, Plus, Trash2, Zap } from 'lucide-react'
+import { ArrowLeft, MessageSquareText, Pencil, Plus, Trash2, Zap } from 'lucide-react'
+import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import {
   useGudangAktif,
@@ -31,6 +32,7 @@ import {
   Table,
   Tbody,
   Td,
+  Textarea,
   Th,
   Thead,
   Tr,
@@ -139,6 +141,10 @@ export function PenjualanCepat() {
 
   const [memproses, setMemproses] = useState(false)
   const [error, setError] = useState<unknown>(null)
+
+  const [chatTeks, setChatTeks] = useState('')
+  const [membacaChat, setMembacaChat] = useState(false)
+  const [tidakDikenali, setTidakDikenali] = useState<string[]>([])
 
   const { data: satuanProduk } = useProdukSatuan(addRow.produk_id)
 
@@ -274,6 +280,76 @@ export function PenjualanCepat() {
     const entri = satuanProduk?.find((s) => s.satuan_id === satuanId)
     setAddRow((r) => ({ ...r, satuan_id: satuanId, konversi: entri?.konversi ?? 1 }))
     if (addRow.produk_id) void segarkanHarga(addRow.produk_id, satuanId, addRow.qty)
+  }
+
+  /**
+   * Closing Agent (Fase 2) -- cocokkan teks chat ke katalog produk asli lewat
+   * Edge Function, lalu isi baris seperti kalau staf menambah manual satu-satu.
+   * Harga TETAP dihitung lewat `ambilHargaJual` yang sama, bukan dari AI --
+   * AI di sini cuma mengenali produk & qty dari teks, bukan menentukan harga.
+   * Tidak ada transaksi yang dibuat di sini; staf tetap menekan "Proses
+   * Penjualan" sendiri setelah meninjau baris yang terisi.
+   */
+  async function bacaDariChat() {
+    if (!chatTeks.trim()) {
+      setError(new Error('Tempel dulu teks pesanannya.'))
+      return
+    }
+    setError(null)
+    setTidakDikenali([])
+    setMembacaChat(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('baca-pesanan-chat', { body: { teks: chatTeks.trim() } })
+      if (error) {
+        if (error instanceof FunctionsHttpError) {
+          const body = await error.context.json().catch(() => null)
+          throw new Error(body?.error ?? error.message)
+        }
+        throw error
+      }
+      if (data?.ok === false) throw new Error(data.error ?? 'Gagal membaca pesanan.')
+
+      const items = (data.items ?? []) as {
+        produk_id: string
+        kode_produk: string
+        nama_produk: string
+        satuan_id: string
+        satuan_kode: string
+        konversi: number
+        qty: number
+      }[]
+
+      const barisBaru: BarisCepat[] = []
+      for (const it of items) {
+        let harga = 0
+        if (tierHargaId) {
+          try {
+            harga = (await ambilHargaJual({ produkId: it.produk_id, tierId: tierHargaId, satuanId: it.satuan_id, qty: it.qty, tanggal })) ?? 0
+          } catch {
+            // Tidak ada aturan harga yang cocok -- biarkan 0, staf isi manual.
+          }
+        }
+        barisBaru.push({
+          key: crypto.randomUUID(),
+          produk_id: it.produk_id,
+          produkLabel: { value: it.produk_id, label: it.nama_produk, sublabel: it.kode_produk },
+          satuan_id: it.satuan_id,
+          satuanKode: it.satuan_kode,
+          konversi: it.konversi,
+          qty: it.qty,
+          harga_satuan: harga,
+          diskon_persen: 0,
+          diskon_nilai: 0,
+        })
+      }
+      setBaris((b) => [...b, ...barisBaru])
+      setTidakDikenali((data.tidakDikenali ?? []) as string[])
+      if (barisBaru.length > 0) toast(tt('{n} barang terisi dari chat -- cek dulu sebelum diproses.').replace('{n}', String(barisBaru.length)))
+    } catch (e) {
+      setError(e)
+    } finally {
+      setMembacaChat(false)
+    }
   }
 
   // Kalau baris tambah sudah lengkap diisi tapi belum ditekan "Tambah", tetap
@@ -432,6 +508,33 @@ export function PenjualanCepat() {
               <Input value={teleponPenerima} onChange={(e) => setTeleponPenerima(e.target.value)} />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MessageSquareText className="h-4 w-4 text-primary" /> {tt('Isi cepat dari chat (opsional)')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 p-4 pt-0">
+          <Textarea
+            rows={2}
+            value={chatTeks}
+            onChange={(e) => setChatTeks(e.target.value)}
+            placeholder={tt('Tempel pesan chat pesanan pelanggan di sini, mis. "5 pcs Makaroni Balado 250g, 2 box Kurma Sukari"...')}
+          />
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={bacaDariChat} disabled={membacaChat}>
+              {membacaChat ? <Spinner /> : <MessageSquareText className="h-4 w-4" />}
+              {tt('Baca dari Chat')}
+            </Button>
+          </div>
+          {tidakDikenali.length > 0 ? (
+            <p className="text-xs text-amber-700">
+              {tt('Tidak berhasil dicocokkan, tambahkan manual:')} {tidakDikenali.join('; ')}
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 
