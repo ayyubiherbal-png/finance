@@ -36,7 +36,7 @@ interface FakturCetakItem {
   harga_satuan: number
   diskon_persen: number
   subtotal: number
-  produk: { nama: string; kode: string } | null
+  produk: { nama: string } | null
   satuan: { kode: string } | null
 }
 
@@ -79,7 +79,7 @@ export function FakturPenjualanCetak() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('faktur_penjualan_item')
-        .select('id, qty, harga_satuan, diskon_persen, subtotal, produk:produk_id(nama, kode), satuan:satuan_id(kode)')
+        .select('id, qty, harga_satuan, diskon_persen, subtotal, produk:produk_id(nama), satuan:satuan_id(kode)')
         .eq('faktur_id', id as string)
         .order('urutan')
       if (error) throw error
@@ -206,10 +206,7 @@ export function FakturPenjualanCetak() {
             <tbody>
               {(items ?? []).map((it, i) => (
                 <tr key={it.id} className={i % 2 === 1 ? 'bg-muted/50' : undefined}>
-                  <td className="py-2 pl-3">
-                    {it.produk?.nama}
-                    <span className="ml-1 font-mono text-xs text-gray-500">{it.produk?.kode}</span>
-                  </td>
+                  <td className="py-2 pl-3">{it.produk?.nama}</td>
                   <td className="py-2 text-right">{it.qty}</td>
                   <td className="py-2">{it.satuan?.kode}</td>
                   <td className="py-2 text-right">{rupiah(it.harga_satuan)}</td>
