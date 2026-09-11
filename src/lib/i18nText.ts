@@ -329,6 +329,7 @@ export const TEKS: Record<string, string> = {
 
   // ---------- Placeholder ----------
   'Cari nama atau ID...': 'Search name or ID...',
+  'Cari pelanggan atau nomor faktur...': 'Search customer or invoice number...',
   'Cari nama atau kode...': 'Search name or code...',
   'Cari nama atau kode pelanggan...': 'Search customer name or code...',
   'Cari nama atau kode supplier...': 'Search supplier name or code...',
@@ -386,6 +387,7 @@ export const TEKS: Record<string, string> = {
   'Tidak ada hasil.': 'No results.',
   'Tidak ada pelanggan yang cocok.': 'No matching customers.',
   'Tidak ada piutang berjalan.': 'No outstanding receivables.',
+  'Tidak ada piutang yang cocok dengan filter.': 'No receivables match the filters.',
   'Tidak ada mutasi pada rentang tanggal ini.': 'No movements in this date range.',
   'Tidak ada faktur dengan sisa tagihan untuk pelanggan ini.': 'No invoices with an outstanding balance for this customer.',
   'Tidak ada faktur dengan sisa tagihan untuk supplier ini.': 'No invoices with an outstanding balance for this supplier.',
@@ -456,6 +458,7 @@ export const TEKS: Record<string, string> = {
 
   // ---------- Isi dropdown ----------
   'Semua status': 'All statuses',
+  'Semua umur piutang': 'All receivable ages',
   'Semua status bayar': 'All payment statuses',
   'Semua gudang': 'All warehouses',
   'Tanpa faktur': 'Without invoice',

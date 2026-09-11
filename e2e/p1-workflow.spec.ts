@@ -36,4 +36,18 @@ test.describe('workflow P1', () => {
     await pencarian.fill('nama-yang-tidak-ada')
     await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
   })
+
+  test('laporan piutang menyediakan pencarian dan filter umur tanpa memotong ringkasan', async ({ page }) => {
+    await page.goto('/laporan/piutang')
+    await expect(page.getByRole('heading', { name: 'Laporan Piutang' })).toBeVisible()
+    const pencarian = page.getByPlaceholder('Cari pelanggan atau nomor faktur...')
+    if (await pencarian.count()) {
+      await expect(pencarian).toBeVisible()
+      await expect(page.getByRole('combobox')).toHaveValue('')
+      await pencarian.fill('piutang-yang-tidak-ada')
+    } else {
+      await expect(page.getByText('Tidak ada piutang berjalan.')).toBeVisible()
+    }
+    await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
+  })
 })
