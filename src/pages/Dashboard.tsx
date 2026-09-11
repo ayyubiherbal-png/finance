@@ -14,12 +14,13 @@ import {
   Package,
   ShoppingCart,
   BadgeDollarSign,
+  RefreshCw,
   TrendingUp,
   Users,
   Wallet,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, angka, tanggalISO } from '@/lib/format'
+import { rupiah, angka, tanggalISO, tanggalWaktu } from '@/lib/format'
 import { useI18n } from '@/lib/i18n'
 import { useAuth } from '@/contexts/AuthContext'
 import { GrafikKapsul } from '@/components/Charts'
@@ -105,17 +106,14 @@ function useRingkasan(periode: PeriodeDasbor) {
           .from('v_hutang_aging')
           .select('supplier_id, nama_supplier, total_hutang, umur_90_plus')
           .returns<{ supplier_id: string; nama_supplier: string; total_hutang: number; umur_90_plus: number | null }[]>(),
-        // 5 faktur belum lunas dengan jatuh tempo paling dekat -- pengingat "siapa
-        // yang perlu ditagih duluan", pelengkap notifikasi lonceng yang cuma hitung
-        // yang SUDAH lewat.
+        // Hanya faktur yang sudah jatuh tempo. Faktur yang belum lunas tetapi
+        // tanggal temponya masih di masa depan bukan tindakan untuk hari ini.
         supabase
           .from('faktur_penjualan')
-          .select('id, nomor, jatuh_tempo, sisa, pelanggan:pelanggan_id(nama)')
+          .select('id', { count: 'exact', head: true })
           .neq('status_bayar', 'lunas')
           .neq('status', 'dibatalkan')
-          .order('jatuh_tempo', { ascending: true })
-          .limit(5)
-          .returns<{ id: string; nomor: string; jatuh_tempo: string; sisa: number; pelanggan: { nama: string } | null }[]>(),
+          .lte('jatuh_tempo', tanggalISO()),
         supabase
           .from('v_pelanggan_crm')
           .select('pelanggan_id, kode, nama, total_belanja, jumlah_transaksi, segmen')
@@ -227,12 +225,13 @@ function useRingkasan(periode: PeriodeDasbor) {
         totalHutang: barisHutang.reduce((t, b) => t + Number(b.total_hutang ?? 0), 0),
         hutangMacet: barisHutang.reduce((t, b) => t + Number(b.umur_90_plus ?? 0), 0),
         perluRestock: barisStok.filter((b) => b.perlu_restock),
-        jatuhTempo: jatuhTempo.data ?? [],
+        jumlahJatuhTempo: jatuhTempo.count ?? 0,
         pesananMenunggu: pesananMenunggu.count ?? 0,
         settlementMenunggu,
         settlementTersedia,
         pelangganTeratas: pelangganTeratas.data ?? [],
         totalSaldoKas: (saldoKas.data ?? []).reduce((t, a) => t + Number(a.saldo), 0),
+        diperbaruiPada: new Date().toISOString(),
       }
     },
   })
@@ -242,7 +241,7 @@ export function Dashboard() {
   const { t } = useI18n()
   const { profil } = useAuth()
   const [periode, setPeriode] = useState<PeriodeDasbor>('30')
-  const { data, isLoading, error } = useRingkasan(periode)
+  const { data, isLoading, error, isFetching, refetch } = useRingkasan(periode)
   const bolehLihatBiaya = PERAN_BOLEH_LIHAT_BIAYA.includes(profil?.peran ?? '')
 
   if (isLoading) {
@@ -262,9 +261,8 @@ export function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('dasbor.judul')}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t('dasbor.subjudulAksi')}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('dasbor.subjudulAksi')}</p>
+          {data ? <p className="mt-1 text-xs text-muted-foreground">{t('dasbor.diperbaruiPada')} {tanggalWaktu(data.diperbaruiPada)}</p> : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-full border border-border bg-card p-1 shadow-sm" aria-label={t('dasbor.pilihPeriode')}>
@@ -281,6 +279,10 @@ export function Dashboard() {
           </div>
           <Button variant="outline" size="sm" asChild>
             <Link to="/laporan/omzet">{t('dasbor.lihatLaporan')}</Link>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} aria-label={t('dasbor.perbaruiData')}>
+            <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
+            <span className="hidden sm:inline">{t('dasbor.perbarui')}</span>
           </Button>
         </div>
       </div>
@@ -334,9 +336,9 @@ export function Dashboard() {
             <AlertTriangle className={cn('h-5 w-5', data.perluRestock.length > 0 ? 'text-amber-500' : 'text-success')} />
             <span className="flex-1 text-sm font-medium">{data.perluRestock.length > 0 ? `${data.perluRestock.length} ${t('dasbor.produkPerluRestock')}` : t('dasbor.semuaStokAman')}</span>
           </Link>
-          <Link to="/faktur-penjualan" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.jatuhTempo.length > 0 && 'border-amber-500/30')}>
-            {data.jatuhTempo.length > 0 ? <CalendarClock className="h-5 w-5 text-amber-500" /> : <CheckCircle2 className="h-5 w-5 text-success" />}
-            <span className="flex-1 text-sm font-medium">{data.jatuhTempo.length > 0 ? t('dasbor.fakturPerluDitagih') : t('dasbor.tidakAdaFaktur')}</span>
+          <Link to="/faktur-penjualan" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.jumlahJatuhTempo > 0 && 'border-destructive/30')}>
+            {data.jumlahJatuhTempo > 0 ? <CalendarClock className="h-5 w-5 text-destructive" /> : <CheckCircle2 className="h-5 w-5 text-success" />}
+            <span className="flex-1 text-sm font-medium">{data.jumlahJatuhTempo > 0 ? t('dasbor.fakturJatuhTempo').replace('{n}', String(data.jumlahJatuhTempo)) : t('dasbor.tidakAdaJatuhTempo')}</span>
           </Link>
           <Link to="/sales-order" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.pesananMenunggu > 0 && 'border-amber-500/30')}>
             {data.pesananMenunggu > 0 ? <ShoppingCart className="h-5 w-5 text-amber-500" /> : <CheckCircle2 className="h-5 w-5 text-success" />}
