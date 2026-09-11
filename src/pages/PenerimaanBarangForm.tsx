@@ -34,9 +34,13 @@ interface POSumberItem {
   produk_id: string
   satuan_id: string
   konversi: number
+  qty: number
   qty_dasar: number
   qty_diterima: number
   harga_satuan: number
+  diskon_persen: number
+  diskon_nilai: number
+  subtotal: number
   produk: { nama: string; kode: string } | null
   satuan: { kode: string } | null
 }
@@ -54,6 +58,13 @@ interface POSumber {
 interface BarisTerima extends POSumberItem {
   qtyTerima: number
   hargaTerima: number
+}
+
+function teksDiskon(b: { diskon_persen: number; diskon_nilai: number }) {
+  const bagian: string[] = []
+  if (b.diskon_persen > 0) bagian.push(`${b.diskon_persen}%`)
+  if (b.diskon_nilai > 0) bagian.push(rupiah(b.diskon_nilai))
+  return bagian.length > 0 ? `(${bagian.join(' + ')})` : ''
 }
 
 export function PenerimaanBarangForm() {
@@ -100,7 +111,7 @@ function FormBaru({ poId }: { poId: string | null }) {
       const { data, error } = await supabase
         .from('purchase_order_item')
         .select(
-          'id, produk_id, satuan_id, konversi, qty_dasar, qty_diterima, harga_satuan, produk:produk_id(nama, kode), satuan:satuan_id(kode)',
+          'id, produk_id, satuan_id, konversi, qty, qty_dasar, qty_diterima, harga_satuan, diskon_persen, diskon_nilai, subtotal, produk:produk_id(nama, kode), satuan:satuan_id(kode)',
         )
         .eq('po_id', poId as string)
         .order('urutan')
@@ -118,7 +129,10 @@ function FormBaru({ poId }: { poId: string | null }) {
         .map((it) => ({
           ...it,
           qtyTerima: (it.qty_dasar - it.qty_diterima) / it.konversi,
-          hargaTerima: it.harga_satuan,
+          // Harga bersih setelah diskon PO (bukan harga_satuan kotor) --
+          // supaya diskon per-item PO tidak hilang saat dijadikan Faktur
+          // Pembelian & perhitungan HPP nantinya.
+          hargaTerima: it.qty > 0 ? Math.round((it.subtotal / it.qty) * 100) / 100 : it.harga_satuan,
         })),
     )
   }, [itemPO])
@@ -264,6 +278,11 @@ function FormBaru({ poId }: { poId: string | null }) {
                     </Td>
                     <Td className="text-right">
                       <InputAngka value={r.hargaTerima} onChange={(nilai) => ubahHarga(r.id, nilai)} className="ml-auto w-28" />
+                      {r.diskon_persen > 0 || r.diskon_nilai > 0 ? (
+                        <p className="mt-0.5 text-right text-xs text-muted-foreground">
+                          {tt('Sudah termasuk diskon PO')} {teksDiskon(r)}
+                        </p>
+                      ) : null}
                     </Td>
                   </Tr>
                 )
@@ -300,10 +319,10 @@ function FormBaru({ poId }: { poId: string | null }) {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Biaya tambahan (ongkos angkut/bongkar)</Label>
+            <Label>{tt('Ongkir / biaya pengiriman')}</Label>
             <InputAngka value={header.biaya_tambahan} onChange={(nilai) => setHeader((h) => ({ ...h, biaya_tambahan: nilai }))} />
             <p className="text-xs text-muted-foreground">
-              {tt('Dibagi proporsional ke tiap produk dan ikut masuk perhitungan HPP.')}
+              {tt('Dicatat sebagai beban operasional dan tidak dimasukkan ke HPP persediaan.')}
             </p>
           </div>
 

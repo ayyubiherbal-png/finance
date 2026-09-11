@@ -86,6 +86,7 @@ export const KAMUS = {
   'menu.omzet': { id: 'Omzet', en: 'Revenue' },
   'menu.piutang': { id: 'Piutang', en: 'Receivables' },
   'menu.labaKotor': { id: 'Laba Kotor', en: 'Gross Profit' },
+  'menu.labaRugi': { id: 'Laba Rugi', en: 'Income Statement' },
 
   // ---------- Topbar ----------
   'topbar.cari': { id: 'Cari produk, pelanggan, supplier...', en: 'Search products, customers, suppliers...' },
@@ -580,6 +581,8 @@ export const TEKS: Record<string, string> = {
   'Data master -- piutang berjalan ada di Laporan Piutang': 'Master data -- outstanding receivables are in the Receivables report',
   'Sisa tagihan pelanggan berdasarkan umur jatuh tempo': 'Customer balances by age of due date',
   'Omzet dikurangi HPP, dari seluruh faktur penjualan': 'Revenue minus COGS, across all sales invoices',
+  'Penjualan bersih dikurangi HPP setelah retur, dianalisis per produk atau pelanggan':
+    'Net sales minus COGS after returns, analyzed by product or customer',
 
   // ---------- Impor Pesanan & Pembeli Marketplace lanjutan (2026-09-08) ----------
   // Ditambahkan belakangan karena fitur-fitur ini dibangun di sesi ini --
@@ -707,6 +710,8 @@ export const TEKS: Record<string, string> = {
   'Stok lintas gudang dan nilai persediaan berdasarkan HPP rata-rata': 'Stock across warehouses and inventory value based on average COGS',
   'Omzet & laba kotor dari seluruh Faktur Penjualan (di luar yang dibatalkan), dikelompokkan per periode':
     'Revenue & gross profit from all Sales Invoices (excluding cancelled ones), grouped by period',
+  'Penjualan bersih & laba kotor setelah retur, dikelompokkan per periode':
+    'Net sales & gross profit after returns, grouped by period',
   'Barang langsung diserahkan & dibayar. Sistem otomatis membuat Sales Order, Surat Jalan, Faktur, dan Penerimaan Kas sekaligus.':
     'Goods handed over & paid on the spot. The system automatically creates the Sales Order, Delivery Note, Invoice, and Cash Receipt all at once.',
   'Fakturnya akan tercatat sebagai piutang. Pembayarannya dicatat nanti lewat menu Penerimaan Kas.':
@@ -719,6 +724,9 @@ export const TEKS: Record<string, string> = {
   'Dibuat dari Purchase Order yang sudah disetujui. Untuk membuat baru, buka PO-nya dan klik "Buat Penerimaan Barang".':
     'Created from an approved Purchase Order. To create a new one, open the PO and click "Create Goods Receipt".',
   'Dibagi proporsional ke tiap produk dan ikut masuk perhitungan HPP.': 'Split proportionally across products and included in the COGS calculation.',
+  'Sudah termasuk diskon PO': 'Already includes PO discount',
+  'Ongkir / biaya tambahan': 'Shipping / additional cost',
+  'Nilai barang': 'Goods value',
   '"Terima Sekarang" langsung menambah stok gudang': '"Receive Now" immediately adds stock to warehouse',
   'dan menghitung ulang HPP.': 'and recalculates COGS.',
   'Surat Jalan dibuat dari Sales Order': 'Delivery Notes are created from a Sales Order',
@@ -803,6 +811,21 @@ export const TEKS: Record<string, string> = {
   'Cocok untuk modal, ambil pribadi, dll -- tetap mengurangi saldo kas, TAPI TIDAK dihitung sebagai Biaya Operasional/Laba Bersih.':
     'Suited for capital, personal draws, etc. -- still reduces the cash balance, BUT is NOT counted as an Operating Expense/in Net Profit.',
   'Margin laba kotor': 'Gross margin',
+  'Laporan Laba Rugi': 'Income Statement',
+  'Penjualan bersih (di luar retur), HPP, laba kotor, dan rincian beban operasional per periode':
+    'Net sales (excluding returns), COGS, gross profit, and operating expense breakdown per period',
+  'Penjualan Kotor': 'Gross Sales',
+  'Penjualan Bersih': 'Net Sales',
+  'Rincian Beban Operasional': 'Operating Expense Breakdown',
+  'Belum ada beban operasional pada periode ini.': 'No operating expenses in this period yet.',
+  'Total Beban Operasional': 'Total Operating Expenses',
+  'vs periode sebelumnya': 'vs previous period',
+  'Ada {n} beban non-operasional (modal, ambil pribadi, dll) pada periode ini -- TIDAK ikut mengurangi Laba Bersih di atas.':
+    'There is {n} in non-operating expenses (capital, personal draws, etc.) in this period -- it does NOT reduce the Net Profit above.',
+  'Rincian Beban': 'Expense Breakdown',
+  'Ongkir / biaya pengiriman': 'Shipping / delivery expense',
+  'Dicatat sebagai beban operasional dan tidak dimasukkan ke HPP persediaan.':
+    'Recorded as an operating expense and excluded from inventory cost.',
   'Biaya Operasional': 'Operating Expenses',
   'Laba Bersih': 'Net Profit',
   'Memuat jumlah produk...': 'Loading product count...',

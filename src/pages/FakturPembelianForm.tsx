@@ -45,12 +45,46 @@ interface PBOutstanding {
   id: string
   nomor: string
   tanggal: string
+  biaya_tambahan: number
+}
+
+interface ItemPBUntukFaktur {
+  id: string
+  produk_id: string
+  satuan_id: string
+  konversi: number
+  qty: number
+  harga_satuan: number
+  poItem: {
+    qty: number
+    harga_satuan: number
+    diskon_persen: number
+    diskon_nilai: number
+    subtotal: number
+  } | null
+}
+
+/**
+ * PB lama (dibuat sebelum perbaikan diskon) menyimpan harga kotor PO.
+ * Kenali hanya sidik bug yang pasti: harga PB masih sama dengan harga
+ * kotor PO dan PO memang punya diskon. Harga PB yang sudah diedit manual
+ * tidak disentuh.
+ */
+function hargaTagihanItemPB(item: ItemPBUntukFaktur) {
+  const po = item.poItem
+  const pbMasihHargaKotor =
+    po &&
+    (po.diskon_persen > 0 || po.diskon_nilai > 0) &&
+    Number(item.harga_satuan) === Number(po.harga_satuan)
+  return pbMasihHargaKotor && po.qty > 0
+    ? Math.round((Number(po.subtotal) / Number(po.qty)) * 100) / 100
+    : Number(item.harga_satuan)
 }
 
 async function ambilPBBelumDifakturkan(supplierId: string): Promise<PBOutstanding[]> {
   const { data: semuaPB, error: errPB } = await supabase
     .from('penerimaan_barang')
-    .select('id, nomor, tanggal')
+    .select('id, nomor, tanggal, biaya_tambahan')
     .eq('supplier_id', supplierId)
     .eq('status', 'selesai')
     .order('tanggal')
@@ -136,6 +170,9 @@ function FormBaru() {
     setMenyimpan(true)
     try {
       const idPBTerpilih = Array.from(terpilih)
+      const totalBiayaTambahan = (pbOutstanding ?? [])
+        .filter((pb) => terpilih.has(pb.id))
+        .reduce((total, pb) => total + Number(pb.biaya_tambahan), 0)
 
       const { data: supplier, error: errSup } = await supabase
         .from('supplier')
@@ -155,6 +192,7 @@ function FormBaru() {
           jatuh_tempo: tanggalISO(jatuhTempo),
           supplier_id: supplierId,
           nomor_supplier: nomorSupplier || null,
+          biaya_tambahan: totalBiayaTambahan,
           dibuat_oleh: profil?.id ?? null,
         })
         .select('id')
@@ -168,17 +206,20 @@ function FormBaru() {
 
       const { data: itemPB, error: errItemPB } = await supabase
         .from('penerimaan_barang_item')
-        .select('produk_id, satuan_id, konversi, qty, harga_satuan')
+        .select(
+          'id, produk_id, satuan_id, konversi, qty, harga_satuan, poItem:po_item_id(qty, harga_satuan, diskon_persen, diskon_nilai, subtotal)',
+        )
         .in('pb_id', idPBTerpilih)
       if (errItemPB) throw errItemPB
 
-      const payloadItem = (itemPB ?? []).map((it, i) => ({
+      const payloadItem = ((itemPB ?? []) as unknown as ItemPBUntukFaktur[]).map((it, i) => ({
         faktur_id: faktur.id,
+        pb_item_id: it.id,
         produk_id: it.produk_id,
         satuan_id: it.satuan_id,
         konversi: it.konversi,
         qty: it.qty,
-        harga_satuan: it.harga_satuan,
+        harga_satuan: hargaTagihanItemPB(it),
         urutan: i,
       }))
       const { error: errItem } = await supabase.from('faktur_pembelian_item').insert(payloadItem)
@@ -255,6 +296,11 @@ function FormBaru() {
                       />
                       <span className="font-mono text-xs">{pb.nomor}</span>
                       <span className="text-muted-foreground">{fmtTanggal(pb.tanggal)}</span>
+                      {Number(pb.biaya_tambahan) > 0 ? (
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {tt('Ongkir / biaya tambahan')} {rupiah(pb.biaya_tambahan)}
+                        </span>
+                      ) : null}
                     </label>
                   ))}
                 </div>
@@ -289,6 +335,8 @@ interface FakturDetail {
   jatuh_tempo: string
   status: StatusDokumen
   status_bayar: StatusBayar
+  subtotal: number
+  biaya_tambahan: number
   total: number
   terbayar: number
   sisa: number
@@ -332,7 +380,7 @@ function FormDetail({ fakturId }: { fakturId: string }) {
       const { data, error } = await supabase
         .from('faktur_pembelian')
         .select(
-          'id, nomor, nomor_supplier, tanggal, jatuh_tempo, status, status_bayar, total, terbayar, sisa, catatan, supplier_id, supplier:supplier_id(nama)',
+          'id, nomor, nomor_supplier, tanggal, jatuh_tempo, status, status_bayar, subtotal, biaya_tambahan, total, terbayar, sisa, catatan, supplier_id, supplier:supplier_id(nama)',
         )
         .eq('id', fakturId)
         .single()
@@ -462,6 +510,16 @@ function FormDetail({ fakturId }: { fakturId: string }) {
           <div className="flex justify-end border-t border-border p-3">
             <div className="w-full max-w-xs space-y-1 text-sm">
               <div className="flex justify-between text-muted-foreground">
+                <span>{tt('Nilai barang')}</span>
+                <span className="tabular">{rupiah(faktur.subtotal)}</span>
+              </div>
+              {faktur.biaya_tambahan > 0 ? (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{tt('Ongkir / biaya tambahan')}</span>
+                  <span className="tabular">{rupiah(faktur.biaya_tambahan)}</span>
+                </div>
+              ) : null}
+              <div className="flex justify-between font-medium">
                 <span>{tt('Total')}</span>
                 <span className="tabular">{rupiah(faktur.total)}</span>
               </div>

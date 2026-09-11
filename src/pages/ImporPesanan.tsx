@@ -468,9 +468,9 @@ export function ImporPesanan() {
               <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={pilihFile} />
             </label>
             {memuatFile ? (
-              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Spinner className="h-3.5 w-3.5" /> {tt('Membaca file...')}
-              </p>
+              </div>
             ) : null}
           </div>
 

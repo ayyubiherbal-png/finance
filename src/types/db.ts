@@ -602,6 +602,9 @@ export interface VPenjualanHarian {
   jumlah_faktur: number
   omzet: number
   laba_kotor: number
+  hpp: number
+  retur: number
+  penjualan_bersih: number
 }
 
 export interface VSaldoKasBank {

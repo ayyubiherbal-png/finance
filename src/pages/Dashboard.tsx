@@ -80,7 +80,7 @@ function useRingkasan() {
       const [penjualan, pengeluaran, stok, piutang, jatuhTempo, pelangganTeratas, saldoKas, aktifBulanan] = await Promise.all([
         supabase
           .from('v_penjualan_harian')
-          .select('tanggal, jumlah_faktur, omzet, laba_kotor')
+          .select('tanggal, jumlah_faktur, omzet, laba_kotor, hpp, retur, penjualan_bersih')
           .gte('tanggal', tanggalISO(batas60))
           .returns<VPenjualanHarian[]>(),
         // Peran yang tidak boleh baca pengeluaran_kas (lihat RLS 0046) akan
@@ -155,7 +155,7 @@ function useRingkasan() {
         const d = new Date(hariIni)
         d.setDate(d.getDate() - i)
         const iso = tanggalISO(d)
-        trenHarian.push({ tanggal: iso, nilai: Number(petaHari.get(iso)?.omzet ?? 0) })
+        trenHarian.push({ tanggal: iso, nilai: Number(petaHari.get(iso)?.penjualan_bersih ?? 0) })
       }
 
       // 6 titik bulanan berurutan, bulan tanpa pelanggan aktif diisi 0 --
@@ -175,9 +175,9 @@ function useRingkasan() {
       const periodeIni = semuaHari.filter((h) => h.tanggal >= isoBatas30)
       const periodeSebelum = semuaHari.filter((h) => h.tanggal < isoBatas30)
 
-      const omzet30Hari = periodeIni.reduce((t, h) => t + Number(h.omzet ?? 0), 0)
+      const omzet30Hari = periodeIni.reduce((t, h) => t + Number(h.penjualan_bersih ?? 0), 0)
       const laba30Hari = periodeIni.reduce((t, h) => t + Number(h.laba_kotor ?? 0), 0)
-      const omzetSebelum = periodeSebelum.reduce((t, h) => t + Number(h.omzet ?? 0), 0)
+      const omzetSebelum = periodeSebelum.reduce((t, h) => t + Number(h.penjualan_bersih ?? 0), 0)
       const deltaOmzetPersen = omzetSebelum > 0 ? ((omzet30Hari - omzetSebelum) / omzetSebelum) * 100 : null
 
       const pengeluaran30Hari = (pengeluaran.data ?? []).reduce((t, h) => t + Number(h.total_keluar ?? 0), 0)
@@ -250,7 +250,7 @@ export function Dashboard() {
           warna={AKSEN.biru}
           ikon={<Coins className="h-4 w-4" />}
           catatan={`${t('dasbor.margin')} ${margin.toFixed(1)}%`}
-          tautan="/laporan/laba"
+          tautan="/laporan/laba-rugi"
         />
         {bolehLihatBiaya ? (
           <>
@@ -266,7 +266,7 @@ export function Dashboard() {
               nilai={rupiah(data.labaBersih30Hari)}
               warna={AKSEN.hijau}
               ikon={<TrendingUp className="h-4 w-4" />}
-              tautan="/laporan/laba"
+              tautan="/laporan/laba-rugi"
             />
           </>
         ) : null}

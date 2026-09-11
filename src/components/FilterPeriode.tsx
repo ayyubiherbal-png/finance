@@ -81,8 +81,15 @@ export function rentangDariPreset(preset: PresetPeriode): RentangTanggal {
  * & Pengiriman. Kalau perlu rentang di layar lain tanpa dropdown-nya
  * (mis. laporan yang grouping-nya sendiri), pakai `rentangDariPreset`.
  */
-export function FilterPeriode({ onChange }: { onChange: (r: RentangTanggal) => void }) {
-  const [preset, setPreset] = useState<PresetPeriode>('semua')
+export function FilterPeriode({
+  onChange,
+  presetAwal = 'semua',
+}: {
+  onChange: (r: RentangTanggal) => void
+  /** Preset saat halaman pertama dibuka -- default 'semua' (perilaku lama, tidak berubah untuk pemanggil lain). */
+  presetAwal?: PresetPeriode
+}) {
+  const [preset, setPreset] = useState<PresetPeriode>(presetAwal)
   const [dariCustom, setDariCustom] = useState('')
   const [sampaiCustom, setSampaiCustom] = useState('')
 

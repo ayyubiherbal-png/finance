@@ -63,8 +63,8 @@ create table penerimaan_barang (
   gudang_id     uuid not null references gudang(id) on delete restrict,
   surat_jalan_supplier text,
   status        status_dokumen not null default 'draf',
-  -- Biaya angkut/bongkar yang dibebankan ke HPP (landed cost),
-  -- dialokasikan proporsional ke nilai tiap item oleh trigger.
+  -- Ongkir/biaya pengiriman. Sejak migrasi 0052 diakui sebagai beban
+  -- operasional saat faktur disetujui dan tidak dibebankan ke HPP.
   biaya_tambahan numeric(18,2) not null default 0 check (biaya_tambahan >= 0),
   catatan       text,
   dibuat_oleh   uuid references profil(id) on delete set null,
@@ -86,7 +86,7 @@ create table penerimaan_barang_item (
   qty           numeric(18,4) not null check (qty > 0),
   qty_dasar     numeric(18,4) generated always as (qty * konversi) stored,
   harga_satuan  numeric(18,2) not null default 0,   -- harga beli per satuan transaksi
-  -- HPP per satuan dasar setelah dibebani biaya tambahan.
+  -- HPP per satuan dasar dari nilai barang bersih (tanpa ongkir).
   -- Diisi trigger di 0006, jangan diisi manual.
   hpp_satuan    numeric(18,4) not null default 0,
   catatan       text

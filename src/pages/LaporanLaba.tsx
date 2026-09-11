@@ -25,14 +25,21 @@ function useLabaProduk() {
   return useQuery({
     queryKey: ['laporan-laba-produk'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('v_laba_produk')
-        .select('*')
-        .order('laba_kotor', { ascending: false })
-        .limit(200)
-        .returns<VLabaProduk[]>()
-      if (error) throw error
-      return data ?? []
+      const semua: VLabaProduk[] = []
+      const ukuranHalaman = 1_000
+      for (let mulai = 0; ; mulai += ukuranHalaman) {
+        const { data, error } = await supabase
+          .from('v_laba_produk')
+          .select('*')
+          .order('laba_kotor', { ascending: false })
+          .order('produk_id')
+          .range(mulai, mulai + ukuranHalaman - 1)
+          .returns<VLabaProduk[]>()
+        if (error) throw error
+        semua.push(...(data ?? []))
+        if ((data?.length ?? 0) < ukuranHalaman) break
+      }
+      return semua
     },
   })
 }
@@ -41,14 +48,21 @@ function useLabaPelanggan() {
   return useQuery({
     queryKey: ['laporan-laba-pelanggan'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('v_laba_pelanggan')
-        .select('*')
-        .order('laba_kotor', { ascending: false })
-        .limit(200)
-        .returns<VLabaPelanggan[]>()
-      if (error) throw error
-      return data ?? []
+      const semua: VLabaPelanggan[] = []
+      const ukuranHalaman = 1_000
+      for (let mulai = 0; ; mulai += ukuranHalaman) {
+        const { data, error } = await supabase
+          .from('v_laba_pelanggan')
+          .select('*')
+          .order('laba_kotor', { ascending: false })
+          .order('pelanggan_id')
+          .range(mulai, mulai + ukuranHalaman - 1)
+          .returns<VLabaPelanggan[]>()
+        if (error) throw error
+        semua.push(...(data ?? []))
+        if ((data?.length ?? 0) < ukuranHalaman) break
+      }
+      return semua
     },
   })
 }
@@ -101,7 +115,7 @@ export function LaporanLaba() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{tt('Laporan Laba Kotor')}</h1>
-          <p className="text-sm text-muted-foreground">{tt('Omzet dikurangi HPP, dari seluruh faktur penjualan')}</p>
+          <p className="text-sm text-muted-foreground">{tt('Penjualan bersih dikurangi HPP setelah retur, dianalisis per produk atau pelanggan')}</p>
         </div>
         {data && data.length > 0 ? (
           <TombolEkspor

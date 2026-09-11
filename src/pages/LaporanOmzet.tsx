@@ -21,6 +21,7 @@ interface BarisHarian {
   tanggal: string
   jumlah_faktur: number
   omzet: number
+  penjualan_bersih: number
   laba_kotor: number
 }
 
@@ -71,14 +72,14 @@ function kelompokkanPeriode(harian: BarisHarian[], biayaHarian: BarisBiayaHarian
     const ada = peta.get(kunci)
     if (ada) {
       ada.jumlah_faktur += h.jumlah_faktur
-      ada.omzet += Number(h.omzet)
+      ada.omzet += Number(h.penjualan_bersih)
       ada.laba_kotor += Number(h.laba_kotor)
     } else {
       peta.set(kunci, {
         kunci,
         label,
         jumlah_faktur: h.jumlah_faktur,
-        omzet: Number(h.omzet),
+        omzet: Number(h.penjualan_bersih),
         laba_kotor: Number(h.laba_kotor),
         biaya_operasional: 0,
         laba_bersih: 0,
@@ -104,7 +105,7 @@ function useOmzetHarian() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('v_penjualan_harian')
-        .select('tanggal, jumlah_faktur, omzet, laba_kotor')
+        .select('tanggal, jumlah_faktur, omzet, laba_kotor, penjualan_bersih')
         .order('tanggal', { ascending: true })
         .limit(3660) // ~10 tahun data harian -- cukup lega, tetap dibatasi biar tidak runaway
         .returns<BarisHarian[]>()
@@ -168,7 +169,7 @@ export function LaporanOmzet() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{tt('Laporan Omzet')}</h1>
           <p className="text-sm text-muted-foreground">
-            {tt('Omzet & laba kotor dari seluruh Faktur Penjualan (di luar yang dibatalkan), dikelompokkan per periode')}
+            {tt('Penjualan bersih & laba kotor setelah retur, dikelompokkan per periode')}
           </p>
         </div>
         {kelompok.length > 0 ? (
