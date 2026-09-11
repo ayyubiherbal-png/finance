@@ -112,6 +112,14 @@
     font-size: 80%;
   }
 
+  /* HP memakai skala baca penuh dan target sentuh yang nyaman. Tablet/
+     desktop tetap 80% sesuai preferensi user untuk kepadatan kerja. */
+  @media (max-width: 639px) {
+    html {
+      font-size: 100%;
+    }
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
   }

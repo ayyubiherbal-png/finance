@@ -53,6 +53,8 @@ export const KAMUS = {
 
   // ---------- Sidebar: item menu ----------
   'menu.dasbor': { id: 'Dasbor', en: 'Dashboard' },
+  'mobile.jual': { id: 'Jual', en: 'Sell' },
+  'mobile.lainnya': { id: 'Lainnya', en: 'More' },
   'menu.penjualanCepat': { id: 'Penjualan Cepat', en: 'Quick Sale' },
   'menu.imporPesanan': { id: 'Impor Pesanan', en: 'Import Orders' },
   'menu.salesOrder': { id: 'Sales Order', en: 'Sales Order' },

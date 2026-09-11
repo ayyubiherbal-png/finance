@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { CheckCircle2, Plus, Search, XCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 import { rupiah, tanggal, tanggalISO, terlihatSepertiNama } from '@/lib/format'
 import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
 import { TombolEkspor } from '@/components/TombolEkspor'
@@ -161,7 +162,7 @@ export function SalesOrder() {
           <h1 className="text-2xl font-bold tracking-tight">{tt('Sales Order')}</h1>
           <p className="text-sm text-muted-foreground">{tt('Pesanan dari canvassing maupun kanal online')}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <TombolEkspor
             ambilData={async () => {
               let q = supabase
@@ -240,6 +241,7 @@ export function SalesOrder() {
             <KondisiKosong pesan="Belum ada Sales Order." />
           ) : (
             <>
+              <div className="hidden md:block">
               <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 <Thead>
                   <Tr>
@@ -295,6 +297,39 @@ export function SalesOrder() {
                   ))}
                 </Tbody>
               </Table>
+              </div>
+              <div className={cn('space-y-2 p-2 md:hidden', isFetching && 'opacity-60 transition-opacity')}>
+                <label className="flex min-h-[44px] items-center gap-3 rounded-xl bg-muted/60 px-3 text-sm font-medium">
+                  <input type="checkbox" className="h-5 w-5 accent-primary" checked={semuaTerpilih} onChange={(e) => pilihSemua(e.target.checked)} />
+                  {tt('Pilih semua di halaman ini')}
+                </label>
+                {baris.map((so) => {
+                  const nama = (so.nama_penerima && terlihatSepertiNama(so.nama_penerima) ? so.nama_penerima : null) || so.pelanggan?.nama || '-'
+                  return (
+                    <article key={so.id} className="rounded-xl border border-border bg-card p-3 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <label className="flex h-[44px] w-[32px] shrink-0 cursor-pointer items-center justify-center">
+                          <input type="checkbox" className="h-5 w-5 accent-primary" checked={terpilih.has(so.id)} onChange={(e) => pilihBaris(so.id, e.target.checked)} aria-label={tt('Pilih baris {nomor}').replace('{nomor}', so.nomor)} />
+                        </label>
+                        <Link to={`/sales-order/${so.id}`} className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="truncate font-mono text-xs font-medium text-primary">{so.nomor}</span>
+                            <Badge variant={VARIAN_STATUS[so.status]}>{LABEL_STATUS[so.status]}</Badge>
+                          </div>
+                          <p className="mt-1 truncate font-semibold text-foreground">{nama}</p>
+                          <div className="mt-3 flex items-end justify-between gap-2">
+                            <div className="space-y-1 text-xs text-muted-foreground">
+                              <p>{tanggal(so.tanggal)}</p>
+                              <Badge variant="netral">{LABEL_KANAL[so.kanal]}</Badge>
+                            </div>
+                            <p className="tabular text-base font-bold text-foreground">{rupiah(so.total)}</p>
+                          </div>
+                        </Link>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
                   {`${tt('Total')} ${baris.length} ${tt('SO')}`}

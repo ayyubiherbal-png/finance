@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { CheckCircle2, Plus, Search, XCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { cn } from '@/lib/utils'
 import { rupiah, tanggal, tanggalISO } from '@/lib/format'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
@@ -113,7 +114,7 @@ export function PurchaseOrder() {
           <h1 className="text-2xl font-bold tracking-tight">{tt('Purchase Order')}</h1>
           <p className="text-sm text-muted-foreground">{tt('Pemesanan barang ke supplier')}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
           <TombolEkspor
             ambilData={async () => {
               let q = supabase.from('purchase_order').select('id, nomor, tanggal, status, total, supplier:supplier_id(nama)')
@@ -174,6 +175,7 @@ export function PurchaseOrder() {
             <KondisiKosong pesan="Belum ada Purchase Order." />
           ) : (
             <>
+              <div className="hidden md:block">
               <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
               <Thead>
                 <Tr>
@@ -212,6 +214,33 @@ export function PurchaseOrder() {
                 ))}
               </Tbody>
               </Table>
+              </div>
+              <div className={cn('space-y-2 p-2 md:hidden', isFetching && 'opacity-60 transition-opacity')}>
+                <label className="flex min-h-[44px] items-center gap-3 rounded-xl bg-muted/60 px-3 text-sm font-medium">
+                  <input type="checkbox" className="h-5 w-5 accent-primary" checked={semuaTerpilih} onChange={(e) => setTerpilih(e.target.checked ? new Set(baris.map((r) => r.id)) : new Set())} />
+                  {tt('Pilih semua di halaman ini')}
+                </label>
+                {baris.map((po) => (
+                  <article key={po.id} className="rounded-xl border border-border bg-card p-3 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <label className="flex h-[44px] w-[32px] shrink-0 cursor-pointer items-center justify-center">
+                        <input type="checkbox" className="h-5 w-5 accent-primary" checked={terpilih.has(po.id)} onChange={(e) => pilihBaris(po.id, e.target.checked)} aria-label={tt('Pilih baris {nomor}').replace('{nomor}', po.nomor)} />
+                      </label>
+                      <Link to={`/purchase-order/${po.id}`} className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="truncate font-mono text-xs font-medium text-primary">{po.nomor}</span>
+                          <Badge variant={VARIAN_STATUS[po.status]}>{LABEL_STATUS[po.status]}</Badge>
+                        </div>
+                        <p className="mt-1 truncate font-semibold text-foreground">{po.supplier?.nama ?? '-'}</p>
+                        <div className="mt-3 flex items-end justify-between gap-2">
+                          <p className="text-xs text-muted-foreground">{tanggal(po.tanggal)}</p>
+                          <p className="tabular text-base font-bold text-foreground">{rupiah(po.total)}</p>
+                        </div>
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
               <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={(h) => { setHalaman(h); setTerpilih(new Set()) }} />
             </>
           )}

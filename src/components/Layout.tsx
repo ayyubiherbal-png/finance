@@ -17,6 +17,7 @@ import {
   Boxes,
   Wallet,
   Menu,
+  MoreHorizontal,
   X,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -236,7 +237,7 @@ export function Layout() {
     // dengan jarak di sekelilingnya), bukan menempel rata ke tepi layar --
     // ini yang membedakan tampilan referensi: tiap area punya "wadah"
     // sendiri di atas latar abu-abu, bukan bidang putih tanpa batas.
-    <div className="flex h-screen gap-2 overflow-hidden bg-background p-2 sm:gap-3 sm:p-3 md:gap-4 md:p-4">
+    <div className="flex h-[100dvh] gap-2 overflow-hidden bg-background p-2 sm:gap-3 sm:p-3 md:gap-4 md:p-4">
       <aside
         data-testid="sidebar-desktop"
         className="hidden w-16 shrink-0 flex-col overflow-hidden rounded-2xl bg-card shadow-panel md:flex lg:w-64"
@@ -293,14 +294,51 @@ export function Layout() {
           bukaMenu={() => setMenuMobileTerbuka(true)}
         />
 
-        <main className="min-w-0 flex-1 overflow-y-auto">
+        <main className="min-w-0 flex-1 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
           <div className="mx-auto max-w-7xl space-y-4">
             {tabAktif.length > 1 ? <TabSeksi tab={tabAktif} pathname={pathname} /> : null}
             <Outlet />
           </div>
         </main>
       </div>
+      <NavigasiBawah pathname={pathname} bukaMenu={() => setMenuMobileTerbuka(true)} />
     </div>
+  )
+}
+
+function NavigasiBawah({ pathname, bukaMenu }: { pathname: string; bukaMenu: () => void }) {
+  const { t } = useI18n()
+  const item = [
+    { ke: '/', label: t('menu.dasbor'), ikon: LayoutDashboard },
+    { ke: '/penjualan-cepat', label: t('mobile.jual'), ikon: Zap },
+    { ke: '/sales-order', label: t('grup.penjualan'), ikon: ShoppingCart },
+    { ke: '/stok', label: t('menu.stok'), ikon: Warehouse },
+  ]
+
+  return (
+    <nav
+      data-testid="mobile-bottom-nav"
+      aria-label={t('topbar.menuUtama')}
+      className="fixed inset-x-2 bottom-2 z-40 grid grid-cols-5 rounded-2xl border border-border/70 bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-floating backdrop-blur-md md:hidden"
+    >
+      {item.map((x) => {
+        const aktif = x.ke === '/' ? pathname === '/' : pathname === x.ke || pathname.startsWith(`${x.ke}/`)
+        return (
+          <NavLink
+            key={x.ke}
+            to={x.ke}
+            className={cn('flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[11px] font-medium', aktif ? 'text-primary' : 'text-muted-foreground')}
+          >
+            <x.ikon className={cn('h-5 w-5', aktif && 'stroke-[2.5]')} />
+            <span className="max-w-full truncate">{x.label}</span>
+          </NavLink>
+        )
+      })}
+      <button type="button" onClick={bukaMenu} className="flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[11px] font-medium text-muted-foreground" aria-label={t('topbar.bukaMenu')}>
+        <MoreHorizontal className="h-5 w-5" />
+        <span>{t('mobile.lainnya')}</span>
+      </button>
+    </nav>
   )
 }
 
@@ -357,7 +395,7 @@ function TopBar({
       <button
         type="button"
         data-testid="mobile-menu-button"
-        className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-muted/70 text-foreground/70 hover:bg-accent md:hidden"
+        className="hidden h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-muted/70 text-foreground/70 hover:bg-accent"
         aria-label={t('topbar.bukaMenu')}
         aria-expanded={menuTerbuka}
         onClick={bukaMenu}

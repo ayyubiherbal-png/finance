@@ -1,18 +1,21 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('layout responsif', () => {
-  test('mobile punya menu navigasi yang dapat dibuka dan tertutup setelah pindah halaman', async ({ page }) => {
+  test('mobile memakai skala 100% dan bottom navigation yang membuka menu lengkap', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/')
 
     const tombolMenu = page.getByTestId('mobile-menu-button')
-    await expect(tombolMenu).toBeVisible()
+    await expect(tombolMenu).toBeHidden()
     await expect(page.getByTestId('sidebar-desktop')).toBeHidden()
+    const navigasi = page.getByTestId('mobile-bottom-nav')
+    await expect(navigasi).toBeVisible()
+    await expect(navigasi.getByRole('link', { name: 'Jual', exact: true })).toBeVisible()
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).fontSize)).toBe('16px')
 
-    await tombolMenu.click()
+    await navigasi.getByRole('button', { name: 'Buka menu' }).click()
     const drawer = page.getByTestId('mobile-menu-drawer')
     await expect(drawer).toBeVisible()
-    await expect(tombolMenu).toHaveAttribute('aria-expanded', 'true')
 
     await drawer.getByRole('link', { name: 'Inventori' }).click()
     await expect(page).toHaveURL(/\/stok$/)
@@ -30,8 +33,19 @@ test.describe('layout responsif', () => {
     await expect(sidebar.getByRole('link', { name: 'Inventori' })).toBeVisible()
 
     await page.setViewportSize({ width: 1280, height: 900 })
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).fontSize)).toBe('12.8px')
     await expect(sidebar.getByText('Ayyubi Food')).toBeVisible()
     await expect(sidebar.getByText('Inventori')).toBeVisible()
+  })
+
+  test('halaman pesanan utama tidak meluber pada layar HP', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    for (const rute of ['/sales-order', '/purchase-order']) {
+      await page.goto(rute)
+      await expect(page.getByTestId('mobile-bottom-nav')).toBeVisible()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+      await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
+    }
   })
 })
 
