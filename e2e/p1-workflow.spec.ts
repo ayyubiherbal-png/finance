@@ -27,4 +27,13 @@ test.describe('workflow P1', () => {
     await expect(page.getByRole('combobox').first()).toHaveValue('')
     await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
   })
+
+  test('tugas follow-up dapat dicari tanpa mengubah aturan treatment', async ({ page }) => {
+    await page.goto('/tugas-follow-up')
+    await expect(page.getByRole('heading', { name: 'Tugas Follow-Up' })).toBeVisible()
+    const pencarian = page.getByPlaceholder('Cari nama atau sumber...')
+    await expect(pencarian).toBeVisible()
+    await pencarian.fill('nama-yang-tidak-ada')
+    await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
+  })
 })

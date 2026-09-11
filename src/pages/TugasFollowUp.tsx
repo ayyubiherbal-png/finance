@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { tt } from '@/lib/i18nText'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, MessageCircle, Settings2 } from 'lucide-react'
+import { CheckCircle2, MessageCircle, Search, Settings2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { tautanWa } from '@/lib/whatsapp'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/components/Toast'
-import { Badge, Button, Card, CardContent, Input, KondisiKosong, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import { Badge, Button, Card, CardContent, Input, KondisiKosong, Paginasi, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import type { KategoriTreatmentFu, PembeliMarketplace, TahapanTreatmentFu, VPelangganCrm } from '@/types/db'
@@ -377,6 +377,7 @@ const KOLOM_EKSPOR_TUGAS_FU: KolomEkspor<Tugas>[] = [
 ]
 
 export function TugasFollowUp() {
+  const UKURAN_HALAMAN = 50
   const { profil } = useAuth()
   const bolehAturTreatment = profil?.peran === 'owner' || profil?.peran === 'admin'
 
@@ -387,6 +388,8 @@ export function TugasFollowUp() {
   const { data: tahapan } = useTahapanTreatment()
   const queryClient = useQueryClient()
   const [kategoriAktif, setKategoriAktif] = useState<Kategori | null>(null)
+  const [cari, setCari] = useState('')
+  const [halaman, setHalaman] = useState(1)
 
   const [sedangTandai, setSedangTandai] = useState<string | null>(null)
   const [catatanTandai, setCatatanTandai] = useState('')
@@ -399,7 +402,18 @@ export function TugasFollowUp() {
   const semuaTugas = isLoading || error ? [] : susunTugas(pelanggan ?? [], pembeli ?? [], tahapanPerKategori, ulangTahun ?? [])
   const semua = semuaTugas.filter((t) => !sudahSelesai?.has(t.id))
   const hitungan = URUTAN_KATEGORI.map((k) => ({ kunci: k, ...INFO_KATEGORI[k], jumlah: semua.filter((t) => t.kategori === k).length }))
-  const tersaring = kategoriAktif ? semua.filter((t) => t.kategori === kategoriAktif) : semua
+  const polaCari = cari.trim().toLowerCase()
+  const tersaringSemua = semua.filter((t) => {
+    if (kategoriAktif && t.kategori !== kategoriAktif) return false
+    return !polaCari || t.nama.toLowerCase().includes(polaCari) || t.sumber.toLowerCase().includes(polaCari)
+  })
+  const mulaiHalaman = (halaman - 1) * UKURAN_HALAMAN
+  const tersaring = tersaringSemua.slice(mulaiHalaman, mulaiHalaman + UKURAN_HALAMAN)
+  useEffect(() => setHalaman(1), [kategoriAktif, cari])
+  useEffect(() => {
+    const halamanTerakhir = Math.max(1, Math.ceil(tersaringSemua.length / UKURAN_HALAMAN))
+    if (halaman > halamanTerakhir) setHalaman(halamanTerakhir)
+  }, [halaman, tersaringSemua.length])
 
   // Catat kemunculan tiap tugas ke `riwayat_tahap_pelanggan` (0037) --
   // idempotent lewat `tugas_id` unik (ignoreDuplicates), jadi aman
@@ -462,7 +476,7 @@ export function TugasFollowUp() {
         </div>
         <div className="flex gap-2">
           <TombolEkspor
-            ambilData={async () => tersaring}
+            ambilData={async () => tersaringSemua}
             kolom={KOLOM_EKSPOR_TUGAS_FU}
             opsi={{ namaFile: `tugas-follow-up-${tanggalISO()}`, judul: tt('Tugas Follow-Up') }}
           />
@@ -500,6 +514,11 @@ export function TugasFollowUp() {
         </div>
       ) : null}
 
+      <div className="relative w-full sm:w-72">
+        <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input className="pl-8" placeholder={tt('Cari nama atau sumber...')} value={cari} onChange={(e) => setCari(e.target.value)} />
+      </div>
+
       {kategoriAktif ? (
         <p className="text-sm text-muted-foreground">
           {tt('Menampilkan')} <span className="font-medium text-foreground">{tt(INFO_KATEGORI[kategoriAktif].label)}</span> -- {tt(INFO_KATEGORI[kategoriAktif].jelas)}.{' '}
@@ -523,7 +542,7 @@ export function TugasFollowUp() {
             </div>
           ) : semua.length === 0 ? (
             <KondisiKosong pesan="Tidak ada tugas follow-up hari ini. Cek lagi besok." />
-          ) : tersaring.length === 0 ? (
+          ) : tersaringSemua.length === 0 ? (
             <KondisiKosong pesan="Tidak ada tugas di kategori ini." />
           ) : (
             <Table>
@@ -616,7 +635,7 @@ export function TugasFollowUp() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={tersaringSemua.length} onUbah={setHalaman} />
     </div>
   )
 }
-
