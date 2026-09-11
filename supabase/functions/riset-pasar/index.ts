@@ -114,19 +114,16 @@ Data internal saat ini:
 
 Tugas kamu:
 1. Kalau data penjualan internal masih sangat sedikit (di bawah 10 faktur), katakan itu terus terang di awal -- jangan berpura-pura ada pola dari data yang belum cukup.
-2. Cari tren pasar, kisaran harga, dan kompetitor terkini di Indonesia untuk kategori produk yang relevan dari data di atas.
+2. Jelaskan tren pasar, kisaran harga, dan kompetitor untuk kategori produk yang relevan dari data di atas. Kalau kamu tidak punya akses pencarian web saat ini, jawab dari pengetahuanmu dan sebutkan terus terang bahwa info ini mungkin bukan yang paling terkini -- jangan berpura-pura baru mencari.
 3. Tutup dengan 2-4 rekomendasi konkret yang bisa langsung ditindaklanjuti, bukan saran umum.
 
 Tulis dalam Bahasa Indonesia, ringkas, format markdown dengan sub-judul.`
 
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      tools: [{ google_search: {} }],
-    }),
-  })
+  // Kuota gratis untuk grounding (google_search) jauh lebih ketat daripada
+  // sekadar generate teks -- coba pakai grounding dulu, kalau kena limit (429)
+  // turun otomatis ke tanpa grounding daripada gagal total.
+  let res = await panggilGenerateContent(apiKey, prompt, true)
+  if (res.status === 429) res = await panggilGenerateContent(apiKey, prompt, false)
 
   if (!res.ok) {
     const teks = await res.text()
@@ -138,6 +135,17 @@ Tulis dalam Bahasa Indonesia, ringkas, format markdown dengan sub-judul.`
   const teksGabungan = bagian.map((b: { text?: string }) => b.text ?? '').join('\n')
   if (!teksGabungan.trim()) throw new Error('Gemini tidak mengembalikan teks. Coba lagi sesaat lagi.')
   return teksGabungan
+}
+
+function panggilGenerateContent(apiKey: string, prompt: string, pakaiGrounding: boolean): Promise<Response> {
+  return fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      ...(pakaiGrounding ? { tools: [{ google_search: {} }] } : {}),
+    }),
+  })
 }
 
 function jsonError(pesan: string, status: number): Response {
