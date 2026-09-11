@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { tt } from '@/lib/i18nText'
 import { useKonfirmasi } from '@/components/Konfirmasi'
@@ -19,6 +19,7 @@ import {
   Input,
   KondisiKosong,
   PesanError,
+  Paginasi,
   Spinner,
   Table,
   Tbody,
@@ -36,6 +37,13 @@ const LABEL_KANAL: Record<BarisPembeli['kanal'], string> = { shopee: 'Shopee', t
  * di sini (setiap baris pasti punya minimal 1 pesanan, itu syarat
  * masuk lewat sinkronisasi). */
 const SEGMEN_MP: SegmenPelanggan[] = ['juara', 'setia', 'baru', 'mulai_hilang', 'tidur']
+const UKURAN_HALAMAN = 50
+
+function batasHari(jumlah: number) {
+  const d = new Date()
+  d.setDate(d.getDate() - jumlah)
+  return tanggalISO(d)
+}
 
 /**
  * Logika RFM SAMA PERSIS seperti view `v_pelanggan_crm` (0019) --
@@ -59,20 +67,46 @@ function segmenPembeli(p: BarisPembeli): SegmenPelanggan {
   return 'baru'
 }
 
-function usePembeliMarketplace(cari: string) {
+function usePembeliMarketplace(cari: string, segmen: SegmenPelanggan | null, halaman: number) {
   return useQuery({
-    queryKey: ['pembeli-marketplace', cari],
+    queryKey: ['pembeli-marketplace', cari, segmen, halaman],
     queryFn: async () => {
-      let q = supabase.from('pembeli_marketplace').select('*')
+      let q = supabase.from('pembeli_marketplace').select('*', { count: 'exact' })
       if (cari.trim()) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},telepon.ilike.${pola},catatan.ilike.${pola}`)
       }
-      const { data, error } = await q.order('pesanan_terakhir', { ascending: false }).limit(500)
+      if (segmen === 'tidur') q = q.lt('pesanan_terakhir', batasHari(120))
+      else if (segmen === 'mulai_hilang') q = q.gte('pesanan_terakhir', batasHari(120)).lt('pesanan_terakhir', batasHari(60))
+      else if (segmen === 'juara') q = q.gte('pesanan_terakhir', batasHari(60)).gte('jumlah_pesanan', 3)
+      else if (segmen === 'setia') q = q.gte('pesanan_terakhir', batasHari(60)).eq('jumlah_pesanan', 2)
+      else if (segmen === 'baru') q = q.gte('pesanan_terakhir', batasHari(60)).eq('jumlah_pesanan', 1)
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      const { data, error, count } = await q.order('pesanan_terakhir', { ascending: false }).range(mulai, mulai + UKURAN_HALAMAN - 1)
       if (error) throw error
-      return (data ?? []) as BarisPembeli[]
+      return { baris: (data ?? []) as BarisPembeli[], total: count ?? 0 }
     },
     placeholderData: (sebelumnya) => sebelumnya,
+  })
+}
+
+function useHitunganSegmenMarketplace() {
+  return useQuery({
+    queryKey: ['pembeli-marketplace', 'hitungan-segmen'],
+    queryFn: async () => {
+      const hasil = await Promise.all(SEGMEN_MP.map(async (segmen) => {
+        let q = supabase.from('pembeli_marketplace').select('id', { count: 'exact', head: true })
+        if (segmen === 'tidur') q = q.lt('pesanan_terakhir', batasHari(120))
+        else if (segmen === 'mulai_hilang') q = q.gte('pesanan_terakhir', batasHari(120)).lt('pesanan_terakhir', batasHari(60))
+        else if (segmen === 'juara') q = q.gte('pesanan_terakhir', batasHari(60)).gte('jumlah_pesanan', 3)
+        else if (segmen === 'setia') q = q.gte('pesanan_terakhir', batasHari(60)).eq('jumlah_pesanan', 2)
+        else q = q.gte('pesanan_terakhir', batasHari(60)).eq('jumlah_pesanan', 1)
+        return q
+      }))
+      const gagal = hasil.find((x) => x.error)
+      if (gagal?.error) throw gagal.error
+      return Object.fromEntries(SEGMEN_MP.map((segmen, i) => [segmen, hasil[i]!.count ?? 0])) as Partial<Record<SegmenPelanggan, number>>
+    },
   })
 }
 
@@ -124,13 +158,17 @@ export function PembeliMarketplace() {
   const konfirmasi = useKonfirmasi()
   const navigate = useNavigate()
   const [cari, setCari] = useState('')
-  const { data, isLoading, error, isFetching } = usePembeliMarketplace(cari)
   const queryClient = useQueryClient()
   const [segmenAktif, setSegmenAktif] = useState<SegmenPelanggan | null>(null)
-
-  const semua = data ?? []
-  const hitunganSegmen = SEGMEN_MP.map((kunci) => ({ ...INFO_SEGMEN[kunci], jumlah: semua.filter((p) => segmenPembeli(p) === kunci).length }))
-  const tersaring = segmenAktif ? semua.filter((p) => segmenPembeli(p) === segmenAktif) : semua
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = usePembeliMarketplace(cari, segmenAktif, halaman)
+  const hitunganQuery = useHitunganSegmenMarketplace()
+  const errorHalaman = error ?? hitunganQuery.error
+  useEffect(() => setHalaman(1), [cari, segmenAktif])
+  const semua = data?.baris ?? []
+  const hitunganSegmen = SEGMEN_MP.map((kunci) => ({ ...INFO_SEGMEN[kunci], jumlah: hitunganQuery.data?.[kunci] ?? 0 }))
+  const jumlahTotalSegmen = hitunganSegmen.reduce((n, x) => n + x.jumlah, 0)
+  const tersaring = semua
 
   const [menyinkronkan, setMenyinkronkan] = useState(false)
   const [errorAksi, setErrorAksi] = useState<unknown>(null)
@@ -228,13 +266,27 @@ export function PembeliMarketplace() {
           </p>
         </div>
         <TombolEkspor
-          ambilData={async () => tersaring}
+          ambilData={async () => {
+            let q = supabase.from('pembeli_marketplace').select('*')
+            if (cari.trim()) {
+              const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+              q = q.or(`nama.ilike.${pola},telepon.ilike.${pola},catatan.ilike.${pola}`)
+            }
+            if (segmenAktif === 'tidur') q = q.lt('pesanan_terakhir', batasHari(120))
+            else if (segmenAktif === 'mulai_hilang') q = q.gte('pesanan_terakhir', batasHari(120)).lt('pesanan_terakhir', batasHari(60))
+            else if (segmenAktif === 'juara') q = q.gte('pesanan_terakhir', batasHari(60)).gte('jumlah_pesanan', 3)
+            else if (segmenAktif === 'setia') q = q.gte('pesanan_terakhir', batasHari(60)).eq('jumlah_pesanan', 2)
+            else if (segmenAktif === 'baru') q = q.gte('pesanan_terakhir', batasHari(60)).eq('jumlah_pesanan', 1)
+            const { data, error } = await q.order('pesanan_terakhir', { ascending: false }).limit(10000)
+            if (error) throw error
+            return (data ?? []) as BarisPembeli[]
+          }}
           kolom={KOLOM_EKSPOR_PEMBELI_MP}
           opsi={{ namaFile: `pembeli-marketplace-${tanggalISO()}`, judul: tt('Pembeli Marketplace') }}
         />
       </div>
 
-      {semua.length > 0 ? (
+      {jumlahTotalSegmen > 0 ? (
         <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {hitunganSegmen.map((s) => {
             const aktif = segmenAktif === s.kunci
@@ -294,9 +346,9 @@ export function PembeliMarketplace() {
             <div className="flex justify-center py-16">
               <Spinner className="h-6 w-6" />
             </div>
-          ) : error ? (
+          ) : errorHalaman ? (
             <div className="p-4">
-              <PesanError error={error} />
+              <PesanError error={errorHalaman} />
             </div>
           ) : semua.length === 0 ? (
             <KondisiKosong pesan='Belum ada data. Klik "Sinkronkan dari Pesanan" untuk menarik pembeli dari pesanan Shopee/TikTok yang sudah diimpor.' />
@@ -446,6 +498,7 @@ export function PembeliMarketplace() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
   )
 }
