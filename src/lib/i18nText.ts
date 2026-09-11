@@ -89,6 +89,7 @@ export const KAMUS = {
   'menu.piutang': { id: 'Piutang', en: 'Receivables' },
   'menu.labaKotor': { id: 'Laba Kotor', en: 'Gross Profit' },
   'menu.labaRugi': { id: 'Laba Rugi', en: 'Income Statement' },
+  'menu.risetPasar': { id: 'Riset Pasar', en: 'Market Research' },
 
   // ---------- Topbar ----------
   'topbar.cari': { id: 'Cari produk, pelanggan, supplier...', en: 'Search products, customers, suppliers...' },
@@ -1328,6 +1329,17 @@ export const TEKS: Record<string, string> = {
 
   // ---------- Surat Jalan: nama penerima = nama pelanggan (murni frontend) ----------
   'Sama dengan nama pelanggan': 'Same as customer name',
+
+  // ---------- Riset Pasar ----------
+  'Riset Pasar': 'Market Research',
+  'Brief AI yang menggabungkan data penjualan internal dengan tren pasar luar -- dipicu manual, belum terjadwal otomatis.':
+    'AI brief combining internal sales data with outside market trends -- triggered manually, not yet scheduled.',
+  'Buat Riset Baru': 'New Research',
+  'Belum ada riset. Klik "Buat Riset Baru" untuk memulai -- butuh beberapa saat sampai hasilnya siap.':
+    'No research yet. Click "New Research" to start -- it takes a moment for the result to be ready.',
+  Tutup: 'Close',
+  'Baca selengkapnya': 'Read more',
+  'Gagal membuat riset.': 'Failed to create research.',
 }
 
 
