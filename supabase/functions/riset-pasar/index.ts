@@ -16,7 +16,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const MODEL = 'gemini-2.0-flash'
+const MODEL = 'gemini-3.6-flash'
 
 interface RingkasanInternal {
   jumlah_produk_aktif: number
