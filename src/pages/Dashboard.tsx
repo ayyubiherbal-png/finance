@@ -12,6 +12,8 @@ import {
   Landmark,
   PackageSearch,
   Package,
+  ShoppingCart,
+  BadgeDollarSign,
   TrendingUp,
   Users,
   Wallet,
@@ -76,7 +78,7 @@ function useRingkasan(periode: PeriodeDasbor) {
       const batasDuaPeriode = new Date(batasPeriode)
       batasDuaPeriode.setDate(batasDuaPeriode.getDate() - jumlahHari)
 
-      const [penjualan, pengeluaran, stok, piutang, hutang, jatuhTempo, pelangganTeratas, saldoKas, penjualanProduk] = await Promise.all([
+      const [penjualan, pengeluaran, stok, piutang, hutang, jatuhTempo, pelangganTeratas, saldoKas, penjualanProduk, pesananMenunggu, pesananMarketplace, settlementItems] = await Promise.all([
         supabase
           .from('v_penjualan_harian')
           .select('tanggal, jumlah_faktur, omzet, laba_kotor, hpp, retur, penjualan_bersih')
@@ -134,6 +136,20 @@ function useRingkasan(periode: PeriodeDasbor) {
           .select('produk_id, kode_produk, nama_produk, qty_dasar, omzet')
           .gte('tanggal', tanggalISO(batasPeriode))
           .returns<{ produk_id: string; kode_produk: string; nama_produk: string; qty_dasar: number; omzet: number }[]>(),
+        supabase
+          .from('sales_order')
+          .select('id', { count: 'exact', head: true })
+          .in('status', ['draf', 'menunggu']),
+        supabase
+          .from('pesanan_marketplace_impor')
+          .select('id, faktur:faktur_id(id, status, sisa)')
+          .limit(1000)
+          .returns<{ id: string; faktur: { id: string; status: string; sisa: number } | null }[]>(),
+        supabase
+          .from('settlement_marketplace_item')
+          .select('pesanan_id')
+          .limit(1000)
+          .returns<{ pesanan_id: string }[]>(),
       ])
 
       if (penjualan.error) throw penjualan.error
@@ -145,6 +161,8 @@ function useRingkasan(periode: PeriodeDasbor) {
       if (pelangganTeratas.error) throw pelangganTeratas.error
       if (saldoKas.error) throw saldoKas.error
       if (penjualanProduk.error) throw penjualanProduk.error
+      if (pesananMenunggu.error) throw pesananMenunggu.error
+      if (pesananMarketplace.error) throw pesananMarketplace.error
 
       const semuaHari = penjualan.data ?? []
       const barisStok = stok.data ?? []
@@ -172,6 +190,9 @@ function useRingkasan(periode: PeriodeDasbor) {
         produkMap.set(baris.produk_id, produk)
       }
       const produkTerlaris = [...produkMap.values()].sort((a, b) => b.qty - a.qty).slice(0, 5)
+      const settlementTersedia = !settlementItems.error
+      const pesananSudahSettlement = new Set((settlementItems.data ?? []).map((x) => x.pesanan_id))
+      const settlementMenunggu = (pesananMarketplace.data ?? []).filter((x) => x.faktur && x.faktur.status !== 'dibatalkan' && Number(x.faktur.sisa) > 0 && !pesananSudahSettlement.has(x.id)).length
 
       const periodeIni = semuaHari.filter((h) => h.tanggal >= isoBatasPeriode)
       const periodeSebelum = semuaHari.filter((h) => h.tanggal < isoBatasPeriode)
@@ -207,6 +228,9 @@ function useRingkasan(periode: PeriodeDasbor) {
         hutangMacet: barisHutang.reduce((t, b) => t + Number(b.umur_90_plus ?? 0), 0),
         perluRestock: barisStok.filter((b) => b.perlu_restock),
         jatuhTempo: jatuhTempo.data ?? [],
+        pesananMenunggu: pesananMenunggu.count ?? 0,
+        settlementMenunggu,
+        settlementTersedia,
         pelangganTeratas: pelangganTeratas.data ?? [],
         totalSaldoKas: (saldoKas.data ?? []).reduce((t, a) => t + Number(a.saldo), 0),
       }
@@ -305,7 +329,7 @@ export function Dashboard() {
 
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('dasbor.perluTindakanHariIni')}</p>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={cn('grid gap-3 sm:grid-cols-2', bolehLihatBiaya && data.settlementTersedia ? 'xl:grid-cols-4' : 'lg:grid-cols-3')}>
           <Link to="/produk" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.perluRestock.length > 0 && 'border-amber-500/30')}>
             <AlertTriangle className={cn('h-5 w-5', data.perluRestock.length > 0 ? 'text-amber-500' : 'text-success')} />
             <span className="flex-1 text-sm font-medium">{data.perluRestock.length > 0 ? `${data.perluRestock.length} ${t('dasbor.produkPerluRestock')}` : t('dasbor.semuaStokAman')}</span>
@@ -314,6 +338,16 @@ export function Dashboard() {
             {data.jatuhTempo.length > 0 ? <CalendarClock className="h-5 w-5 text-amber-500" /> : <CheckCircle2 className="h-5 w-5 text-success" />}
             <span className="flex-1 text-sm font-medium">{data.jatuhTempo.length > 0 ? t('dasbor.fakturPerluDitagih') : t('dasbor.tidakAdaFaktur')}</span>
           </Link>
+          <Link to="/sales-order" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.pesananMenunggu > 0 && 'border-amber-500/30')}>
+            {data.pesananMenunggu > 0 ? <ShoppingCart className="h-5 w-5 text-amber-500" /> : <CheckCircle2 className="h-5 w-5 text-success" />}
+            <span className="flex-1 text-sm font-medium">{data.pesananMenunggu > 0 ? t('dasbor.pesananMenunggu').replace('{n}', String(data.pesananMenunggu)) : t('dasbor.tidakAdaPesananMenunggu')}</span>
+          </Link>
+          {bolehLihatBiaya && data.settlementTersedia ? (
+            <Link to="/settlement-marketplace" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.settlementMenunggu > 0 && 'border-amber-500/30')}>
+              {data.settlementMenunggu > 0 ? <BadgeDollarSign className="h-5 w-5 text-amber-500" /> : <CheckCircle2 className="h-5 w-5 text-success" />}
+              <span className="flex-1 text-sm font-medium">{data.settlementMenunggu > 0 ? t('dasbor.settlementMenunggu').replace('{n}', String(data.settlementMenunggu)) : t('dasbor.tidakAdaSettlementMenunggu')}</span>
+            </Link>
+          ) : null}
         </div>
       </div>
 
