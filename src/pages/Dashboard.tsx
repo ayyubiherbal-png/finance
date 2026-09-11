@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   Boxes,
   CalendarClock,
+  CheckCircle2,
   Coins,
   Landmark,
   PackageSearch,
@@ -15,11 +16,11 @@ import {
   Wallet,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { rupiah, angka, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
+import { rupiah, angka, tanggalISO } from '@/lib/format'
 import { useI18n } from '@/lib/i18n'
 import { tt } from '@/lib/i18nText'
 import { useAuth } from '@/contexts/AuthContext'
-import { GrafikBatang, GrafikDonut, GrafikKapsul } from '@/components/Charts'
+import { GrafikBatang, GrafikKapsul } from '@/components/Charts'
 import { cn } from '@/lib/utils'
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, KondisiKosong, PesanError, Spinner } from '@/components/ui'
 import { INFO_SEGMEN } from '@/pages/CrmPelanggan'
@@ -65,15 +66,18 @@ const KARTU_LIST = 'flex flex-col'
 const ISI_KOSONG = 'flex flex-1 items-center justify-center p-0'
 const ISI_LIST = 'p-0 pb-2'
 
-function useRingkasan() {
+type PeriodeDasbor = '7' | '30' | 'bulan'
+
+function useRingkasan(periode: PeriodeDasbor) {
   return useQuery({
-    queryKey: ['dasbor', 'ringkasan'],
+    queryKey: ['dasbor', 'ringkasan', periode],
     queryFn: async () => {
       const hariIni = new Date()
-      const batas30 = new Date(hariIni)
-      batas30.setDate(batas30.getDate() - 29)
-      const batas60 = new Date(hariIni)
-      batas60.setDate(batas60.getDate() - 59)
+      const jumlahHari = periode === '7' ? 7 : periode === 'bulan' ? hariIni.getDate() : 30
+      const batasPeriode = new Date(hariIni)
+      batasPeriode.setDate(batasPeriode.getDate() - (jumlahHari - 1))
+      const batasDuaPeriode = new Date(batasPeriode)
+      batasDuaPeriode.setDate(batasDuaPeriode.getDate() - jumlahHari)
 
       const bulanAwal = new Date(hariIni.getFullYear(), hariIni.getMonth() - 5, 1)
 
@@ -81,7 +85,7 @@ function useRingkasan() {
         supabase
           .from('v_penjualan_harian')
           .select('tanggal, jumlah_faktur, omzet, laba_kotor, hpp, retur, penjualan_bersih')
-          .gte('tanggal', tanggalISO(batas60))
+          .gte('tanggal', tanggalISO(batasDuaPeriode))
           .returns<VPenjualanHarian[]>(),
         // Peran yang tidak boleh baca pengeluaran_kas (lihat RLS 0046) akan
         // dapat baris kosong di sini, BUKAN error -- lihat komponen Dashboard
@@ -90,7 +94,7 @@ function useRingkasan() {
         supabase
           .from('v_pengeluaran_harian')
           .select('tanggal, jumlah_pengeluaran, total_keluar')
-          .gte('tanggal', tanggalISO(batas30))
+          .gte('tanggal', tanggalISO(batasDuaPeriode))
           .returns<VPengeluaranHarian[]>(),
         supabase
           .from('v_stok_produk')
@@ -116,6 +120,7 @@ function useRingkasan() {
           .select('pelanggan_id, kode, nama, total_belanja, jumlah_transaksi, segmen')
           .eq('aktif', true)
           .eq('akun_agregat', false)
+          .gt('jumlah_transaksi', 0)
           .order('total_belanja', { ascending: false })
           .limit(5)
           .returns<Pick<VPelangganCrm, 'pelanggan_id' | 'kode' | 'nama' | 'total_belanja' | 'jumlah_transaksi' | 'segmen'>[]>(),
@@ -146,12 +151,12 @@ function useRingkasan() {
       const barisPiutang = piutang.data ?? []
 
       const petaHari = new Map(semuaHari.map((h) => [h.tanggal, h]))
-      const isoBatas30 = tanggalISO(batas30)
+      const isoBatasPeriode = tanggalISO(batasPeriode)
 
       // 30 titik harian berurutan, hari tanpa penjualan diisi 0 -- supaya
       // grafiknya benar-benar merepresentasikan waktu, bukan cuma hari yang ada transaksi.
       const trenHarian: { tanggal: string; nilai: number }[] = []
-      for (let i = 29; i >= 0; i--) {
+      for (let i = jumlahHari - 1; i >= 0; i--) {
         const d = new Date(hariIni)
         d.setDate(d.getDate() - i)
         const iso = tanggalISO(d)
@@ -172,15 +177,20 @@ function useRingkasan() {
         })
       }
 
-      const periodeIni = semuaHari.filter((h) => h.tanggal >= isoBatas30)
-      const periodeSebelum = semuaHari.filter((h) => h.tanggal < isoBatas30)
+      const periodeIni = semuaHari.filter((h) => h.tanggal >= isoBatasPeriode)
+      const periodeSebelum = semuaHari.filter((h) => h.tanggal < isoBatasPeriode)
 
       const omzet30Hari = periodeIni.reduce((t, h) => t + Number(h.penjualan_bersih ?? 0), 0)
       const laba30Hari = periodeIni.reduce((t, h) => t + Number(h.laba_kotor ?? 0), 0)
       const omzetSebelum = periodeSebelum.reduce((t, h) => t + Number(h.penjualan_bersih ?? 0), 0)
-      const deltaOmzetPersen = omzetSebelum > 0 ? ((omzet30Hari - omzetSebelum) / omzetSebelum) * 100 : null
-
-      const pengeluaran30Hari = (pengeluaran.data ?? []).reduce((t, h) => t + Number(h.total_keluar ?? 0), 0)
+      const labaSebelum = periodeSebelum.reduce((t, h) => t + Number(h.laba_kotor ?? 0), 0)
+      const pengeluaranPeriodeIni = (pengeluaran.data ?? []).filter((h) => h.tanggal >= isoBatasPeriode)
+      const pengeluaranPeriodeSebelum = (pengeluaran.data ?? []).filter((h) => h.tanggal < isoBatasPeriode)
+      const pengeluaran30Hari = pengeluaranPeriodeIni.reduce((t, h) => t + Number(h.total_keluar ?? 0), 0)
+      const pengeluaranSebelum = pengeluaranPeriodeSebelum.reduce((t, h) => t + Number(h.total_keluar ?? 0), 0)
+      const labaOperasional = laba30Hari - pengeluaran30Hari
+      const labaOperasionalSebelum = labaSebelum - pengeluaranSebelum
+      const deltaPersen = (nilai: number, sebelumnya: number) => sebelumnya !== 0 ? ((nilai - sebelumnya) / Math.abs(sebelumnya)) * 100 : null
 
       return {
         trenHarian,
@@ -188,8 +198,12 @@ function useRingkasan() {
         omzet30Hari,
         laba30Hari,
         pengeluaran30Hari,
-        labaBersih30Hari: laba30Hari - pengeluaran30Hari,
-        deltaOmzetPersen,
+        labaBersih30Hari: labaOperasional,
+        deltaOmzetPersen: deltaPersen(omzet30Hari, omzetSebelum),
+        deltaLabaPersen: deltaPersen(laba30Hari, labaSebelum),
+        deltaPengeluaranPersen: deltaPersen(pengeluaran30Hari, pengeluaranSebelum),
+        deltaLabaOperasionalPersen: deltaPersen(labaOperasional, labaOperasionalSebelum),
+        jumlahHari,
         nilaiPersediaan: barisStok.reduce((t, b) => t + Number(b.nilai_persediaan ?? 0), 0),
         totalPiutang: barisPiutang.reduce((t, b) => t + Number(b.total_piutang ?? 0), 0),
         piutangMacet: barisPiutang.reduce((t, b) => t + Number(b.umur_90_plus ?? 0), 0),
@@ -206,7 +220,8 @@ function useRingkasan() {
 export function Dashboard() {
   const { t, bahasa } = useI18n()
   const { profil } = useAuth()
-  const { data, isLoading, error } = useRingkasan()
+  const [periode, setPeriode] = useState<PeriodeDasbor>('30')
+  const { data, isLoading, error } = useRingkasan(periode)
   const bolehLihatBiaya = PERAN_BOLEH_LIHAT_BIAYA.includes(profil?.peran ?? '')
 
   if (isLoading) {
@@ -226,19 +241,33 @@ export function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('dasbor.judul')}</h1>
-          <p className="text-sm text-muted-foreground">{t('dasbor.subjudul')}</p>
+          <p className="text-sm text-muted-foreground">
+            {t('dasbor.subjudulAksi')}
+          </p>
         </div>
-        <Button variant="pill" size="sm" asChild>
-          <Link to="/laporan/omzet">
-            <TrendingUp className="h-4 w-4" />
-            {t('dasbor.lihatLaporanOmzet')}
-          </Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-full border border-border bg-card p-1 shadow-sm" aria-label={t('dasbor.pilihPeriode')}>
+            {(['7', '30', 'bulan'] as const).map((opsi) => (
+              <button
+                key={opsi}
+                type="button"
+                onClick={() => setPeriode(opsi)}
+                className={cn('rounded-full px-3 py-1.5 text-xs font-medium transition-colors', periode === opsi ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+              >
+                {opsi === 'bulan' ? t('dasbor.bulanIni') : `${opsi} ${t('dasbor.hari')}`}
+              </button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/laporan/omzet">{t('dasbor.lihatLaporan')}</Link>
+          </Button>
+        </div>
       </div>
 
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('dasbor.kinerjaHari').replace('{n}', String(data.jumlahHari))}</p>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <KartuHero
-          judul={t('dasbor.omzet30Hari')}
+          judul={t('dasbor.penjualanBersih')}
           nilai={rupiah(data.omzet30Hari)}
           ikon={<TrendingUp className="h-4 w-4" />}
           delta={data.deltaOmzetPersen}
@@ -250,42 +279,45 @@ export function Dashboard() {
           warna={AKSEN.biru}
           ikon={<Coins className="h-4 w-4" />}
           catatan={`${t('dasbor.margin')} ${margin.toFixed(1)}%`}
+          delta={data.deltaLabaPersen}
           tautan="/laporan/laba-rugi"
         />
         {bolehLihatBiaya ? (
           <>
             <KartuStat
-              judul={t('dasbor.pengeluaran30Hari')}
+              judul={t('dasbor.bebanOperasional')}
               nilai={rupiah(data.pengeluaran30Hari)}
               warna={AKSEN.merah}
               ikon={<Coins className="h-4 w-4" />}
+              delta={data.deltaPengeluaranPersen}
+              deltaTerbalik
               tautan="/pengeluaran-kas"
             />
             <KartuStat
-              judul={t('dasbor.labaBersih30Hari')}
+              judul={t('dasbor.labaOperasional')}
               nilai={rupiah(data.labaBersih30Hari)}
-              warna={AKSEN.hijau}
-              ikon={<TrendingUp className="h-4 w-4" />}
+              warna={data.labaBersih30Hari < 0 ? AKSEN.merah : AKSEN.hijau}
+              ikon={data.labaBersih30Hari < 0 ? <ArrowDownRight className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
+              bahaya={data.labaBersih30Hari < 0}
+              delta={data.deltaLabaOperasionalPersen}
               tautan="/laporan/laba-rugi"
             />
           </>
         ) : null}
-        <KartuStat
-          judul={t('dasbor.nilaiPersediaan')}
-          nilai={rupiah(data.nilaiPersediaan)}
-          warna={AKSEN.ungu}
-          ikon={<Boxes className="h-4 w-4" />}
-          tautan="/stok"
-        />
-        <KartuStat
-          judul={t('dasbor.piutangBerjalan')}
-          nilai={rupiah(data.totalPiutang)}
-          warna={data.piutangMacet > 0 ? AKSEN.merah : AKSEN.kuning}
-          ikon={<Wallet className="h-4 w-4" />}
-          catatan={data.piutangMacet > 0 ? `${rupiah(data.piutangMacet)} ${t('dasbor.lewat90Hari')}` : undefined}
-          bahaya={data.piutangMacet > 0}
-          tautan="/laporan/piutang"
-        />
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('dasbor.perluTindakanHariIni')}</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link to="/produk" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.perluRestock.length > 0 && 'border-amber-500/30')}>
+            <AlertTriangle className={cn('h-5 w-5', data.perluRestock.length > 0 ? 'text-amber-500' : 'text-success')} />
+            <span className="flex-1 text-sm font-medium">{data.perluRestock.length > 0 ? `${data.perluRestock.length} ${t('dasbor.produkPerluRestock')}` : t('dasbor.semuaStokAman')}</span>
+          </Link>
+          <Link to="/faktur-penjualan" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.jatuhTempo.length > 0 && 'border-amber-500/30')}>
+            {data.jatuhTempo.length > 0 ? <CalendarClock className="h-5 w-5 text-amber-500" /> : <CheckCircle2 className="h-5 w-5 text-success" />}
+            <span className="flex-1 text-sm font-medium">{data.jatuhTempo.length > 0 ? t('dasbor.fakturPerluDitagih') : t('dasbor.tidakAdaFaktur')}</span>
+          </Link>
+        </div>
       </div>
 
       {/*
@@ -305,52 +337,13 @@ export function Dashboard() {
         di bawah) supaya ruang kosongnya terlihat disengaja.
       */}
       <div className="grid gap-4 lg:grid-cols-4">
-        <div className="grid gap-4 sm:grid-cols-3 lg:col-span-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-3">
           <Card className="sm:col-span-2">
             <CardHeader>
-              <CardTitle className="text-base">{t('dasbor.trenOmzetHarian')}</CardTitle>
+              <CardTitle className="text-base">{t('dasbor.trenPenjualanBersih')}</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <GrafikKapsul data={data.trenHarian} />
-            </CardContent>
-          </Card>
-
-          <Card className={KARTU_LIST}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <CalendarClock className="h-4 w-4 text-muted-foreground" />
-                {t('dasbor.jatuhTempoTerdekat')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className={data.jatuhTempo.length === 0 ? ISI_KOSONG : ISI_LIST}>
-              {data.jatuhTempo.length === 0 ? (
-                <KondisiKosong pesan={t('dasbor.tidakAdaFakturBelumLunas')} />
-              ) : (
-                <div className="divide-y divide-border">
-                  {data.jatuhTempo.map((f) => {
-                    const lewat = f.jatuh_tempo < tanggalISO()
-                    return (
-                      <Link
-                        key={f.id}
-                        to={`/faktur-penjualan/${f.id}`}
-                        className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{f.pelanggan?.nama ?? '-'}</p>
-                          <p className="font-mono text-xs text-muted-foreground">{f.nomor}</p>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <p className="tabular text-sm font-medium">{rupiah(f.sisa)}</p>
-                          <p className={cn('text-xs', lewat ? 'font-medium text-destructive' : 'text-muted-foreground')}>
-                            {lewat ? `${t('dasbor.lewat')} ` : ''}
-                            {fmtTanggal(f.jatuh_tempo)}
-                          </p>
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -392,24 +385,6 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t('dasbor.marginLaba30Hari')}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center gap-3 pt-0">
-              <GrafikDonut persen={margin} warna="hsl(var(--primary))" />
-              <div className="flex w-full justify-around text-center text-xs">
-                <div>
-                  <p className="tabular font-semibold">{rupiah(data.laba30Hari)}</p>
-                  <p className="text-muted-foreground">{t('dasbor.labaKotor')}</p>
-                </div>
-                <div>
-                  <p className="tabular font-semibold">{rupiah(data.omzet30Hari)}</p>
-                  <p className="text-muted-foreground">{t('dasbor.omzet')}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="flex flex-col gap-4">
@@ -466,36 +441,15 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-primary-dark to-[hsl(24_20%_9%)] text-primary-dark-foreground">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base text-primary-dark-foreground">
-                <Landmark className="h-4 w-4" />
-                {t('dasbor.saldoKasBank')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <p className="tabular text-2xl font-bold">{rupiah(data.totalSaldoKas)}</p>
-              <p className="text-xs text-primary-dark-foreground/60">
-                {bahasa === 'id'
-                  ? `Total ${data.saldoKas.length} akun aktif`
-                  : `Total of ${data.saldoKas.length} active accounts`}
-              </p>
-              <div className="mt-3 space-y-1.5">
-                {data.saldoKas.slice(0, 4).map((a) => (
-                  <div key={a.akun_id} className="flex items-center justify-between text-xs">
-                    <span className="truncate text-primary-dark-foreground/80">{a.nama}</span>
-                    <span className="tabular shrink-0 pl-2 font-medium">{rupiah(a.saldo)}</span>
-                  </div>
-                ))}
-              </div>
-              <Link
-                to="/kas-bank"
-                className="mt-3 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium transition-colors hover:bg-white/25"
-              >
-                {t('dasbor.lihatSemuaAkun')}
-              </Link>
-            </CardContent>
-          </Card>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('dasbor.posisiSaatIni')}</p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <KartuStat judul={t('dasbor.kasSaatIni')} nilai={rupiah(data.totalSaldoKas)} warna={AKSEN.hijau} ikon={<Landmark className="h-4 w-4" />} tautan="/kas-bank" />
+          <KartuStat judul={t('dasbor.piutangSaatIni')} nilai={rupiah(data.totalPiutang)} warna={data.piutangMacet > 0 ? AKSEN.merah : AKSEN.kuning} ikon={<Wallet className="h-4 w-4" />} catatan={data.piutangMacet > 0 ? `${rupiah(data.piutangMacet)} ${t('dasbor.lewat90Hari')}` : undefined} bahaya={data.piutangMacet > 0} tautan="/laporan/piutang" />
+          <KartuStat judul={t('dasbor.persediaanSaatIni')} nilai={rupiah(data.nilaiPersediaan)} warna={AKSEN.ungu} ikon={<Boxes className="h-4 w-4" />} tautan="/stok" />
         </div>
       </div>
 
@@ -549,7 +503,7 @@ function KartuHero({
         {delta !== undefined && delta !== null ? (
           <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium">
             {delta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-            {Math.abs(delta).toFixed(1)}% {t('dasbor.vs30HariSebelumnya')}
+            {Math.abs(delta).toFixed(1)}% {t('dasbor.vsPeriodeSebelumnya')}
           </span>
         ) : null}
       </CardContent>
@@ -564,6 +518,8 @@ function KartuStat({
   ikon,
   catatan,
   bahaya,
+  delta,
+  deltaTerbalik,
   tautan,
 }: {
   judul: string
@@ -572,8 +528,12 @@ function KartuStat({
   ikon: ReactNode
   catatan?: string
   bahaya?: boolean
+  delta?: number | null
+  deltaTerbalik?: boolean
   tautan: string
 }) {
+  const { t } = useI18n()
+  const deltaPositif = deltaTerbalik ? Number(delta) <= 0 : Number(delta) >= 0
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-4">
@@ -590,6 +550,12 @@ function KartuStat({
         <p className="tabular mt-2 text-2xl font-semibold">{nilai}</p>
         {catatan ? (
           <span className={cn('mt-2 inline-block text-xs', bahaya ? 'text-destructive' : 'text-muted-foreground')}>{catatan}</span>
+        ) : null}
+        {delta !== undefined && delta !== null ? (
+          <span className={cn('mt-2 flex items-center gap-1 text-[11px] font-medium', deltaPositif ? 'text-success' : 'text-destructive')}>
+            {delta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            {Math.abs(delta).toFixed(1)}% {t('dasbor.vsPeriodeSebelumnya')}
+          </span>
         ) : null}
       </CardContent>
     </Card>

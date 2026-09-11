@@ -1,6 +1,6 @@
 -- P0: jejak perubahan untuk data bisnis penting. Ditulis hanya oleh trigger;
 -- klien tidak mendapat izin INSERT/UPDATE/DELETE agar riwayat tidak dapat dipalsukan.
-create table audit_log (
+create table if not exists audit_log (
   id              bigint generated always as identity primary key,
   tabel           text not null,
   record_id       text,
@@ -11,8 +11,8 @@ create table audit_log (
   dilakukan_pada timestamptz not null default now()
 );
 
-create index idx_audit_log_waktu on audit_log(dilakukan_pada desc);
-create index idx_audit_log_record on audit_log(tabel, record_id, dilakukan_pada desc);
+create index if not exists idx_audit_log_waktu on audit_log(dilakukan_pada desc);
+create index if not exists idx_audit_log_record on audit_log(tabel, record_id, dilakukan_pada desc);
 
 create or replace function fn_catat_audit()
 returns trigger
@@ -56,13 +56,14 @@ begin
     'nama_pengeluaran','pesanan_marketplace_impor'
   ] loop
     if to_regclass('public.' || nama_tabel) is not null then
+      execute format('drop trigger if exists trg_audit_%I on %I', nama_tabel, nama_tabel);
       execute format('create trigger trg_audit_%I after insert or update or delete on %I for each row execute function fn_catat_audit()', nama_tabel, nama_tabel);
     end if;
   end loop;
 end $$;
 
 alter table audit_log enable row level security;
+drop policy if exists baca_audit on audit_log;
 create policy baca_audit on audit_log for select to authenticated using (is_admin());
 grant select on audit_log to authenticated;
 grant usage, select on sequence audit_log_id_seq to authenticated;
-

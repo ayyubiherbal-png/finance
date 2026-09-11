@@ -1,7 +1,7 @@
 -- P0: rekonsiliasi pencairan marketplace. Faktur dilunasi sebesar omzet
 -- bruto, potongan platform dicatat sebagai beban, sehingga kenaikan bank
 -- tepat sebesar dana netto yang benar-benar diterima.
-create table settlement_marketplace (
+create table if not exists settlement_marketplace (
   id                         uuid primary key default gen_random_uuid(),
   kanal                      kanal_penjualan not null check (kanal in ('shopee','tiktok','tokopedia','lainnya')),
   nomor_settlement_platform  text not null,
@@ -23,7 +23,7 @@ create table settlement_marketplace (
   check (bruto >= fee_platform + voucher_toko + ongkir_dipotong + refund)
 );
 
-create table settlement_marketplace_item (
+create table if not exists settlement_marketplace_item (
   id              uuid primary key default gen_random_uuid(),
   settlement_id   uuid not null references settlement_marketplace(id) on delete cascade,
   pesanan_id      uuid not null references pesanan_marketplace_impor(id) on delete restrict,
@@ -33,12 +33,15 @@ create table settlement_marketplace_item (
   unique (settlement_id, pesanan_id)
 );
 
-create index idx_settlement_tanggal on settlement_marketplace(tanggal desc);
-create index idx_settlement_item_header on settlement_marketplace_item(settlement_id);
+create index if not exists idx_settlement_tanggal on settlement_marketplace(tanggal desc);
+create index if not exists idx_settlement_item_header on settlement_marketplace_item(settlement_id);
+drop trigger if exists trg_settlement_updated on settlement_marketplace;
 create trigger trg_settlement_updated before update on settlement_marketplace for each row execute function set_updated_at();
 
 alter table settlement_marketplace enable row level security;
 alter table settlement_marketplace_item enable row level security;
+drop policy if exists baca on settlement_marketplace;
+drop policy if exists baca on settlement_marketplace_item;
 create policy baca on settlement_marketplace for select to authenticated using (boleh_finance());
 create policy baca on settlement_marketplace_item for select to authenticated using (boleh_finance());
 grant select on settlement_marketplace, settlement_marketplace_item to authenticated;
@@ -146,5 +149,7 @@ revoke all on function batalkan_settlement_marketplace(uuid) from public;
 grant execute on function posting_settlement_marketplace(kanal_penjualan,text,date,uuid,numeric,numeric,numeric,numeric,jsonb,text) to authenticated;
 grant execute on function batalkan_settlement_marketplace(uuid) to authenticated;
 
+drop trigger if exists trg_audit_settlement_marketplace on settlement_marketplace;
 create trigger trg_audit_settlement_marketplace after insert or update or delete on settlement_marketplace for each row execute function fn_catat_audit();
+drop trigger if exists trg_audit_settlement_marketplace_item on settlement_marketplace_item;
 create trigger trg_audit_settlement_marketplace_item after insert or update or delete on settlement_marketplace_item for each row execute function fn_catat_audit();
