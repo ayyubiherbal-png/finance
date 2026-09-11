@@ -1,8 +1,11 @@
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
+import { Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
-import { Badge, Card, CardContent, KondisiKosong, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import { Badge, Card, CardContent, Input, KondisiKosong, Paginasi, PesanError, Select, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import type { RiwayatFollowUp as BarisRiwayat, VTingkatFuSelesai } from '@/types/db'
@@ -51,19 +54,27 @@ function useTingkatFuSelesai() {
 }
 
 const SELECT_RIWAYAT_FU = '*, profil:selesai_oleh(nama)'
+const UKURAN_HALAMAN = 50
 
-function useRiwayatFollowUp() {
+function useRiwayatFollowUp(cari: string, kategori: string, periode: RentangTanggal, halaman: number) {
   return useQuery({
-    queryKey: ['riwayat-follow-up'],
+    queryKey: ['riwayat-follow-up', cari, kategori, periode, halaman],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('riwayat_follow_up')
-        .select(SELECT_RIWAYAT_FU)
+        .select(SELECT_RIWAYAT_FU, { count: 'exact' })
+      if (cari.trim()) q = q.ilike('nama', `%${cari.trim()}%`)
+      if (kategori) q = q.eq('kategori', kategori)
+      if (periode.dari) q = q.gte('selesai_pada', `${periode.dari}T00:00:00`)
+      if (periode.sampai) q = q.lte('selesai_pada', `${periode.sampai}T23:59:59.999`)
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      const { data, error, count } = await q
         .order('selesai_pada', { ascending: false })
-        .limit(300)
+        .range(mulai, mulai + UKURAN_HALAMAN - 1)
       if (error) throw error
-      return (data ?? []) as (BarisRiwayat & { profil: { nama: string } | null })[]
+      return { baris: (data ?? []) as (BarisRiwayat & { profil: { nama: string } | null })[], total: count ?? 0 }
     },
+    placeholderData: (sebelumnya) => sebelumnya,
   })
 }
 
@@ -76,8 +87,13 @@ const KOLOM_EKSPOR_RIWAYAT_FU: KolomEkspor<BarisRiwayatTampil>[] = [
 ]
 
 export function RiwayatFollowUp() {
-  const { data, isLoading, error } = useRiwayatFollowUp()
+  const [cari, setCari] = useState('')
+  const [kategori, setKategori] = useState('')
+  const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useRiwayatFollowUp(cari, kategori, periode, halaman)
   const { data: tingkat } = useTingkatFuSelesai()
+  useEffect(() => setHalaman(1), [cari, kategori, periode])
 
   const totalMuncul = tingkat?.reduce((t, k) => t + k.jumlah_muncul, 0) ?? 0
   const totalSelesai = tingkat?.reduce((t, k) => t + k.jumlah_selesai, 0) ?? 0
@@ -92,9 +108,14 @@ export function RiwayatFollowUp() {
         </div>
         <TombolEkspor
           ambilData={async () => {
-            const { data, error } = await supabase
+            let q = supabase
               .from('riwayat_follow_up')
               .select(SELECT_RIWAYAT_FU)
+            if (cari.trim()) q = q.ilike('nama', `%${cari.trim()}%`)
+            if (kategori) q = q.eq('kategori', kategori)
+            if (periode.dari) q = q.gte('selesai_pada', `${periode.dari}T00:00:00`)
+            if (periode.sampai) q = q.lte('selesai_pada', `${periode.sampai}T23:59:59.999`)
+            const { data, error } = await q
               .order('selesai_pada', { ascending: false })
               .limit(10000)
             if (error) throw error
@@ -128,6 +149,12 @@ export function RiwayatFollowUp() {
         </div>
       ) : null}
 
+      <div className="flex flex-wrap gap-2">
+        <div className="relative w-full sm:w-64"><Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-8" placeholder={tt('Cari nama pelanggan...')} value={cari} onChange={(e) => setCari(e.target.value)} /></div>
+        <Select className="w-full sm:w-52" value={kategori} onChange={(e) => setKategori(e.target.value)}><option value="">{tt('Semua kategori')}</option>{Object.entries(LABEL_KATEGORI).map(([nilai, label]) => <option key={nilai} value={nilai}>{tt(label)}</option>)}</Select>
+        <FilterPeriode onChange={setPeriode} />
+      </div>
+
       <Card>
         <CardContent className="p-0 pb-2">
           {isLoading ? (
@@ -138,10 +165,10 @@ export function RiwayatFollowUp() {
             <div className="p-4">
               <PesanError error={error} />
             </div>
-          ) : !data || data.length === 0 ? (
+          ) : !data || data.baris.length === 0 ? (
             <KondisiKosong pesan="Belum ada follow-up yang ditandai selesai." />
           ) : (
-            <Table>
+            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
               <Thead>
                 <Tr>
                   <Th>{tt('Tanggal')}</Th>
@@ -152,7 +179,7 @@ export function RiwayatFollowUp() {
                 </Tr>
               </Thead>
               <Tbody>
-                {data.map((r) => (
+                {data.baris.map((r) => (
                   <Tr key={r.id}>
                     <Td className="text-muted-foreground">{fmtTanggal(r.selesai_pada)}</Td>
                     <Td className="font-medium">{r.nama || '-'}</Td>
@@ -170,6 +197,7 @@ export function RiwayatFollowUp() {
           )}
         </CardContent>
       </Card>
+      <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
   )
 }

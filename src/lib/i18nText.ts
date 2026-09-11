@@ -1316,6 +1316,8 @@ export const TEKS: Record<string, string> = {
   '{aksi} {n} Purchase Order terpilih?': '{aksi} {n} selected Purchase Orders?',
   '{n} Sales Order berhasil diperbarui.': '{n} Sales Orders updated successfully.',
   '{n} Purchase Order berhasil diperbarui.': '{n} Purchase Orders updated successfully.',
+  'Cari nama pelanggan...': 'Search customer name...',
+  'Semua kategori': 'All categories',
 
   // ---------- Surat Jalan: nama penerima = nama pelanggan (murni frontend) ----------
   'Sama dengan nama pelanggan': 'Same as customer name',

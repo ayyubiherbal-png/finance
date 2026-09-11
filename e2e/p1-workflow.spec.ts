@@ -19,4 +19,12 @@ test.describe('workflow P1', () => {
     await pencarian.fill('uji-pencarian-yang-tidak-ada')
     await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
   })
+
+  test('riwayat follow-up menyediakan filter server tanpa error', async ({ page }) => {
+    await page.goto('/riwayat-follow-up')
+    await expect(page.getByRole('heading', { name: 'Riwayat Follow-Up' })).toBeVisible()
+    await expect(page.getByPlaceholder('Cari nama pelanggan...')).toBeVisible()
+    await expect(page.getByRole('combobox').first()).toHaveValue('')
+    await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
+  })
 })
