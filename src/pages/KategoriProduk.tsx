@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -15,6 +15,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Spinner,
   Table,
@@ -26,18 +27,21 @@ import {
 } from '@/components/ui'
 import type { KategoriProduk as KategoriRow } from '@/types/db'
 
-function useKategoriProduk(cari: string) {
+const UKURAN_HALAMAN = 50
+
+function useKategoriProduk(cari: string, halaman: number) {
   return useQuery({
-    queryKey: ['kategori-produk-list', cari],
+    queryKey: ['kategori-produk-list', cari, halaman],
     queryFn: async () => {
-      let q = supabase.from('kategori_produk').select('*')
+      let q = supabase.from('kategori_produk').select('*', { count: 'exact' })
       if (cari.trim()) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
-      const { data, error } = await q.order('nama').returns<KategoriRow[]>()
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      const { data, error, count } = await q.order('nama').range(mulai, mulai + UKURAN_HALAMAN - 1).returns<KategoriRow[]>()
       if (error) throw error
-      return data ?? []
+      return { baris: data ?? [], total: count ?? 0 }
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -51,7 +55,9 @@ const KOLOM_EKSPOR_KATEGORI_PRODUK: KolomEkspor<KategoriRow>[] = [
 
 export function KategoriProduk() {
   const [cari, setCari] = useState('')
-  const { data, isLoading, error, isFetching } = useKategoriProduk(cari)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useKategoriProduk(cari, halaman)
+  useEffect(() => setHalaman(1), [cari])
 
   return (
     <div className="space-y-4">
@@ -66,7 +72,16 @@ export function KategoriProduk() {
             <Input className="pl-8" placeholder="Cari nama atau kode..." value={cari} onChange={(e) => setCari(e.target.value)} />
           </div>
           <TombolEkspor
-            ambilData={async () => data ?? []}
+            ambilData={async () => {
+              let q = supabase.from('kategori_produk').select('*')
+              if (cari.trim()) {
+                const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+                q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+              }
+              const { data, error } = await q.order('nama').limit(10000).returns<KategoriRow[]>()
+              if (error) throw error
+              return data ?? []
+            }}
             kolom={KOLOM_EKSPOR_KATEGORI_PRODUK}
             opsi={{ namaFile: `kategori-produk-${tanggalISO()}`, judul: tt('Kategori Produk') }}
           />
@@ -89,7 +104,7 @@ export function KategoriProduk() {
             <div className="p-4">
               <PesanError error={error} />
             </div>
-          ) : !data || data.length === 0 ? (
+          ) : !data || data.baris.length === 0 ? (
             <KondisiKosong pesan="Belum ada kategori." />
           ) : (
             <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
@@ -101,7 +116,7 @@ export function KategoriProduk() {
                 </Tr>
               </Thead>
               <Tbody>
-                {data.map((k) => (
+                {data.baris.map((k) => (
                   <Tr key={k.id}>
                     <Td className="font-mono text-xs">{k.kode}</Td>
                     <Td>
@@ -115,6 +130,7 @@ export function KategoriProduk() {
               </Tbody>
             </Table>
           )}
+          <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
         </CardContent>
       </Card>
     </div>

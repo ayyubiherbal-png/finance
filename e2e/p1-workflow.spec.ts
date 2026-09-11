@@ -67,4 +67,17 @@ test.describe('workflow P1', () => {
     await expect(page.getByRole('combobox').first()).toHaveValue('')
     await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
   })
+
+  for (const halaman of [
+    { url: '/kategori-produk', judul: 'Kategori Produk' },
+    { url: '/gudang', judul: 'Gudang' },
+    { url: '/kas-bank', judul: 'Kas & Bank' },
+  ]) {
+    test(`${halaman.judul} memakai pagination server-side`, async ({ page }) => {
+      await page.goto(halaman.url)
+      await expect(page.getByRole('heading', { name: halaman.judul })).toBeVisible()
+      await expect(page.getByTestId('paginasi')).toContainText(/Halaman 1 dari/)
+      await expect(page.getByText(/Failed to|Could not find|relation .* does not exist/i)).toHaveCount(0)
+    })
+  }
 })

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -6,6 +6,7 @@ import { Plus, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggalISO } from '@/lib/format'
 import { kutipFilterPostgrest } from '@/lib/utils'
+import { ambilSemuaBertahap } from '@/lib/ambilSemua'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
@@ -15,6 +16,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Spinner,
   Table,
@@ -28,20 +30,31 @@ import type { VSaldoKasBank } from '@/types/db'
 
 const LABEL_JENIS = { kas: 'Kas', bank: 'Bank' }
 
-function useSaldoKasBank(cari: string) {
+const UKURAN_HALAMAN = 50
+
+function useSaldoKasBank(cari: string, halaman: number) {
   return useQuery({
-    queryKey: ['akun-kas-bank', cari],
+    queryKey: ['akun-kas-bank', cari, halaman],
     queryFn: async () => {
-      let q = supabase.from('v_saldo_kas_bank').select('*')
+      let q = supabase.from('v_saldo_kas_bank').select('*', { count: 'exact' })
       if (cari.trim()) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
-      const { data, error } = await q.order('jenis').order('nama').returns<VSaldoKasBank[]>()
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      const { data, error, count } = await q.order('jenis').order('nama').range(mulai, mulai + UKURAN_HALAMAN - 1).returns<VSaldoKasBank[]>()
       if (error) throw error
-      return data ?? []
+      return { baris: data ?? [], total: count ?? 0 }
     },
     placeholderData: (sebelumnya) => sebelumnya,
+  })
+}
+
+function useTotalSaldoKasBank() {
+  return useQuery({
+    queryKey: ['akun-kas-bank-total'],
+    queryFn: () => ambilSemuaBertahap<Pick<VSaldoKasBank, 'saldo' | 'aktif'>>((dari, sampai) => supabase
+      .from('v_saldo_kas_bank').select('saldo, aktif').range(dari, sampai)),
   })
 }
 
@@ -57,9 +70,12 @@ const KOLOM_EKSPOR_AKUN: KolomEkspor<VSaldoKasBank>[] = [
 
 export function AkunKasBank() {
   const [cari, setCari] = useState('')
-  const { data, isLoading, error, isFetching } = useSaldoKasBank(cari)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useSaldoKasBank(cari, halaman)
+  const { data: ringkasan } = useTotalSaldoKasBank()
+  useEffect(() => setHalaman(1), [cari])
 
-  const totalSaldo = (data ?? []).filter((a) => a.aktif).reduce((t, a) => t + Number(a.saldo), 0)
+  const totalSaldo = (ringkasan ?? []).filter((a) => a.aktif).reduce((t, a) => t + Number(a.saldo), 0)
 
   return (
     <div className="space-y-4">
@@ -108,7 +124,7 @@ export function AkunKasBank() {
             <div className="p-4">
               <PesanError error={error} />
             </div>
-          ) : !data || data.length === 0 ? (
+          ) : !data || data.baris.length === 0 ? (
             <KondisiKosong pesan="Belum ada akun kas/bank. Tambahkan minimal satu supaya Penerimaan Kas & Pembayaran Supplier bisa dicatat." />
           ) : (
             <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
@@ -123,7 +139,7 @@ export function AkunKasBank() {
                 </Tr>
               </Thead>
               <Tbody>
-                {data.map((a) => (
+                {data.baris.map((a) => (
                   <Tr key={a.akun_id}>
                     <Td className="font-mono text-xs">{a.kode}</Td>
                     <Td>
@@ -142,10 +158,11 @@ export function AkunKasBank() {
               </Tbody>
             </Table>
           )}
+          <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
         </CardContent>
       </Card>
 
-      {data && data.length > 0 ? (
+      {ringkasan && ringkasan.length > 0 ? (
         <p className="text-right text-sm text-muted-foreground">
           {tt('Total saldo (akun aktif):')} <span className="tabular font-medium text-foreground">{rupiah(totalSaldo)}</span>
         </p>

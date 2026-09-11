@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -15,6 +15,7 @@ import {
   CardContent,
   Input,
   KondisiKosong,
+  Paginasi,
   PesanError,
   Spinner,
   Table,
@@ -26,18 +27,21 @@ import {
 } from '@/components/ui'
 import type { Gudang as GudangRow } from '@/types/db'
 
-function useGudang(cari: string) {
+const UKURAN_HALAMAN = 50
+
+function useGudang(cari: string, halaman: number) {
   return useQuery({
-    queryKey: ['gudang', cari],
+    queryKey: ['gudang', cari, halaman],
     queryFn: async () => {
-      let q = supabase.from('gudang').select('*')
+      let q = supabase.from('gudang').select('*', { count: 'exact' })
       if (cari.trim()) {
         const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
         q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
       }
-      const { data, error } = await q.order('utama', { ascending: false }).order('nama').returns<GudangRow[]>()
+      const mulai = (halaman - 1) * UKURAN_HALAMAN
+      const { data, error, count } = await q.order('utama', { ascending: false }).order('nama').range(mulai, mulai + UKURAN_HALAMAN - 1).returns<GudangRow[]>()
       if (error) throw error
-      return data ?? []
+      return { baris: data ?? [], total: count ?? 0 }
     },
     placeholderData: (sebelumnya) => sebelumnya,
   })
@@ -53,7 +57,9 @@ const KOLOM_EKSPOR_GUDANG: KolomEkspor<GudangRow>[] = [
 
 export function Gudang() {
   const [cari, setCari] = useState('')
-  const { data, isLoading, error, isFetching } = useGudang(cari)
+  const [halaman, setHalaman] = useState(1)
+  const { data, isLoading, error, isFetching } = useGudang(cari, halaman)
+  useEffect(() => setHalaman(1), [cari])
 
   return (
     <div className="space-y-4">
@@ -68,7 +74,16 @@ export function Gudang() {
             <Input className="pl-8" placeholder="Cari nama atau kode..." value={cari} onChange={(e) => setCari(e.target.value)} />
           </div>
           <TombolEkspor
-            ambilData={async () => data ?? []}
+            ambilData={async () => {
+              let q = supabase.from('gudang').select('*')
+              if (cari.trim()) {
+                const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+                q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+              }
+              const { data, error } = await q.order('utama', { ascending: false }).order('nama').limit(10000).returns<GudangRow[]>()
+              if (error) throw error
+              return data ?? []
+            }}
             kolom={KOLOM_EKSPOR_GUDANG}
             opsi={{ namaFile: `gudang-${tanggalISO()}`, judul: tt('Gudang') }}
           />
@@ -91,7 +106,7 @@ export function Gudang() {
             <div className="p-4">
               <PesanError error={error} />
             </div>
-          ) : !data || data.length === 0 ? (
+          ) : !data || data.baris.length === 0 ? (
             <KondisiKosong pesan="Belum ada gudang." />
           ) : (
             <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
@@ -104,7 +119,7 @@ export function Gudang() {
                 </Tr>
               </Thead>
               <Tbody>
-                {data.map((g) => (
+                {data.baris.map((g) => (
                   <Tr key={g.id}>
                     <Td className="font-mono text-xs">{g.kode}</Td>
                     <Td>
@@ -126,6 +141,7 @@ export function Gudang() {
               </Tbody>
             </Table>
           )}
+          <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
         </CardContent>
       </Card>
     </div>
