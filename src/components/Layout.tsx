@@ -147,6 +147,7 @@ const MENU: Grup[] = [
         tab: [
           { ke: '/laporan/omzet', label: 'menu.omzet', peran: ['owner', 'admin'] },
           { ke: '/laporan/piutang', label: 'menu.piutang' },
+          { ke: '/laporan/utang', label: 'menu.utang', peran: ['owner', 'admin', 'finance'] },
           { ke: '/laporan/laba', label: 'menu.labaKotor', peran: ['owner', 'admin'] },
           { ke: '/laporan/laba-rugi', label: 'menu.labaRugi', peran: ['owner', 'admin'] },
           { ke: '/riset-pasar', label: 'menu.risetPasar', peran: ['owner', 'admin'] },

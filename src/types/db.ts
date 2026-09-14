@@ -360,6 +360,33 @@ export interface VPiutangAging {
   umur_90_plus: number | null
 }
 
+export interface VHutang {
+  faktur_id: string
+  nomor: string
+  nomor_supplier: string | null
+  tanggal: string
+  jatuh_tempo: string
+  supplier_id: string
+  kode_supplier: string
+  nama_supplier: string
+  total: number
+  terbayar: number
+  sisa: number
+  hari_lewat: number
+  bucket_umur: 'belum_jatuh_tempo' | '1-30' | '31-60' | '61-90' | '90+'
+}
+
+export interface VHutangAging {
+  supplier_id: string
+  nama_supplier: string
+  total_hutang: number
+  belum_jatuh_tempo: number | null
+  umur_1_30: number | null
+  umur_31_60: number | null
+  umur_61_90: number | null
+  umur_90_plus: number | null
+}
+
 /** Segmen RFM pelanggan -- dihitung otomatis di view `v_pelanggan_crm` (0019). */
 export type SegmenPelanggan = 'juara' | 'setia' | 'baru' | 'mulai_hilang' | 'tidur' | 'belum_pernah'
 

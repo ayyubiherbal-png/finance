@@ -91,6 +91,7 @@ export const KAMUS = {
   'menu.gudang': { id: 'Gudang', en: 'Warehouse' },
   'menu.omzet': { id: 'Omzet', en: 'Revenue' },
   'menu.piutang': { id: 'Piutang', en: 'Receivables' },
+  'menu.utang': { id: 'Utang', en: 'Payables' },
   'menu.labaKotor': { id: 'Laba Kotor', en: 'Gross Profit' },
   'menu.labaRugi': { id: 'Laba Rugi', en: 'Income Statement' },
   'menu.risetPasar': { id: 'Riset Pasar', en: 'Market Research' },
@@ -1379,6 +1380,14 @@ export const TEKS: Record<string, string> = {
     'No content drafts yet. Pick a product & channel above to create the first one.',
   'Produk sudah dihapus': 'Product deleted',
   'Pilih produk dulu.': 'Pick a product first.',
+
+  // ---------- Laporan Utang ----------
+  'Laporan Utang': 'Payables Report',
+  'Sisa tagihan supplier berdasarkan umur jatuh tempo': 'Outstanding supplier bills by due-date age',
+  'Tidak ada utang berjalan.': 'No outstanding payables.',
+  'Cari supplier atau nomor faktur...': 'Search supplier or invoice number...',
+  'Semua umur utang': 'All payable ages',
+  'Tidak ada utang yang cocok dengan filter.': 'No payables match the filter.',
 }
 
 
