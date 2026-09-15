@@ -151,7 +151,7 @@ export function Neraca() {
 
           <p className="text-xs text-muted-foreground">
             {tt(
-              'Saldo dihitung dari Jurnal Umum sejak sistem ini mulai mencatat double-entry (September 2026). Transaksi/persediaan dari sebelum tanggal itu belum tercermin di sini sampai jurnal saldo awal (opening balance) dibuat.',
+              'Saldo dihitung dari Jurnal Umum, termasuk jurnal Saldo Awal (opening balance) yang mencatat riwayat Kas/Piutang/Utang/Persediaan sebelum sistem ini mulai double-entry.',
             )}
           </p>
         </>

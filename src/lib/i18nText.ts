@@ -1433,8 +1433,8 @@ export const TEKS: Record<string, string> = {
   'Laba Berjalan (Belum Dibagi)': 'Current Earnings (Undistributed)',
   'Selisih Aset vs Liabilitas+Ekuitas: {n} -- seharusnya nol. Laporkan sebagai bug.':
     'Difference Assets vs Liabilities+Equity: {n} -- should be zero. Please report this as a bug.',
-  'Saldo dihitung dari Jurnal Umum sejak sistem ini mulai mencatat double-entry (September 2026). Transaksi/persediaan dari sebelum tanggal itu belum tercermin di sini sampai jurnal saldo awal (opening balance) dibuat.':
-    'Balances are computed from the General Ledger since this system started double-entry bookkeeping (September 2026). Transactions/inventory from before that date are not yet reflected here until an opening-balance journal entry is created.',
+  'Saldo dihitung dari Jurnal Umum, termasuk jurnal Saldo Awal (opening balance) yang mencatat riwayat Kas/Piutang/Utang/Persediaan sebelum sistem ini mulai double-entry.':
+    'Balances are computed from the General Ledger, including the Opening Balance journal entry that records Cash/Receivables/Payables/Inventory history from before this system started double-entry bookkeeping.',
 
   // ---------- Arus Kas ----------
   'Arus Kas': 'Cash Flow',
