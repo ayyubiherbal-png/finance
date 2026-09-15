@@ -624,6 +624,15 @@ export interface VLabaPelanggan {
   margin_persen: number
 }
 
+export interface VLabaKanal {
+  kanal: KanalPenjualan
+  jumlah_faktur: number
+  omzet: number
+  hpp: number
+  laba_kotor: number
+  margin_persen: number
+}
+
 export interface VPenjualanHarian {
   tanggal: string
   jumlah_faktur: number

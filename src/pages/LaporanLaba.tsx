@@ -19,7 +19,8 @@ import {
   Thead,
   Tr,
 } from '@/components/ui'
-import type { VLabaPelanggan, VLabaProduk, VRingkasanLabaBiaya } from '@/types/db'
+import { LABEL_KANAL } from '@/pages/SalesOrder'
+import type { VLabaKanal, VLabaPelanggan, VLabaProduk, VRingkasanLabaBiaya } from '@/types/db'
 
 function useLabaProduk() {
   return useQuery({
@@ -67,6 +68,17 @@ function useLabaPelanggan() {
   })
 }
 
+function useLabaKanal() {
+  return useQuery({
+    queryKey: ['laporan-laba-kanal'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('v_laba_kanal').select('*').order('laba_kotor', { ascending: false }).returns<VLabaKanal[]>()
+      if (error) throw error
+      return data ?? []
+    },
+  })
+}
+
 function useRingkasanLabaBiaya() {
   return useQuery({
     queryKey: ['laporan-laba-ringkasan'],
@@ -79,23 +91,33 @@ function useRingkasanLabaBiaya() {
 }
 
 export function LaporanLaba() {
-  const [tab, setTab] = useState<'produk' | 'pelanggan'>('produk')
+  const [tab, setTab] = useState<'produk' | 'pelanggan' | 'kanal'>('produk')
   const produk = useLabaProduk()
   const pelanggan = useLabaPelanggan()
+  const kanal = useLabaKanal()
   const ringkasan = useRingkasanLabaBiaya()
 
-  const aktif = tab === 'produk' ? produk : pelanggan
+  const aktif = tab === 'produk' ? produk : tab === 'pelanggan' ? pelanggan : kanal
   const data = aktif.data
   const totalOmzet = (data ?? []).reduce((t: number, r: { omzet: number }) => t + Number(r.omzet), 0)
   const totalLaba = (data ?? []).reduce((t: number, r: { laba_kotor: number }) => t + Number(r.laba_kotor), 0)
   const marginKeseluruhan = totalOmzet > 0 ? (totalLaba / totalOmzet) * 100 : 0
 
-  const kolomEkspor: KolomEkspor<VLabaProduk | VLabaPelanggan>[] =
+  const kolomEkspor: KolomEkspor<VLabaProduk | VLabaPelanggan | VLabaKanal>[] =
     tab === 'produk'
       ? [
           { header: 'Produk', nilai: (r) => (r as VLabaProduk).nama_produk },
           { header: 'Kode', nilai: (r) => (r as VLabaProduk).kode_produk },
           { header: 'Qty Terjual', nilai: (r) => (r as VLabaProduk).qty_terjual, format: (v) => angka(v as number), rata: 'kanan' },
+          { header: 'Omzet', nilai: (r) => r.omzet, format: (v) => rupiah(v as number), rata: 'kanan' },
+          { header: 'HPP', nilai: (r) => r.hpp, format: (v) => rupiah(v as number), rata: 'kanan' },
+          { header: 'Laba Kotor', nilai: (r) => r.laba_kotor, format: (v) => rupiah(v as number), rata: 'kanan' },
+          { header: 'Margin', nilai: (r) => r.margin_persen, format: (v) => `${(v as number).toFixed(1)}%`, rata: 'kanan' },
+        ]
+      : tab === 'kanal'
+      ? [
+          { header: 'Kanal', nilai: (r) => LABEL_KANAL[(r as VLabaKanal).kanal] },
+          { header: 'Jml Faktur', nilai: (r) => (r as VLabaKanal).jumlah_faktur, rata: 'kanan' },
           { header: 'Omzet', nilai: (r) => r.omzet, format: (v) => rupiah(v as number), rata: 'kanan' },
           { header: 'HPP', nilai: (r) => r.hpp, format: (v) => rupiah(v as number), rata: 'kanan' },
           { header: 'Laba Kotor', nilai: (r) => r.laba_kotor, format: (v) => rupiah(v as number), rata: 'kanan' },
@@ -150,7 +172,7 @@ export function LaporanLaba() {
       ) : null}
 
       <div className="inline-flex rounded-md border border-border p-0.5">
-        {(['produk', 'pelanggan'] as const).map((t) => (
+        {(['produk', 'pelanggan', 'kanal'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -206,7 +228,7 @@ export function LaporanLaba() {
                 ))}
               </Tbody>
             </Table>
-          ) : (
+          ) : tab === 'pelanggan' ? (
             <Table>
               <Thead>
                 <Tr>
@@ -233,7 +255,34 @@ export function LaporanLaba() {
                 ))}
               </Tbody>
             </Table>
-          )}
+          ) : tab === 'kanal' ? (
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Kanal</Th>
+                  <Th className="text-right">Jml faktur</Th>
+                  <Th className="text-right">Omzet</Th>
+                  <Th className="text-right">HPP</Th>
+                  <Th className="text-right">Laba kotor</Th>
+                  <Th className="text-right">Margin</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {(data as VLabaKanal[]).map((r) => (
+                  <Tr key={r.kanal}>
+                    <Td className="font-medium">{LABEL_KANAL[r.kanal]}</Td>
+                    <Td className="tabular text-right">{r.jumlah_faktur}</Td>
+                    <Td className="tabular text-right">{rupiah(r.omzet)}</Td>
+                    <Td className="tabular text-right text-muted-foreground">{rupiah(r.hpp)}</Td>
+                    <Td className="tabular text-right font-medium">{rupiah(r.laba_kotor)}</Td>
+                    <Td className={cn('tabular text-right', r.margin_persen < 0 && 'text-destructive')}>
+                      {r.margin_persen.toFixed(1)}%
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          ) : null}
         </CardContent>
       </Card>
     </div>
