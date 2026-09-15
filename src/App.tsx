@@ -46,6 +46,7 @@ import { LaporanLabaRugi } from '@/pages/LaporanLabaRugi'
 import { Neraca } from '@/pages/Neraca'
 import { ArusKas } from '@/pages/ArusKas'
 import { BukuBesar } from '@/pages/BukuBesar'
+import { RekonsiliasiMarketplace } from '@/pages/RekonsiliasiMarketplace'
 import { RisetPasar } from '@/pages/RisetPasar'
 import { AsistenJawabPelanggan } from '@/pages/AsistenJawabPelanggan'
 import { DrafKonten } from '@/pages/DrafKonten'
@@ -151,6 +152,7 @@ function Rute() {
         <Route path="laporan/neraca" element={<Neraca />} />
         <Route path="laporan/arus-kas" element={<ArusKas />} />
         <Route path="buku-besar" element={<BukuBesar />} />
+        <Route path="rekonsiliasi-marketplace" element={<RekonsiliasiMarketplace />} />
         <Route path="riset-pasar" element={<RisetPasar />} />
         <Route path="asisten-jawab-pelanggan" element={<AsistenJawabPelanggan />} />
         <Route path="draf-konten" element={<DrafKonten />} />

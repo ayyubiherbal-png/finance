@@ -98,6 +98,7 @@ export const KAMUS = {
   'menu.neraca': { id: 'Neraca', en: 'Balance Sheet' },
   'menu.arusKas': { id: 'Arus Kas', en: 'Cash Flow' },
   'menu.bukuBesar': { id: 'Buku Besar', en: 'General Ledger' },
+  'menu.rekonsiliasiMarketplace': { id: 'Rekonsiliasi Marketplace', en: 'Marketplace Reconciliation' },
   'menu.risetPasar': { id: 'Riset Pasar', en: 'Market Research' },
 
   // ---------- Topbar ----------
@@ -1469,6 +1470,26 @@ export const TEKS: Record<string, string> = {
   'Total Nilai Persediaan': 'Total Inventory Value',
   'Jumlah SKU': 'SKU Count',
   'Perlu Restock': 'Needs Restock',
+
+  // ---------- Rekonsiliasi Marketplace ----------
+  'Rekonsiliasi Marketplace': 'Marketplace Reconciliation',
+  'Cocokkan pencairan marketplace dengan mutasi kas/bank di Jurnal Umum, dan pantau pesanan yang belum di-settlement':
+    'Match marketplace payouts against cash/bank movement in the General Ledger, and track orders not yet settled',
+  'Total Bruto': 'Total Gross',
+  'Total Potongan': 'Total Deductions',
+  'Total Netto (Dana Diterima)': 'Total Net (Cash Received)',
+  'Selisih vs Jurnal Umum': 'Difference vs General Ledger',
+  'Ada selisih antara netto settlement dan mutasi kas/bank di Jurnal Umum -- seharusnya selalu nol. Laporkan sebagai bug.':
+    'There is a difference between settlement net and cash/bank movement in the General Ledger -- this should always be zero. Please report this as a bug.',
+  'Netto settlement cocok persis dengan mutasi kas/bank di Jurnal Umum -- tidak ada selisih.':
+    'Settlement net matches cash/bank movement in the General Ledger exactly -- no difference.',
+  'Per Kanal': 'By Channel',
+  'Belum ada settlement pada periode ini.': 'No settlements in this period yet.',
+  'Jml Settlement': 'Settlement Count',
+  Netto: 'Net',
+  'Pesanan Menunggu Settlement': 'Orders Awaiting Settlement',
+  'Semua pesanan marketplace sudah di-settlement.': 'All marketplace orders have been settled.',
+  'Bruto Menunggu': 'Gross Awaiting',
 }
 
 

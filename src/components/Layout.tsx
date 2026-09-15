@@ -154,6 +154,7 @@ const MENU: Grup[] = [
           { ke: '/laporan/neraca', label: 'menu.neraca', peran: ['owner', 'admin', 'finance'] },
           { ke: '/laporan/arus-kas', label: 'menu.arusKas', peran: ['owner', 'admin', 'finance'] },
           { ke: '/buku-besar', label: 'menu.bukuBesar', peran: ['owner', 'admin', 'finance'] },
+          { ke: '/rekonsiliasi-marketplace', label: 'menu.rekonsiliasiMarketplace', peran: ['owner', 'admin', 'finance'] },
           { ke: '/riset-pasar', label: 'menu.risetPasar', peran: ['owner', 'admin'] },
         ],
       },

@@ -633,6 +633,34 @@ export interface VLabaKanal {
   margin_persen: number
 }
 
+export interface VRekonsiliasiMarketplace {
+  settlement_id: string
+  kanal: KanalPenjualan
+  nomor_settlement_platform: string
+  tanggal: string
+  akun_id: string
+  nama_akun: string
+  bruto: number
+  fee_platform: number
+  voucher_toko: number
+  ongkir_dipotong: number
+  refund: number
+  netto: number
+  status: StatusDokumen
+  /** Mutasi kas/bank yang benar-benar tercermin di Jurnal Umum untuk settlement ini -- harus = netto kalau posting & jurnal sinkron. */
+  netto_gl: number
+}
+
+export interface VPesananMenungguSettlement {
+  pesanan_id: string
+  kanal: KanalPenjualan
+  nomor_pesanan_platform: string
+  diimpor_pada: string
+  faktur_id: string
+  nomor_faktur: string
+  bruto_menunggu: number
+}
+
 export interface VPenjualanHarian {
   tanggal: string
   jumlah_faktur: number
