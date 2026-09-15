@@ -80,6 +80,7 @@ export const KAMUS = {
   'menu.produk': { id: 'Produk', en: 'Products' },
   'menu.kategoriProduk': { id: 'Kategori Produk', en: 'Product Categories' },
   'menu.kategoriBiaya': { id: 'Kategori Biaya', en: 'Expense Categories' },
+  'menu.kategoriAkun': { id: 'Kategori Akun', en: 'Chart of Accounts' },
   'menu.pelanggan': { id: 'Pelanggan', en: 'Customers' },
   'menu.pembeliMarketplace': { id: 'Pembeli Marketplace', en: 'Marketplace Buyers' },
   'menu.tugasFollowUp': { id: 'Tugas Follow-Up', en: 'Follow-Up Tasks' },
@@ -94,6 +95,9 @@ export const KAMUS = {
   'menu.utang': { id: 'Utang', en: 'Payables' },
   'menu.labaKotor': { id: 'Laba Kotor', en: 'Gross Profit' },
   'menu.labaRugi': { id: 'Laba Rugi', en: 'Income Statement' },
+  'menu.neraca': { id: 'Neraca', en: 'Balance Sheet' },
+  'menu.arusKas': { id: 'Arus Kas', en: 'Cash Flow' },
+  'menu.bukuBesar': { id: 'Buku Besar', en: 'General Ledger' },
   'menu.risetPasar': { id: 'Riset Pasar', en: 'Market Research' },
 
   // ---------- Topbar ----------
@@ -1388,6 +1392,78 @@ export const TEKS: Record<string, string> = {
   'Cari supplier atau nomor faktur...': 'Search supplier or invoice number...',
   'Semua umur utang': 'All payable ages',
   'Tidak ada utang yang cocok dengan filter.': 'No payables match the filter.',
+
+  // ---------- Kategori Akun (COA) ----------
+  'Kategori Akun (COA)': 'Chart of Accounts (COA)',
+  'Chart of Accounts -- dipakai Jurnal Umum untuk posting otomatis tiap transaksi keuangan':
+    'Chart of Accounts -- used by the General Ledger to auto-post every financial transaction',
+  'Cari kode atau nama akun...': 'Search account code or name...',
+  'Belum ada akun.': 'No accounts yet.',
+  Induk: 'Parent',
+  'Saldo Normal': 'Normal Balance',
+  Aset: 'Assets',
+  Liabilitas: 'Liabilities',
+  Ekuitas: 'Equity',
+  Pendapatan: 'Revenue',
+  Beban: 'Expenses',
+  Debit: 'Debit',
+  Kredit: 'Credit',
+  'Akun ini sudah dipakai di {n} baris jurnal -- tidak bisa dihapus. Nonaktifkan saja lewat checkbox Aktif di atas.':
+    'This account is already used in {n} journal lines -- it cannot be deleted. Just deactivate it via the Active checkbox above.',
+  'Hapus akun ini?': 'Delete this account?',
+  'Akun dihapus.': 'Account deleted.',
+  'Tidak bisa dihapus -- akun ini masih dipakai (kas/bank, kategori biaya, atau akun anak). Nonaktifkan saja lewat checkbox Aktif di atas.':
+    'Cannot delete -- this account is still in use (cash/bank, expense category, or a child account). Just deactivate it via the Active checkbox above.',
+  'Kode tidak bisa diubah setelah dibuat -- sebagian logika posting jurnal mengacu ke kode akun ini secara langsung.':
+    'The code cannot be changed after creation -- some journal-posting logic refers to this account code directly.',
+  'Akun Induk (opsional)': 'Parent Account (optional)',
+  '-- Tanpa induk --': '-- No parent --',
+
+  // ---------- Neraca ----------
+  Neraca: 'Balance Sheet',
+  'Posisi aset, liabilitas, dan ekuitas per tanggal tertentu': 'Position of assets, liabilities, and equity as of a given date',
+  'Per tanggal': 'As of date',
+  'Belum ada saldo aset.': 'No asset balance yet.',
+  'Total Aset': 'Total Assets',
+  'Belum ada saldo liabilitas.': 'No liability balance yet.',
+  'Total Liabilitas': 'Total Liabilities',
+  'Belum ada saldo ekuitas.': 'No equity balance yet.',
+  'Total Ekuitas': 'Total Equity',
+  'Total Liabilitas + Ekuitas': 'Total Liabilities + Equity',
+  'Laba Berjalan (Belum Dibagi)': 'Current Earnings (Undistributed)',
+  'Selisih Aset vs Liabilitas+Ekuitas: {n} -- seharusnya nol. Laporkan sebagai bug.':
+    'Difference Assets vs Liabilities+Equity: {n} -- should be zero. Please report this as a bug.',
+  'Saldo dihitung dari Jurnal Umum sejak sistem ini mulai mencatat double-entry (September 2026). Transaksi/persediaan dari sebelum tanggal itu belum tercermin di sini sampai jurnal saldo awal (opening balance) dibuat.':
+    'Balances are computed from the General Ledger since this system started double-entry bookkeeping (September 2026). Transactions/inventory from before that date are not yet reflected here until an opening-balance journal entry is created.',
+
+  // ---------- Arus Kas ----------
+  'Arus Kas': 'Cash Flow',
+  'Pergerakan kas & bank per periode -- Operasi, Investasi, Pendanaan': 'Cash & bank movement per period -- Operating, Investing, Financing',
+  'Arus Kas dari Aktivitas Operasi': 'Cash Flow from Operating Activities',
+  'Tidak ada arus kas operasi pada periode ini.': 'No operating cash flow in this period.',
+  'Kas Bersih dari Aktivitas Operasi': 'Net Cash from Operating Activities',
+  'Arus Kas dari Aktivitas Investasi': 'Cash Flow from Investing Activities',
+  'Belum ada aktivitas investasi tercatat (mis. pembelian aset tetap) di sistem ini.':
+    'No investing activity recorded yet (e.g. fixed asset purchases) in this system.',
+  'Kas Bersih dari Aktivitas Investasi': 'Net Cash from Investing Activities',
+  'Arus Kas dari Aktivitas Pendanaan': 'Cash Flow from Financing Activities',
+  'Tidak ada arus kas pendanaan pada periode ini.': 'No financing cash flow in this period.',
+  'Kas Bersih dari Aktivitas Pendanaan': 'Net Cash from Financing Activities',
+  'Kenaikan (Penurunan) Kas Bersih': 'Net Increase (Decrease) in Cash',
+  'Penerimaan dari Pelanggan': 'Receipts from Customers',
+  'Pembayaran ke Supplier': 'Payments to Suppliers',
+  'Pengeluaran Operasional Lainnya': 'Other Operating Expenses',
+  'Pengambilan Pribadi (Prive)': 'Owner Withdrawal (Drawings)',
+
+  // ---------- Buku Besar ----------
+  'Buku Besar': 'General Ledger',
+  'Riwayat mutasi & saldo berjalan tiap akun COA': 'Movement history & running balance for each COA account',
+  '-- Pilih akun --': '-- Select account --',
+  'Pilih akun untuk melihat riwayat mutasinya.': 'Select an account to see its movement history.',
+  'Mutasi Periode': 'Period Movement',
+  'Saldo Akhir': 'Ending Balance',
+  Referensi: 'Reference',
+  'Tidak ada mutasi pada periode ini.': 'No movement in this period.',
 }
 
 

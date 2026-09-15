@@ -15,6 +15,8 @@ import { KategoriProduk } from '@/pages/KategoriProduk'
 import { KategoriProdukForm } from '@/pages/KategoriProdukForm'
 import { KategoriBiaya } from '@/pages/KategoriBiaya'
 import { KategoriBiayaForm } from '@/pages/KategoriBiayaForm'
+import { KategoriAkun } from '@/pages/KategoriAkun'
+import { KategoriAkunForm } from '@/pages/KategoriAkunForm'
 import { NamaPengeluaranForm } from '@/pages/NamaPengeluaranForm'
 import { Pelanggan } from '@/pages/Pelanggan'
 import { PelangganForm } from '@/pages/PelangganForm'
@@ -41,6 +43,9 @@ import { LaporanPiutang } from '@/pages/LaporanPiutang'
 import { LaporanUtang } from '@/pages/LaporanUtang'
 import { LaporanLaba } from '@/pages/LaporanLaba'
 import { LaporanLabaRugi } from '@/pages/LaporanLabaRugi'
+import { Neraca } from '@/pages/Neraca'
+import { ArusKas } from '@/pages/ArusKas'
+import { BukuBesar } from '@/pages/BukuBesar'
 import { RisetPasar } from '@/pages/RisetPasar'
 import { AsistenJawabPelanggan } from '@/pages/AsistenJawabPelanggan'
 import { DrafKonten } from '@/pages/DrafKonten'
@@ -114,6 +119,8 @@ function Rute() {
         <Route path="kategori-biaya" element={<KategoriBiaya />} />
         <Route path="kategori-biaya/:id" element={<KategoriBiayaForm />} />
         <Route path="nama-pengeluaran/:id" element={<NamaPengeluaranForm />} />
+        <Route path="kategori-akun" element={<KategoriAkun />} />
+        <Route path="kategori-akun/:id" element={<KategoriAkunForm />} />
         <Route path="pelanggan" element={<Pelanggan />} />
         <Route path="pelanggan/:id" element={<PelangganForm />} />
         <Route path="pembeli-marketplace" element={<PembeliMarketplace />} />
@@ -141,6 +148,9 @@ function Rute() {
         <Route path="laporan/utang" element={<LaporanUtang />} />
         <Route path="laporan/laba" element={<LaporanLaba />} />
         <Route path="laporan/laba-rugi" element={<LaporanLabaRugi />} />
+        <Route path="laporan/neraca" element={<Neraca />} />
+        <Route path="laporan/arus-kas" element={<ArusKas />} />
+        <Route path="buku-besar" element={<BukuBesar />} />
         <Route path="riset-pasar" element={<RisetPasar />} />
         <Route path="asisten-jawab-pelanggan" element={<AsistenJawabPelanggan />} />
         <Route path="draf-konten" element={<DrafKonten />} />

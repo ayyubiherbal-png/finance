@@ -673,3 +673,71 @@ export interface VRingkasanLabaBiaya {
   laba_bersih: number
   total_biaya_non_operasional: number
 }
+
+// ---------- Chart of Accounts (COA) + Jurnal Umum (0057-0062) ----------
+
+export type TipeAkunCoa = 'aset' | 'liabilitas' | 'ekuitas' | 'pendapatan' | 'beban'
+export type SaldoNormalCoa = 'debit' | 'kredit'
+
+export interface AkunCoa {
+  id: string
+  kode: string
+  nama: string
+  tipe: TipeAkunCoa
+  saldo_normal: SaldoNormalCoa
+  induk_id: string | null
+  aktif: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface JurnalUmum {
+  id: string
+  nomor: string
+  tanggal: string
+  ref_tabel: string
+  ref_id: string
+  ref_nomor: string
+  keterangan: string
+  dibuat_oleh: string | null
+  created_at: string
+}
+
+/** Satu baris pada `v_buku_besar` -- gabungan jurnal_umum_baris + jurnal_umum + akun_coa. */
+export interface VBukuBesar {
+  baris_id: string
+  jurnal_id: string
+  nomor: string
+  tanggal: string
+  created_at: string
+  ref_tabel: string
+  ref_id: string
+  ref_nomor: string
+  keterangan: string
+  akun_id: string
+  kode_akun: string
+  nama_akun: string
+  tipe_akun: TipeAkunCoa
+  saldo_normal: SaldoNormalCoa
+  debit: number
+  kredit: number
+  keterangan_baris: string | null
+}
+
+/** Baris hasil RPC `fn_neraca(p_tanggal)` -- saldo kumulatif tiap akun s/d tanggal cutoff. */
+export interface BarisNeraca {
+  akun_id: string
+  kode: string
+  nama: string
+  tipe: TipeAkunCoa
+  saldo_normal: SaldoNormalCoa
+  induk_id: string | null
+  saldo: number
+}
+
+/** Baris hasil RPC `fn_arus_kas(p_dari, p_sampai)` -- arus kas per ref_tabel dalam satu periode. */
+export interface BarisArusKas {
+  kategori: 'operasi' | 'pendanaan' | 'investasi'
+  ref_tabel: string
+  arus_bersih: number
+}
