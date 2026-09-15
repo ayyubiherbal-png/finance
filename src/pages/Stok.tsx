@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { angka, rupiah, tanggalISO } from '@/lib/format'
 import { useGudangAktif } from '@/lib/queries'
 import { kutipFilterPostgrest } from '@/lib/utils'
+import { ambilSemuaBertahap } from '@/lib/ambilSemua'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
@@ -58,6 +59,40 @@ function useStokGudang(gudangId: string, cari: string, halaman: number) {
   })
 }
 
+/** Total nilai persediaan & jumlah SKU untuk SELURUH hasil filter (bukan cuma halaman yang tampil). */
+function useRingkasanStok(gudangId: string, cari: string) {
+  return useQuery({
+    queryKey: ['stok-ringkasan', gudangId, cari],
+    queryFn: async () => {
+      const baris = await ambilSemuaBertahap<Pick<BarisStokGudang, 'produk_id' | 'nilai'>>((dari, sampai) => {
+        let q = supabase.from('v_stok_gudang').select('produk_id, nilai')
+        if (gudangId) q = q.eq('gudang_id', gudangId)
+        if (cari.trim()) {
+          const pola = kutipFilterPostgrest(`%${cari.trim()}%`)
+          q = q.or(`nama.ilike.${pola},kode.ilike.${pola}`)
+        }
+        return q.range(dari, sampai)
+      })
+      return {
+        totalNilai: baris.reduce((t, b) => t + Number(b.nilai), 0),
+        jumlahSku: new Set(baris.map((b) => b.produk_id)).size,
+      }
+    },
+  })
+}
+
+/** Selalu se-perusahaan (lintas gudang) -- "perlu restock" dibandingkan terhadap stok_min per produk, bukan per gudang. */
+function useJumlahPerluRestock() {
+  return useQuery({
+    queryKey: ['produk-perlu-restock-jumlah'],
+    queryFn: async () => {
+      const { count, error } = await supabase.from('v_stok_produk').select('produk_id', { count: 'exact', head: true }).eq('perlu_restock', true)
+      if (error) throw error
+      return count ?? 0
+    },
+  })
+}
+
 const KOLOM_EKSPOR_STOK: KolomEkspor<BarisStokGudang>[] = [
   { header: 'Kode', nilai: (r) => r.kode },
   { header: 'Produk', nilai: (r) => r.nama },
@@ -73,9 +108,9 @@ export function Stok() {
   const [cari, setCari] = useState('')
   const [halaman, setHalaman] = useState(1)
   const { data, isLoading, error, isFetching } = useStokGudang(gudangId, cari, halaman)
+  const { data: ringkasan } = useRingkasanStok(gudangId, cari)
+  const { data: jumlahPerluRestock } = useJumlahPerluRestock()
   useEffect(() => setHalaman(1), [gudangId, cari])
-
-  const totalNilai = (data ?? []).reduce((t, b) => t + Number(b.nilai), 0)
 
   return (
     <div className="space-y-4">
@@ -98,6 +133,16 @@ export function Stok() {
           }}
           kolom={KOLOM_EKSPOR_STOK}
           opsi={{ namaFile: `stok-${tanggalISO()}`, judul: tt('Stok per Gudang') }}
+        />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <KartuRingkas judul={tt('Total Nilai Persediaan')} nilai={rupiah(ringkasan?.totalNilai ?? 0)} />
+        <KartuRingkas judul={tt('Jumlah SKU')} nilai={angka(ringkasan?.jumlahSku ?? 0)} />
+        <KartuRingkas
+          judul={tt('Perlu Restock')}
+          nilai={angka(jumlahPerluRestock ?? 0)}
+          bahaya={(jumlahPerluRestock ?? 0) > 0}
         />
       </div>
 
@@ -159,12 +204,17 @@ export function Stok() {
         </CardContent>
       </Card>
       <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
-
-      {data && data.length > 0 ? (
-        <p className="text-right text-sm text-muted-foreground">
-          {tt('Total nilai persediaan:')} <span className="tabular font-medium text-foreground">{rupiah(totalNilai)}</span>
-        </p>
-      ) : null}
     </div>
+  )
+}
+
+function KartuRingkas({ judul, nilai, bahaya }: { judul: string; nilai: string; bahaya?: boolean }) {
+  return (
+    <Card>
+      <CardContent className="p-3">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{judul}</p>
+        <p className={`tabular mt-1 text-lg font-semibold ${bahaya ? 'text-destructive' : ''}`}>{nilai}</p>
+      </CardContent>
+    </Card>
   )
 }

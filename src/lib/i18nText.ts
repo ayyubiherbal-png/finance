@@ -1464,6 +1464,11 @@ export const TEKS: Record<string, string> = {
   'Saldo Akhir': 'Ending Balance',
   Referensi: 'Reference',
   'Tidak ada mutasi pada periode ini.': 'No movement in this period.',
+
+  // ---------- Stok per Gudang ----------
+  'Total Nilai Persediaan': 'Total Inventory Value',
+  'Jumlah SKU': 'SKU Count',
+  'Perlu Restock': 'Needs Restock',
 }
 
 
