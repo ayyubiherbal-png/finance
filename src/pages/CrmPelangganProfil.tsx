@@ -11,17 +11,21 @@ import { tautanWa } from '@/lib/whatsapp'
 import { cn } from '@/lib/utils'
 import { toast } from '@/components/Toast'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Label,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -379,27 +383,45 @@ export function CrmPelangganProfil() {
           {!favorit || favorit.length === 0 ? (
             <KondisiKosong pesan="Belum ada pembelian." />
           ) : (
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Produk</Th>
-                  <Th className="text-right">Qty</Th>
-                  <Th className="text-right">Nilai</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Produk</Th>
+                      <Th className="text-right">Qty</Th>
+                      <Th className="text-right">Nilai</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {favorit.map((f) => (
+                      <Tr key={f.produk_id}>
+                        <Td className="font-medium">
+                          {f.nama_produk}
+                          <span className="ml-1.5 font-mono text-xs text-muted-foreground">{f.kode_produk}</span>
+                        </Td>
+                        <Td className="tabular text-right">{angka(f.total_qty_dasar)}</Td>
+                        <Td className="tabular text-right">{rupiah(f.total_nilai)}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
                 {favorit.map((f) => (
-                  <Tr key={f.produk_id}>
-                    <Td className="font-medium">
-                      {f.nama_produk}
-                      <span className="ml-1.5 font-mono text-xs text-muted-foreground">{f.kode_produk}</span>
-                    </Td>
-                    <Td className="tabular text-right">{angka(f.total_qty_dasar)}</Td>
-                    <Td className="tabular text-right">{rupiah(f.total_nilai)}</Td>
-                  </Tr>
+                  <KartuBaris key={f.produk_id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{f.nama_produk}</p>
+                        <p className="font-mono text-xs text-muted-foreground">{f.kode_produk}</p>
+                      </div>
+                      <p className="tabular shrink-0 font-semibold">{rupiah(f.total_nilai)}</p>
+                    </div>
+                    <BarisInfo label="Qty" value={angka(f.total_qty_dasar)} />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>
@@ -412,33 +434,54 @@ export function CrmPelangganProfil() {
           {!riwayat || riwayat.length === 0 ? (
             <KondisiKosong pesan="Belum ada faktur." />
           ) : (
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Nomor</Th>
-                  <Th>Tanggal</Th>
-                  <Th className="text-right">Total</Th>
-                  <Th>Status bayar</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Nomor</Th>
+                      <Th>Tanggal</Th>
+                      <Th className="text-right">Total</Th>
+                      <Th>Status bayar</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {riwayat.map((f) => (
+                      <Tr key={f.id}>
+                        <Td className="font-mono text-xs">
+                          <Link to={`/faktur-penjualan/${f.id}`} className="text-primary hover:underline">
+                            {f.nomor}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{fmtTanggal(f.tanggal)}</Td>
+                        <Td className="tabular text-right">{rupiah(f.total)}</Td>
+                        <Td className="text-muted-foreground">
+                          {tt(LABEL_BAYAR[f.status_bayar])}
+                          {f.sisa > 0 ? <span className="ml-1 text-xs">({tt('sisa')} {rupiah(f.sisa)})</span> : null}
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
                 {riwayat.map((f) => (
-                  <Tr key={f.id}>
-                    <Td className="font-mono text-xs">
-                      <Link to={`/faktur-penjualan/${f.id}`} className="text-primary hover:underline">
+                  <KartuBaris key={f.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/faktur-penjualan/${f.id}`} className="truncate font-mono text-xs text-primary hover:underline">
                         {f.nomor}
                       </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{fmtTanggal(f.tanggal)}</Td>
-                    <Td className="tabular text-right">{rupiah(f.total)}</Td>
-                    <Td className="text-muted-foreground">
-                      {tt(LABEL_BAYAR[f.status_bayar])}
-                      {f.sisa > 0 ? <span className="ml-1 text-xs">({tt('sisa')} {rupiah(f.sisa)})</span> : null}
-                    </Td>
-                  </Tr>
+                      <p className="tabular font-semibold">{rupiah(f.total)}</p>
+                    </div>
+                    <BarisInfo label="Tanggal" value={fmtTanggal(f.tanggal)} />
+                    <BarisInfo
+                      label="Status bayar"
+                      value={`${tt(LABEL_BAYAR[f.status_bayar])}${f.sisa > 0 ? ` (${tt('sisa')} ${rupiah(f.sisa)})` : ''}`}
+                    />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>
@@ -454,38 +497,67 @@ export function CrmPelangganProfil() {
           {!riwayatTahap || riwayatTahap.length === 0 ? (
             <KondisiKosong pesan="Belum ada tahap FU yang tercatat untuk pelanggan ini." />
           ) : (
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Kategori</Th>
-                  <Th>Tahap</Th>
-                  <Th>Muncul pertama</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Kategori</Th>
+                      <Th>Tahap</Th>
+                      <Th>Muncul pertama</Th>
+                      <Th>Status</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {riwayatTahap.map((r) => {
+                      const info = INFO_KATEGORI[r.kategori as Kategori] as (typeof INFO_KATEGORI)[Kategori] | undefined
+                      const selesaiPada = tahapSelesai?.get(r.tugas_id)
+                      return (
+                        <Tr key={r.id}>
+                          <Td>
+                            <Badge variant={info?.varian ?? 'netral'}>{info?.label ?? r.kategori}</Badge>
+                          </Td>
+                          <Td className="font-medium">{r.label}</Td>
+                          <Td className="text-muted-foreground">{fmtTanggal(r.muncul_pertama_pada)}</Td>
+                          <Td>
+                            {selesaiPada ? (
+                              <span className="text-xs text-emerald-700 dark:text-emerald-400">{tt('Selesai')} -- {tanggalWaktu(selesaiPada)}</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">{tt('Belum ditandai selesai')}</span>
+                            )}
+                          </Td>
+                        </Tr>
+                      )
+                    })}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
                 {riwayatTahap.map((r) => {
                   const info = INFO_KATEGORI[r.kategori as Kategori] as (typeof INFO_KATEGORI)[Kategori] | undefined
                   const selesaiPada = tahapSelesai?.get(r.tugas_id)
                   return (
-                    <Tr key={r.id}>
-                      <Td>
+                    <KartuBaris key={r.id}>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium">{r.label}</p>
                         <Badge variant={info?.varian ?? 'netral'}>{info?.label ?? r.kategori}</Badge>
-                      </Td>
-                      <Td className="font-medium">{r.label}</Td>
-                      <Td className="text-muted-foreground">{fmtTanggal(r.muncul_pertama_pada)}</Td>
-                      <Td>
-                        {selesaiPada ? (
-                          <span className="text-xs text-emerald-700 dark:text-emerald-400">{tt('Selesai')} -- {tanggalWaktu(selesaiPada)}</span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">{tt('Belum ditandai selesai')}</span>
-                        )}
-                      </Td>
-                    </Tr>
+                      </div>
+                      <BarisInfo label="Muncul pertama" value={fmtTanggal(r.muncul_pertama_pada)} />
+                      <BarisInfo
+                        label="Status"
+                        value={
+                          selesaiPada ? (
+                            <span className="text-xs text-emerald-700 dark:text-emerald-400">{tt('Selesai')} -- {tanggalWaktu(selesaiPada)}</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">{tt('Belum ditandai selesai')}</span>
+                          )
+                        }
+                      />
+                    </KartuBaris>
                   )
                 })}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>
@@ -534,27 +606,45 @@ export function CrmPelangganProfil() {
           {!riwayatPoin || riwayatPoin.length === 0 ? (
             <KondisiKosong pesan="Belum ada riwayat poin." />
           ) : (
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Tanggal</Th>
-                  <Th>Alasan</Th>
-                  <Th className="text-right">Perubahan</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Tanggal</Th>
+                      <Th>Alasan</Th>
+                      <Th className="text-right">Perubahan</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {riwayatPoin.map((r) => (
+                      <Tr key={r.id}>
+                        <Td className="text-muted-foreground">{tanggalWaktu(r.dibuat_pada)}</Td>
+                        <Td>{r.alasan}</Td>
+                        <Td className={cn('tabular text-right font-medium', r.perubahan > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive')}>
+                          {r.perubahan > 0 ? '+' : ''}
+                          {angka(r.perubahan)}
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
                 {riwayatPoin.map((r) => (
-                  <Tr key={r.id}>
-                    <Td className="text-muted-foreground">{tanggalWaktu(r.dibuat_pada)}</Td>
-                    <Td>{r.alasan}</Td>
-                    <Td className={cn('tabular text-right font-medium', r.perubahan > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive')}>
-                      {r.perubahan > 0 ? '+' : ''}
-                      {angka(r.perubahan)}
-                    </Td>
-                  </Tr>
+                  <KartuBaris key={r.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm">{r.alasan}</p>
+                      <p className={cn('tabular font-semibold', r.perubahan > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-destructive')}>
+                        {r.perubahan > 0 ? '+' : ''}
+                        {angka(r.perubahan)}
+                      </p>
+                    </div>
+                    <BarisInfo label="Tanggal" value={tanggalWaktu(r.dibuat_pada)} />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>
@@ -585,30 +675,49 @@ export function CrmPelangganProfil() {
           {!pemakaianReferral || pemakaianReferral.length === 0 ? (
             <KondisiKosong pesan="Belum ada yang pakai kode referral ini." />
           ) : (
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Pelanggan Rujukan</Th>
-                  <Th>Dipakai</Th>
-                  <Th>Status Bonus</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Pelanggan Rujukan</Th>
+                      <Th>Dipakai</Th>
+                      <Th>Status Bonus</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {pemakaianReferral.map((p) => (
+                      <Tr key={p.id}>
+                        <Td className="font-medium">{p.pelanggan_baru?.nama ?? '-'}</Td>
+                        <Td className="text-muted-foreground">{fmtTanggal(p.dipakai_pada)}</Td>
+                        <Td>
+                          {p.bonus_diberikan ? (
+                            <Badge variant="sukses">{`+${p.bonus_poin} ${tt('poin diberikan')}`}</Badge>
+                          ) : (
+                            <Badge variant="netral">{tt('Menunggu order pertama')}</Badge>
+                          )}
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
                 {pemakaianReferral.map((p) => (
-                  <Tr key={p.id}>
-                    <Td className="font-medium">{p.pelanggan_baru?.nama ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{fmtTanggal(p.dipakai_pada)}</Td>
-                    <Td>
+                  <KartuBaris key={p.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium">{p.pelanggan_baru?.nama ?? '-'}</p>
                       {p.bonus_diberikan ? (
                         <Badge variant="sukses">{`+${p.bonus_poin} ${tt('poin diberikan')}`}</Badge>
                       ) : (
                         <Badge variant="netral">{tt('Menunggu order pertama')}</Badge>
                       )}
-                    </Td>
-                  </Tr>
+                    </div>
+                    <BarisInfo label="Dipakai" value={fmtTanggal(p.dipakai_pada)} />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>

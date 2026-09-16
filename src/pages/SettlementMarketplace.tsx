@@ -7,7 +7,30 @@ import { useAkunKasBankAktif } from '@/lib/queries'
 import { rupiah, tanggal, tanggalISO } from '@/lib/format'
 import { toast } from '@/components/Toast'
 import { useKonfirmasi } from '@/components/Konfirmasi'
-import { Badge, Button, Card, CardContent, Input, InputAngka, KondisiKosong, Label, Paginasi, PesanError, Select, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import {
+  BarisInfo,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  DaftarMobile,
+  Input,
+  InputAngka,
+  KartuBaris,
+  KondisiKosong,
+  Label,
+  Paginasi,
+  PesanError,
+  Select,
+  Spinner,
+  TabelDesktop,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from '@/components/ui'
 import type { KanalPenjualan } from '@/types/db'
 import { tt } from '@/lib/i18nText'
 import { ambilSemuaBertahap } from '@/lib/ambilSemua'
@@ -130,7 +153,24 @@ export function SettlementMarketplace() {
     </CardContent></Card> : null}
     {errorAksi && !bukaForm ? <PesanError error={errorAksi} /> : null}
     <div className="flex flex-wrap gap-2"><div className="relative min-w-[15rem] flex-1 sm:max-w-xs"><Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-8" placeholder="Cari nomor settlement..." value={cariDaftar} onChange={(e) => setCariDaftar(e.target.value)} /></div><Select className="w-full sm:w-44" value={filterKanal} onChange={(e) => setFilterKanal(e.target.value)}><option value="">Semua kanal</option><option value="shopee">Shopee</option><option value="tiktok">TikTok Shop</option><option value="tokopedia">Tokopedia</option><option value="lainnya">Lainnya</option></Select><Select className="w-full sm:w-44" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}><option value="">Semua status</option><option value="selesai">Selesai</option><option value="dibatalkan">Dibatalkan</option></Select></div>
-    <Card>{daftar.isLoading ? <div className="flex justify-center py-16"><Spinner /></div> : !daftar.data?.baris.length ? <KondisiKosong pesan="Belum ada settlement. Catat pencairan Shopee, TikTok, atau marketplace lain di sini." /> : <Table><Thead><Tr><Th>Tanggal</Th><Th>Kanal</Th><Th>Nomor settlement</Th><Th className="text-right">Bruto</Th><Th className="text-right">Potongan</Th><Th className="text-right">Dana diterima</Th><Th>Akun</Th><Th>Status</Th><Th></Th></Tr></Thead><Tbody>{daftar.data.baris.map((x) => <Tr key={x.id}><Td>{tanggal(x.tanggal)}</Td><Td className="capitalize">{x.kanal}</Td><Td>{x.nomor_settlement_platform}</Td><Td className="text-right tabular">{rupiah(x.bruto)}</Td><Td className="text-right tabular">{rupiah(x.fee_platform + x.voucher_toko + x.ongkir_dipotong + x.refund)}</Td><Td className="text-right font-semibold tabular">{rupiah(x.netto)}</Td><Td>{x.akun?.nama ?? '-'}</Td><Td><Badge variant={x.status === 'dibatalkan' ? 'bahaya' : 'sukses'}>{x.status === 'dibatalkan' ? 'Dibatalkan' : 'Selesai'}</Badge></Td><Td>{x.status !== 'dibatalkan' ? <Button size="sm" variant="ghost" onClick={() => batalkan(x.id)}>Batalkan</Button> : null}</Td></Tr>)}</Tbody></Table>}</Card>
+    <Card>{daftar.isLoading ? <div className="flex justify-center py-16"><Spinner /></div> : !daftar.data?.baris.length ? <KondisiKosong pesan="Belum ada settlement. Catat pencairan Shopee, TikTok, atau marketplace lain di sini." /> : <>
+      <TabelDesktop><Table><Thead><Tr><Th>Tanggal</Th><Th>Kanal</Th><Th>Nomor settlement</Th><Th className="text-right">Bruto</Th><Th className="text-right">Potongan</Th><Th className="text-right">Dana diterima</Th><Th>Akun</Th><Th>Status</Th><Th></Th></Tr></Thead><Tbody>{daftar.data.baris.map((x) => <Tr key={x.id}><Td>{tanggal(x.tanggal)}</Td><Td className="capitalize">{x.kanal}</Td><Td>{x.nomor_settlement_platform}</Td><Td className="text-right tabular">{rupiah(x.bruto)}</Td><Td className="text-right tabular">{rupiah(x.fee_platform + x.voucher_toko + x.ongkir_dipotong + x.refund)}</Td><Td className="text-right font-semibold tabular">{rupiah(x.netto)}</Td><Td>{x.akun?.nama ?? '-'}</Td><Td><Badge variant={x.status === 'dibatalkan' ? 'bahaya' : 'sukses'}>{x.status === 'dibatalkan' ? 'Dibatalkan' : 'Selesai'}</Badge></Td><Td>{x.status !== 'dibatalkan' ? <Button size="sm" variant="ghost" onClick={() => batalkan(x.id)}>Batalkan</Button> : null}</Td></Tr>)}</Tbody></Table></TabelDesktop>
+      <DaftarMobile>{daftar.data.baris.map((x) => (
+        <KartuBaris key={x.id}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-medium capitalize">{x.kanal}</span>
+            <Badge variant={x.status === 'dibatalkan' ? 'bahaya' : 'sukses'}>{x.status === 'dibatalkan' ? 'Dibatalkan' : 'Selesai'}</Badge>
+          </div>
+          <BarisInfo label="Nomor settlement" value={x.nomor_settlement_platform} />
+          <BarisInfo label="Tanggal" value={tanggal(x.tanggal)} />
+          <BarisInfo label="Akun" value={x.akun?.nama ?? '-'} />
+          <BarisInfo label="Bruto" value={rupiah(x.bruto)} />
+          <BarisInfo label="Potongan" value={rupiah(x.fee_platform + x.voucher_toko + x.ongkir_dipotong + x.refund)} />
+          <BarisInfo label="Dana diterima" value={<span className="font-semibold">{rupiah(x.netto)}</span>} />
+          {x.status !== 'dibatalkan' ? <div className="pt-1"><Button size="sm" variant="ghost" onClick={() => batalkan(x.id)}>Batalkan</Button></div> : null}
+        </KartuBaris>
+      ))}</DaftarMobile>
+    </>}</Card>
     <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={daftar.data?.total ?? 0} onUbah={setHalaman} />
   </div>
 }

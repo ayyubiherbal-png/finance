@@ -6,7 +6,25 @@ import { supabase } from '@/lib/supabase'
 import { rupiah, angka, tanggalISO } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { GrafikBatang } from '@/components/Charts'
-import { Card, CardContent, CardHeader, CardTitle, KondisiKosong, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import {
+  BarisInfo,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  DaftarMobile,
+  KartuBaris,
+  KondisiKosong,
+  PesanError,
+  Spinner,
+  TabelDesktop,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from '@/components/ui'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 
@@ -235,56 +253,88 @@ export function LaporanOmzet() {
 
           <Card>
             <CardContent className="p-0 pb-2">
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>Periode</Th>
-                    <Th className="text-right">Jml Faktur</Th>
-                    <Th className="text-right">Omzet</Th>
-                    <Th className="text-right">Laba Kotor</Th>
-                    <Th className="text-right">Biaya Operasional</Th>
-                    <Th className="text-right">Laba Bersih</Th>
-                    <Th className="text-right">Margin</Th>
-                    <Th className="text-right">vs Periode Sebelumnya</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {kelompokTerbaruDulu.map((k, idxTerbaruDulu) => {
-                    const idxKronologis = kelompok.length - 1 - idxTerbaruDulu
-                    const before = idxKronologis > 0 ? kelompok[idxKronologis - 1] : null
-                    const delta = before && before.omzet > 0 ? ((k.omzet - before.omzet) / before.omzet) * 100 : null
-                    const margin = k.omzet > 0 ? (k.laba_kotor / k.omzet) * 100 : 0
-                    return (
-                      <Tr key={k.kunci}>
-                        <Td className="font-medium">{k.label}</Td>
-                        <Td className="tabular text-right">{angka(k.jumlah_faktur)}</Td>
-                        <Td className="tabular text-right font-medium">{rupiah(k.omzet)}</Td>
-                        <Td className="tabular text-right">{rupiah(k.laba_kotor)}</Td>
-                        <Td className="tabular text-right text-muted-foreground">{rupiah(k.biaya_operasional)}</Td>
-                        <Td className={cn('tabular text-right font-medium', k.laba_bersih < 0 && 'text-destructive')}>
-                          {rupiah(k.laba_bersih)}
-                        </Td>
-                        <Td className={cn('tabular text-right', margin < 0 && 'text-destructive')}>{margin.toFixed(1)}%</Td>
-                        <Td className="text-right">
-                          {delta === null ? (
-                            <span className="text-muted-foreground">-</span>
-                          ) : (
-                            <span
-                              className={cn(
-                                'inline-flex items-center gap-0.5 text-xs font-medium',
-                                delta >= 0 ? 'text-emerald-600' : 'text-destructive',
-                              )}
-                            >
-                              {delta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                              {Math.abs(delta).toFixed(1)}%
-                            </span>
-                          )}
-                        </Td>
-                      </Tr>
-                    )
-                  })}
-                </Tbody>
-              </Table>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Periode</Th>
+                      <Th className="text-right">Jml Faktur</Th>
+                      <Th className="text-right">Omzet</Th>
+                      <Th className="text-right">Laba Kotor</Th>
+                      <Th className="text-right">Biaya Operasional</Th>
+                      <Th className="text-right">Laba Bersih</Th>
+                      <Th className="text-right">Margin</Th>
+                      <Th className="text-right">vs Periode Sebelumnya</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {kelompokTerbaruDulu.map((k, idxTerbaruDulu) => {
+                      const idxKronologis = kelompok.length - 1 - idxTerbaruDulu
+                      const before = idxKronologis > 0 ? kelompok[idxKronologis - 1] : null
+                      const delta = before && before.omzet > 0 ? ((k.omzet - before.omzet) / before.omzet) * 100 : null
+                      const margin = k.omzet > 0 ? (k.laba_kotor / k.omzet) * 100 : 0
+                      return (
+                        <Tr key={k.kunci}>
+                          <Td className="font-medium">{k.label}</Td>
+                          <Td className="tabular text-right">{angka(k.jumlah_faktur)}</Td>
+                          <Td className="tabular text-right font-medium">{rupiah(k.omzet)}</Td>
+                          <Td className="tabular text-right">{rupiah(k.laba_kotor)}</Td>
+                          <Td className="tabular text-right text-muted-foreground">{rupiah(k.biaya_operasional)}</Td>
+                          <Td className={cn('tabular text-right font-medium', k.laba_bersih < 0 && 'text-destructive')}>
+                            {rupiah(k.laba_bersih)}
+                          </Td>
+                          <Td className={cn('tabular text-right', margin < 0 && 'text-destructive')}>{margin.toFixed(1)}%</Td>
+                          <Td className="text-right">
+                            {delta === null ? (
+                              <span className="text-muted-foreground">-</span>
+                            ) : (
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-0.5 text-xs font-medium',
+                                  delta >= 0 ? 'text-emerald-600' : 'text-destructive',
+                                )}
+                              >
+                                {delta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                                {Math.abs(delta).toFixed(1)}%
+                              </span>
+                            )}
+                          </Td>
+                        </Tr>
+                      )
+                    })}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
+                {kelompokTerbaruDulu.map((k, idxTerbaruDulu) => {
+                  const idxKronologis = kelompok.length - 1 - idxTerbaruDulu
+                  const before = idxKronologis > 0 ? kelompok[idxKronologis - 1] : null
+                  const delta = before && before.omzet > 0 ? ((k.omzet - before.omzet) / before.omzet) * 100 : null
+                  const margin = k.omzet > 0 ? (k.laba_kotor / k.omzet) * 100 : 0
+                  return (
+                    <KartuBaris key={k.kunci}>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium">{k.label}</p>
+                        {delta !== null ? (
+                          <span className={cn('inline-flex items-center gap-0.5 text-xs font-medium', delta >= 0 ? 'text-emerald-600' : 'text-destructive')}>
+                            {delta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                            {Math.abs(delta).toFixed(1)}%
+                          </span>
+                        ) : null}
+                      </div>
+                      <BarisInfo label="Jml Faktur" value={angka(k.jumlah_faktur)} />
+                      <BarisInfo label="Omzet" value={<span className="font-medium">{rupiah(k.omzet)}</span>} />
+                      <BarisInfo label="Laba Kotor" value={rupiah(k.laba_kotor)} />
+                      <BarisInfo label="Biaya Operasional" value={rupiah(k.biaya_operasional)} />
+                      <BarisInfo
+                        label="Laba Bersih"
+                        value={<span className={cn('font-medium', k.laba_bersih < 0 && 'text-destructive')}>{rupiah(k.laba_bersih)}</span>}
+                      />
+                      <BarisInfo label="Margin" value={<span className={margin < 0 ? 'text-destructive' : undefined}>{margin.toFixed(1)}%</span>} />
+                    </KartuBaris>
+                  )
+                })}
+              </DaftarMobile>
             </CardContent>
           </Card>
         </>
