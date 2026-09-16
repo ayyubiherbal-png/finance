@@ -17,18 +17,22 @@ import { rupiah, tanggalISO } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
 import {
+  BarisInfo,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  DaftarMobile,
   Input,
   InputAngka,
+  KartuBaris,
   Label,
   MenuAksi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -543,74 +547,123 @@ export function PenjualanCepat() {
           <CardTitle className="text-base">2. Barang</CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-2">
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>Produk</Th>
-                <Th>Satuan</Th>
-                <Th className="text-right">Qty</Th>
-                <Th className="text-right">Harga</Th>
-                <Th className="text-right">Diskon</Th>
-                <Th className="text-right">Subtotal</Th>
-                <Th></Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {barisTampil.map((b) => (
-                <Tr key={b.key} data-testid={`baris-item-${b.produk_id}`}>
-                  <Td className="font-medium">
-                    {b.produkLabel.label}
-                    <span className="ml-1 font-mono text-xs text-muted-foreground">{b.produkLabel.sublabel}</span>
-                  </Td>
-                  <Td className="text-xs text-muted-foreground">{b.satuanKode}</Td>
-                  <Td className="tabular text-right">{b.qty}</Td>
-                  <Td className="tabular text-right">{rupiah(b.harga_satuan)}</Td>
-                  <Td className="tabular text-right">{teksDiskon(b)}</Td>
-                  <Td className="tabular text-right font-medium">{rupiah(subtotalBaris(b))}</Td>
-                  <Td className="text-right">
-                    <MenuAksi
-                      testId={`menu-aksi-${b.produk_id}`}
-                      item={[
-                        { label: 'Ubah', ikon: Pencil, onClick: () => ubahBaris(b) },
-                        {
-                          label: 'Hapus',
-                          ikon: Trash2,
-                          bahaya: true,
-                          onClick: () => setBaris((rows) => rows.filter((r) => r.key !== b.key)),
-                        },
-                      ]}
-                    />
-                  </Td>
-                </Tr>
-              ))}
-              {barisPending ? (
-                <Tr className="border-dashed bg-muted/40 italic">
-                  <Td className="font-medium">
-                    {barisPending.produkLabel.label}
-                    <span className="ml-1 font-mono text-xs text-muted-foreground">
-                      {barisPending.produkLabel.sublabel}
-                    </span>
-                    <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold not-italic text-amber-800">
-                      {editKey ? tt('sedang diubah') : tt('belum ditekan Tambah')}
-                    </span>
-                  </Td>
-                  <Td className="text-xs text-muted-foreground">{barisPending.satuanKode}</Td>
-                  <Td className="tabular text-right">{barisPending.qty}</Td>
-                  <Td className="tabular text-right">{rupiah(barisPending.harga_satuan)}</Td>
-                  <Td className="tabular text-right">{teksDiskon(barisPending)}</Td>
-                  <Td className="tabular text-right font-medium">{rupiah(subtotalBaris(barisPending))}</Td>
-                  <Td></Td>
-                </Tr>
-              ) : null}
-              {barisTampil.length === 0 && !barisPending ? (
+          <TabelDesktop>
+            <Table>
+              <Thead>
                 <Tr>
-                  <Td colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
-                    {tt("Belum ada barang.")}
-                  </Td>
+                  <Th>Produk</Th>
+                  <Th>Satuan</Th>
+                  <Th className="text-right">Qty</Th>
+                  <Th className="text-right">Harga</Th>
+                  <Th className="text-right">Diskon</Th>
+                  <Th className="text-right">Subtotal</Th>
+                  <Th></Th>
                 </Tr>
-              ) : null}
-            </Tbody>
-          </Table>
+              </Thead>
+              <Tbody>
+                {barisTampil.map((b) => (
+                  <Tr key={b.key} data-testid={`baris-item-${b.produk_id}`}>
+                    <Td className="font-medium">
+                      {b.produkLabel.label}
+                      <span className="ml-1 font-mono text-xs text-muted-foreground">{b.produkLabel.sublabel}</span>
+                    </Td>
+                    <Td className="text-xs text-muted-foreground">{b.satuanKode}</Td>
+                    <Td className="tabular text-right">{b.qty}</Td>
+                    <Td className="tabular text-right">{rupiah(b.harga_satuan)}</Td>
+                    <Td className="tabular text-right">{teksDiskon(b)}</Td>
+                    <Td className="tabular text-right font-medium">{rupiah(subtotalBaris(b))}</Td>
+                    <Td className="text-right">
+                      <MenuAksi
+                        testId={`menu-aksi-${b.produk_id}`}
+                        item={[
+                          { label: 'Ubah', ikon: Pencil, onClick: () => ubahBaris(b) },
+                          {
+                            label: 'Hapus',
+                            ikon: Trash2,
+                            bahaya: true,
+                            onClick: () => setBaris((rows) => rows.filter((r) => r.key !== b.key)),
+                          },
+                        ]}
+                      />
+                    </Td>
+                  </Tr>
+                ))}
+                {barisPending ? (
+                  <Tr className="border-dashed bg-muted/40 italic">
+                    <Td className="font-medium">
+                      {barisPending.produkLabel.label}
+                      <span className="ml-1 font-mono text-xs text-muted-foreground">
+                        {barisPending.produkLabel.sublabel}
+                      </span>
+                      <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold not-italic text-amber-800">
+                        {editKey ? tt('sedang diubah') : tt('belum ditekan Tambah')}
+                      </span>
+                    </Td>
+                    <Td className="text-xs text-muted-foreground">{barisPending.satuanKode}</Td>
+                    <Td className="tabular text-right">{barisPending.qty}</Td>
+                    <Td className="tabular text-right">{rupiah(barisPending.harga_satuan)}</Td>
+                    <Td className="tabular text-right">{teksDiskon(barisPending)}</Td>
+                    <Td className="tabular text-right font-medium">{rupiah(subtotalBaris(barisPending))}</Td>
+                    <Td></Td>
+                  </Tr>
+                ) : null}
+                {barisTampil.length === 0 && !barisPending ? (
+                  <Tr>
+                    <Td colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
+                      {tt("Belum ada barang.")}
+                    </Td>
+                  </Tr>
+                ) : null}
+              </Tbody>
+            </Table>
+          </TabelDesktop>
+          <DaftarMobile>
+            {barisTampil.map((b) => (
+              <KartuBaris key={b.key} data-testid={`baris-item-${b.produk_id}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{b.produkLabel.label}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{b.produkLabel.sublabel}</p>
+                  </div>
+                  <MenuAksi
+                    testId={`menu-aksi-${b.produk_id}`}
+                    item={[
+                      { label: 'Ubah', ikon: Pencil, onClick: () => ubahBaris(b) },
+                      {
+                        label: 'Hapus',
+                        ikon: Trash2,
+                        bahaya: true,
+                        onClick: () => setBaris((rows) => rows.filter((r) => r.key !== b.key)),
+                      },
+                    ]}
+                  />
+                </div>
+                <BarisInfo label="Qty" value={`${b.qty} ${b.satuanKode}`} />
+                <BarisInfo label="Harga" value={rupiah(b.harga_satuan)} />
+                {b.diskon_persen > 0 || b.diskon_nilai > 0 ? <BarisInfo label="Diskon" value={teksDiskon(b)} /> : null}
+                <BarisInfo label="Subtotal" value={<span className="font-semibold">{rupiah(subtotalBaris(b))}</span>} />
+              </KartuBaris>
+            ))}
+            {barisPending ? (
+              <KartuBaris className="border-dashed bg-muted/40 italic">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{barisPending.produkLabel.label}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{barisPending.produkLabel.sublabel}</p>
+                  </div>
+                  <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold not-italic text-amber-800">
+                    {editKey ? tt('sedang diubah') : tt('belum ditekan Tambah')}
+                  </span>
+                </div>
+                <BarisInfo label="Qty" value={`${barisPending.qty} ${barisPending.satuanKode}`} />
+                <BarisInfo label="Harga" value={rupiah(barisPending.harga_satuan)} />
+                <BarisInfo label="Subtotal" value={<span className="font-semibold">{rupiah(subtotalBaris(barisPending))}</span>} />
+              </KartuBaris>
+            ) : null}
+            {barisTampil.length === 0 && !barisPending ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">{tt('Belum ada barang.')}</p>
+            ) : null}
+          </DaftarMobile>
           {barisPending && !editKey ? (
             <p className="px-3 pt-2 text-xs text-amber-700">
               {tt('Baris di atas belum ditekan')} <strong>{tt('Tambah')}</strong> {tt('tapi tetap akan ikut diproses. Klik')}{' '}

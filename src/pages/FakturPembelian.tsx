@@ -8,17 +8,21 @@ import { rupiah, tanggal, tanggalISO } from '@/lib/format'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   BarPilihanMassal,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   PesanError,
   Paginasi,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -173,52 +177,87 @@ export function FakturPembelian() {
             <KondisiKosong pesan="Belum ada Faktur Pembelian." />
           ) : (
             <>
-              <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th className="w-[44px]">
-                    <label className="flex h-[36px] w-[36px] cursor-pointer items-center justify-center">
-                      <input type="checkbox" className="h-4 w-4 accent-primary" checked={semuaTerpilih} onChange={(e) => setTerpilih(e.target.checked ? new Set(baris.map((r) => r.id)) : new Set())} aria-label={tt('Pilih semua di halaman ini')} />
-                    </label>
-                  </Th>
-                  <Th>Nomor</Th>
-                  <Th>Tanggal</Th>
-                  <Th>Supplier</Th>
-                  <Th>Jatuh tempo</Th>
-                  <Th className="text-right">Total</Th>
-                  <Th className="text-right">Sisa</Th>
-                  <Th>Status</Th>
-                  <Th>Bayar</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {baris.map((f) => (
-                  <Tr key={f.id}>
-                    <Td>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                <Thead>
+                  <Tr>
+                    <Th className="w-[44px]">
                       <label className="flex h-[36px] w-[36px] cursor-pointer items-center justify-center">
-                        <input type="checkbox" className="h-4 w-4 accent-primary" checked={terpilih.has(f.id)} onChange={(e) => pilihBaris(f.id, e.target.checked)} aria-label={tt('Pilih baris {nomor}').replace('{nomor}', f.nomor)} />
+                        <input type="checkbox" className="h-4 w-4 accent-primary" checked={semuaTerpilih} onChange={(e) => setTerpilih(e.target.checked ? new Set(baris.map((r) => r.id)) : new Set())} aria-label={tt('Pilih semua di halaman ini')} />
                       </label>
-                    </Td>
-                    <Td>
-                      <Link to={`/faktur-pembelian/${f.id}`} className="font-mono text-xs text-primary hover:underline">
-                        {f.nomor}
-                      </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{tanggal(f.tanggal)}</Td>
-                    <Td className="font-medium">{f.supplier?.nama ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{tanggal(f.jatuh_tempo)}</Td>
-                    <Td className="tabular text-right font-medium">{rupiah(f.total)}</Td>
-                    <Td className="tabular text-right">{f.sisa > 0 ? rupiah(f.sisa) : '-'}</Td>
-                    <Td>
-                      <Badge variant={VARIAN_STATUS[f.status]}>{LABEL_STATUS[f.status]}</Badge>
-                    </Td>
-                    <Td>
-                      <Badge variant={VARIAN_BAYAR[f.status_bayar]}>{LABEL_BAYAR[f.status_bayar]}</Badge>
-                    </Td>
+                    </Th>
+                    <Th>Nomor</Th>
+                    <Th>Tanggal</Th>
+                    <Th>Supplier</Th>
+                    <Th>Jatuh tempo</Th>
+                    <Th className="text-right">Total</Th>
+                    <Th className="text-right">Sisa</Th>
+                    <Th>Status</Th>
+                    <Th>Bayar</Th>
                   </Tr>
+                </Thead>
+                <Tbody>
+                  {baris.map((f) => (
+                    <Tr key={f.id}>
+                      <Td>
+                        <label className="flex h-[36px] w-[36px] cursor-pointer items-center justify-center">
+                          <input type="checkbox" className="h-4 w-4 accent-primary" checked={terpilih.has(f.id)} onChange={(e) => pilihBaris(f.id, e.target.checked)} aria-label={tt('Pilih baris {nomor}').replace('{nomor}', f.nomor)} />
+                        </label>
+                      </Td>
+                      <Td>
+                        <Link to={`/faktur-pembelian/${f.id}`} className="font-mono text-xs text-primary hover:underline">
+                          {f.nomor}
+                        </Link>
+                      </Td>
+                      <Td className="text-muted-foreground">{tanggal(f.tanggal)}</Td>
+                      <Td className="font-medium">{f.supplier?.nama ?? '-'}</Td>
+                      <Td className="text-muted-foreground">{tanggal(f.jatuh_tempo)}</Td>
+                      <Td className="tabular text-right font-medium">{rupiah(f.total)}</Td>
+                      <Td className="tabular text-right">{f.sisa > 0 ? rupiah(f.sisa) : '-'}</Td>
+                      <Td>
+                        <Badge variant={VARIAN_STATUS[f.status]}>{LABEL_STATUS[f.status]}</Badge>
+                      </Td>
+                      <Td>
+                        <Badge variant={VARIAN_BAYAR[f.status_bayar]}>{LABEL_BAYAR[f.status_bayar]}</Badge>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                {baris.map((f) => (
+                  <KartuBaris key={f.id}>
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                        checked={terpilih.has(f.id)}
+                        onChange={(e) => pilihBaris(f.id, e.target.checked)}
+                        aria-label={tt('Pilih baris {nomor}').replace('{nomor}', f.nomor)}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <Link to={`/faktur-pembelian/${f.id}`} className="truncate font-mono text-xs text-primary hover:underline">
+                            {f.nomor}
+                          </Link>
+                          <p className="tabular shrink-0 font-semibold">{rupiah(f.total)}</p>
+                        </div>
+                        <p className="truncate font-medium">{f.supplier?.nama ?? '-'}</p>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          <Badge variant={VARIAN_STATUS[f.status]}>{LABEL_STATUS[f.status]}</Badge>
+                          <Badge variant={VARIAN_BAYAR[f.status_bayar]}>{LABEL_BAYAR[f.status_bayar]}</Badge>
+                        </div>
+                        <div className="mt-1.5 space-y-1">
+                          <BarisInfo label="Tanggal" value={tanggal(f.tanggal)} />
+                          <BarisInfo label="Jatuh tempo" value={tanggal(f.jatuh_tempo)} />
+                          {f.sisa > 0 ? <BarisInfo label="Sisa" value={rupiah(f.sisa)} /> : null}
+                        </div>
+                      </div>
+                    </div>
+                  </KartuBaris>
                 ))}
-              </Tbody>
-              </Table>
+              </DaftarMobile>
               <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={(h) => { setHalaman(h); setTerpilih(new Set()) }} />
             </>
           )}
