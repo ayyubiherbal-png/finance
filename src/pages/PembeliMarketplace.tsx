@@ -12,15 +12,19 @@ import { cn, kutipFilterPostgrest } from '@/lib/utils'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   PesanError,
   Paginasi,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -355,6 +359,8 @@ export function PembeliMarketplace() {
           ) : tersaring.length === 0 ? (
             <KondisiKosong pesan="Tidak ada pembeli yang cocok." />
           ) : (
+            <>
+            <TabelDesktop>
             <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
               <Thead>
                 <Tr>
@@ -495,6 +501,92 @@ export function PembeliMarketplace() {
                 })}
               </Tbody>
             </Table>
+            </TabelDesktop>
+            <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+              {tersaring.map((p) => {
+                const editing = sedangEdit === p.id
+                const tautan = tautanWa(p.telepon)
+                const segmen = INFO_SEGMEN[segmenPembeli(p)]
+                return (
+                  <KartuBaris key={p.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Badge variant="netral">{LABEL_KANAL[p.kanal]}</Badge>
+                      <Badge variant={segmen.varian}>{segmen.label}</Badge>
+                    </div>
+                    {editing ? (
+                      <div className="space-y-2 pt-1">
+                        <Input value={formEdit.nama} onChange={(e) => setFormEdit((f) => ({ ...f, nama: e.target.value }))} placeholder="Nama asli..." />
+                        <Input value={formEdit.telepon} onChange={(e) => setFormEdit((f) => ({ ...f, telepon: e.target.value }))} placeholder="0812..." />
+                        <Input value={formEdit.alamat} onChange={(e) => setFormEdit((f) => ({ ...f, alamat: e.target.value }))} placeholder="Alamat..." />
+                        <Input value={formEdit.catatan} onChange={(e) => setFormEdit((f) => ({ ...f, catatan: e.target.value }))} placeholder="mis. sudah dihubungi..." />
+                        <div className="flex gap-1.5">
+                          <Button onClick={() => simpanEdit(p.id)} disabled={menyimpan}>
+                            {menyimpan ? <Spinner className="h-3.5 w-3.5" /> : null}
+                            {tt('Simpan')}
+                          </Button>
+                          <Button variant="outline" onClick={() => setSedangEdit(null)} disabled={menyimpan}>
+                            {tt('Batal')}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="font-medium">{p.nama || '-'}</p>
+                        <BarisInfo
+                          label="Telepon"
+                          value={
+                            tautan ? (
+                              <a href={tautan} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                                {p.telepon}
+                              </a>
+                            ) : (
+                              p.telepon || '-'
+                            )
+                          }
+                        />
+                        <BarisInfo label="Alamat" value={p.alamat || '-'} />
+                        <BarisInfo label="Jml. Pesanan" value={p.jumlah_pesanan} />
+                        <BarisInfo label="Total Belanja" value={rupiah(p.total_belanja)} />
+                        <BarisInfo label="Pesanan Terakhir" value={p.pesanan_terakhir ? fmtTanggal(p.pesanan_terakhir) : '-'} />
+                        {p.catatan ? <BarisInfo label="Catatan FU" value={p.catatan} /> : null}
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {p.pelanggan_id ? (
+                            <Link to={`/pelanggan/${p.pelanggan_id}`} className="flex items-center gap-1 text-sm text-primary hover:underline">
+                              <CheckCircle2 className="h-4 w-4" />
+                              {tt('Sudah jadi Pelanggan')}
+                            </Link>
+                          ) : (
+                            <>
+                              {tautan ? (
+                                <Button variant="outline" size="sm" asChild>
+                                  <a href={tautan} target="_blank" rel="noreferrer">
+                                    <MessageCircle className="h-4 w-4" />
+                                    {tt('Chat')}
+                                  </a>
+                                </Button>
+                              ) : null}
+                              <Button variant="outline" size="sm" onClick={() => mulaiEdit(p)}>
+                                {tt('Edit')}
+                              </Button>
+                              <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => hapus(p)}>
+                                {tt('Hapus')}
+                              </Button>
+                              {siapDijadikanPelanggan(p) ? (
+                                <Button size="sm" onClick={() => jadikanPelanggan(p)}>
+                                  <UserPlus className="h-4 w-4" />
+                                  {tt('Jadikan Pelanggan')}
+                                </Button>
+                              ) : null}
+                            </>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </KartuBaris>
+                )
+              })}
+            </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>

@@ -4,7 +4,27 @@ import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
-import { Badge, Card, CardContent, Input, KondisiKosong, Paginasi, PesanError, Select, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import {
+  BarisInfo,
+  Badge,
+  Card,
+  CardContent,
+  DaftarMobile,
+  Input,
+  KartuBaris,
+  KondisiKosong,
+  Paginasi,
+  PesanError,
+  Select,
+  Spinner,
+  TabelDesktop,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from '@/components/ui'
 import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
@@ -168,32 +188,49 @@ export function RiwayatFollowUp() {
           ) : !data || data.baris.length === 0 ? (
             <KondisiKosong pesan="Belum ada follow-up yang ditandai selesai." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>{tt('Tanggal')}</Th>
-                  <Th>{tt('Nama')}</Th>
-                  <Th>{tt('Kategori')}</Th>
-                  <Th>{tt('Catatan')}</Th>
-                  <Th>{tt('Diselesaikan oleh')}</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>{tt('Tanggal')}</Th>
+                      <Th>{tt('Nama')}</Th>
+                      <Th>{tt('Kategori')}</Th>
+                      <Th>{tt('Catatan')}</Th>
+                      <Th>{tt('Diselesaikan oleh')}</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.baris.map((r) => (
+                      <Tr key={r.id}>
+                        <Td className="text-muted-foreground">{fmtTanggal(r.selesai_pada)}</Td>
+                        <Td className="font-medium">{r.nama || '-'}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_KATEGORI[r.kategori] ?? 'netral'}>{tt(LABEL_KATEGORI[r.kategori] ?? r.kategori)}</Badge>
+                        </Td>
+                        <Td className="max-w-xs truncate text-muted-foreground" title={r.catatan ?? undefined}>
+                          {r.catatan || '-'}
+                        </Td>
+                        <Td className="text-muted-foreground">{r.profil?.nama ?? '-'}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.baris.map((r) => (
-                  <Tr key={r.id}>
-                    <Td className="text-muted-foreground">{fmtTanggal(r.selesai_pada)}</Td>
-                    <Td className="font-medium">{r.nama || '-'}</Td>
-                    <Td>
+                  <KartuBaris key={r.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-medium">{r.nama || '-'}</p>
                       <Badge variant={VARIAN_KATEGORI[r.kategori] ?? 'netral'}>{tt(LABEL_KATEGORI[r.kategori] ?? r.kategori)}</Badge>
-                    </Td>
-                    <Td className="max-w-xs truncate text-muted-foreground" title={r.catatan ?? undefined}>
-                      {r.catatan || '-'}
-                    </Td>
-                    <Td className="text-muted-foreground">{r.profil?.nama ?? '-'}</Td>
-                  </Tr>
+                    </div>
+                    <BarisInfo label="Tanggal" value={fmtTanggal(r.selesai_pada)} />
+                    {r.catatan ? <BarisInfo label="Catatan" value={r.catatan} /> : null}
+                    <BarisInfo label="Diselesaikan oleh" value={r.profil?.nama ?? '-'} />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>
