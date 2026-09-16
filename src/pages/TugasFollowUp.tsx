@@ -10,7 +10,27 @@ import { cn } from '@/lib/utils'
 import { ambilSemuaBertahap } from '@/lib/ambilSemua'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/components/Toast'
-import { Badge, Button, Card, CardContent, Input, KondisiKosong, Paginasi, PesanError, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import {
+  BarisInfo,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  DaftarMobile,
+  Input,
+  KartuBaris,
+  KondisiKosong,
+  Paginasi,
+  PesanError,
+  Spinner,
+  TabelDesktop,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from '@/components/ui'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import type { KategoriTreatmentFu, PembeliMarketplace, TahapanTreatmentFu, VPelangganCrm } from '@/types/db'
@@ -535,6 +555,8 @@ export function TugasFollowUp() {
           ) : tersaringSemua.length === 0 ? (
             <KondisiKosong pesan="Tidak ada tugas di kategori ini." />
           ) : (
+            <>
+            <TabelDesktop>
             <Table>
               <Thead>
                 <Tr>
@@ -622,6 +644,75 @@ export function TugasFollowUp() {
                 })}
               </Tbody>
             </Table>
+            </TabelDesktop>
+            <DaftarMobile>
+              {tersaring.map((t) => {
+                const info = INFO_KATEGORI[t.kategori]
+                const tautan = tautanWa(t.telepon, t.pesan)
+                const menandai = sedangTandai === t.id
+                return (
+                  <KartuBaris key={t.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-medium">{t.nama}</p>
+                      <Badge variant={info.varian}>{tt(info.label)}</Badge>
+                    </div>
+                    <BarisInfo
+                      label="Sumber"
+                      value={t.tautanProfil ? <Link to={t.tautanProfil} className="text-primary hover:underline">{t.sumber}</Link> : t.sumber}
+                    />
+                    {t.tahapanLabel ? <BarisInfo label="Tahap" value={t.tahapanLabel} /> : null}
+                    {menandai ? (
+                      <div className="space-y-2 pt-1">
+                        <Input
+                          autoFocus
+                          placeholder="Catatan hasil FU (opsional)..."
+                          value={catatanTandai}
+                          onChange={(e) => setCatatanTandai(e.target.value)}
+                        />
+                        <div className="flex gap-1.5">
+                          <Button size="sm" onClick={() => simpanSelesai(t)} disabled={menyimpan}>
+                            {menyimpan ? <Spinner className="h-3.5 w-3.5" /> : null}
+                            {tt('Simpan')}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSedangTandai(null)
+                              setCatatanTandai('')
+                            }}
+                            disabled={menyimpan}
+                          >
+                            {tt('Batal')}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-xs text-muted-foreground">{t.konteks}</p>
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {tautan ? (
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={tautan} target="_blank" rel="noreferrer">
+                                <MessageCircle className="h-4 w-4" />
+                                {tt('Chat')}
+                              </a>
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">{tt('Tanpa nomor')}</span>
+                          )}
+                          <Button variant="outline" size="sm" onClick={() => setSedangTandai(t.id)}>
+                            <CheckCircle2 className="h-4 w-4" />
+                            {tt('Tandai Selesai')}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </KartuBaris>
+                )
+              })}
+            </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>

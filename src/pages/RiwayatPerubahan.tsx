@@ -2,7 +2,25 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { History } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { Badge, Card, KondisiKosong, Paginasi, PesanError, Select, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import {
+  BarisInfo,
+  Badge,
+  Card,
+  DaftarMobile,
+  KartuBaris,
+  KondisiKosong,
+  Paginasi,
+  PesanError,
+  Select,
+  Spinner,
+  TabelDesktop,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from '@/components/ui'
 import { tanggalWaktu } from '@/lib/format'
 import { tt } from '@/lib/i18nText'
 
@@ -77,9 +95,28 @@ export function RiwayatPerubahan() {
         {isLoading ? <div className="flex justify-center py-16"><Spinner className="h-6 w-6" /></div> : !data?.baris.length ? (
           <KondisiKosong pesan="Belum ada riwayat. Perubahan data akan tercatat otomatis setelah migrasi dijalankan." />
         ) : (
-          <Table><Thead><Tr><Th>Waktu</Th><Th>Pengguna</Th><Th>Data</Th><Th>Tindakan</Th><Th>Ringkasan</Th></Tr></Thead>
-            <Tbody>{data.baris.map((x) => <Tr key={x.id}><Td className="whitespace-nowrap">{tanggalWaktu(x.dilakukan_pada)}</Td><Td>{x.pelaku?.nama ?? tt('Sistem')}</Td><Td>{labelTabel(x.tabel)}</Td><Td><Badge variant={x.aksi === 'delete' ? 'bahaya' : x.aksi === 'insert' ? 'sukses' : 'peringatan'}>{x.aksi === 'insert' ? 'Dibuat' : x.aksi === 'update' ? 'Diubah' : 'Dihapus'}</Badge></Td><Td>{ringkasPerubahan(x)}</Td></Tr>)}</Tbody>
-          </Table>
+          <>
+            <TabelDesktop>
+              <Table><Thead><Tr><Th>Waktu</Th><Th>Pengguna</Th><Th>Data</Th><Th>Tindakan</Th><Th>Ringkasan</Th></Tr></Thead>
+                <Tbody>{data.baris.map((x) => <Tr key={x.id}><Td className="whitespace-nowrap">{tanggalWaktu(x.dilakukan_pada)}</Td><Td>{x.pelaku?.nama ?? tt('Sistem')}</Td><Td>{labelTabel(x.tabel)}</Td><Td><Badge variant={x.aksi === 'delete' ? 'bahaya' : x.aksi === 'insert' ? 'sukses' : 'peringatan'}>{x.aksi === 'insert' ? 'Dibuat' : x.aksi === 'update' ? 'Diubah' : 'Dihapus'}</Badge></Td><Td>{ringkasPerubahan(x)}</Td></Tr>)}</Tbody>
+              </Table>
+            </TabelDesktop>
+            <DaftarMobile>
+              {data.baris.map((x) => (
+                <KartuBaris key={x.id}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium">{labelTabel(x.tabel)}</p>
+                    <Badge variant={x.aksi === 'delete' ? 'bahaya' : x.aksi === 'insert' ? 'sukses' : 'peringatan'}>
+                      {x.aksi === 'insert' ? 'Dibuat' : x.aksi === 'update' ? 'Diubah' : 'Dihapus'}
+                    </Badge>
+                  </div>
+                  <BarisInfo label="Waktu" value={tanggalWaktu(x.dilakukan_pada)} />
+                  <BarisInfo label="Pengguna" value={x.pelaku?.nama ?? tt('Sistem')} />
+                  <p className="text-sm text-muted-foreground">{ringkasPerubahan(x)}</p>
+                </KartuBaris>
+              ))}
+            </DaftarMobile>
+          </>
         )}
       </Card>
       <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
