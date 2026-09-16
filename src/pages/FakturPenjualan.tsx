@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { tt } from '@/lib/i18nText'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { rupiah, tanggal, tanggalISO, terlihatSepertiNama } from '@/lib/format'
 import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components/FilterPeriode'
@@ -19,6 +19,7 @@ import {
   Input,
   KartuBaris,
   KondisiKosong,
+  LembarBawah,
   PesanError,
   Paginasi,
   Select,
@@ -116,6 +117,8 @@ export function FakturPenjualan() {
   const [periode, setPeriode] = useState<RentangTanggal>(RENTANG_KOSONG)
   const [halaman, setHalaman] = useState(1)
   const [terpilih, setTerpilih] = useState<Set<string>>(new Set())
+  const [filterTerbuka, setFilterTerbuka] = useState(false)
+  const jumlahFilterAktif = (statusBayar ? 1 : 0) + (periode.dari || periode.sampai ? 1 : 0)
   const { data, isLoading, error, isFetching } = useDaftarFaktur(cari, statusBayar, periode, halaman, hanyaJatuhTempo)
   const baris = data?.baris ?? []
   const barisTerpilih = baris.filter((r) => terpilih.has(r.id))
@@ -135,7 +138,7 @@ export function FakturPenjualan() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{tt('Faktur Penjualan')}</h1>
-          <p className="text-sm text-muted-foreground">{tt('Ditagihkan dari satu atau beberapa Surat Jalan')}</p>
+          <p className="hidden text-sm text-muted-foreground sm:block">{tt('Ditagihkan dari satu atau beberapa Surat Jalan')}</p>
         </div>
         <div className="flex gap-2">
           <TombolEkspor
@@ -170,22 +173,50 @@ export function FakturPenjualan() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {hanyaJatuhTempo ? <Button variant="outline" size="sm" onClick={() => { setSearchParams({}); setHalaman(1) }}>{tt('Jatuh tempo')} ×</Button> : null}
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input className="pl-8" placeholder="Cari nomor faktur..." value={cari} onChange={(e) => { setCari(e.target.value); setHalaman(1); setTerpilih(new Set()) }} />
         </div>
-        <Select className="w-full sm:w-48" value={statusBayar} onChange={(e) => { setStatusBayar(e.target.value); setHalaman(1); setTerpilih(new Set()) }}>
-          <option value="">Semua status bayar</option>
-          {Object.entries(LABEL_BAYAR).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </Select>
-        <FilterPeriode onChange={(rentang) => { setPeriode(rentang); setHalaman(1); setTerpilih(new Set()) }} />
+        <Button variant="outline" size="sm" className="sm:hidden" onClick={() => setFilterTerbuka(true)}>
+          <SlidersHorizontal className="h-4 w-4" />
+          {tt('Filter')}
+          {jumlahFilterAktif > 0 ? <Badge className="px-1.5">{jumlahFilterAktif}</Badge> : null}
+        </Button>
+        <div className="hidden items-center gap-2 sm:flex">
+          <Select className="w-48" value={statusBayar} onChange={(e) => { setStatusBayar(e.target.value); setHalaman(1); setTerpilih(new Set()) }}>
+            <option value="">Semua status bayar</option>
+            {Object.entries(LABEL_BAYAR).map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </Select>
+          <FilterPeriode onChange={(rentang) => { setPeriode(rentang); setHalaman(1); setTerpilih(new Set()) }} />
+        </div>
       </div>
+
+      <LembarBawah terbuka={filterTerbuka} onTutup={() => setFilterTerbuka(false)} judul="Filter">
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{tt('Status bayar')}</label>
+            <Select className="w-full" value={statusBayar} onChange={(e) => { setStatusBayar(e.target.value); setHalaman(1); setTerpilih(new Set()) }}>
+              <option value="">Semua status bayar</option>
+              {Object.entries(LABEL_BAYAR).map(([v, l]) => (
+                <option key={v} value={v}>
+                  {l}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{tt('Periode')}</label>
+            <FilterPeriode onChange={(rentang) => { setPeriode(rentang); setHalaman(1); setTerpilih(new Set()) }} />
+          </div>
+          <Button className="w-full" onClick={() => setFilterTerbuka(false)}>{tt('Terapkan')}</Button>
+        </div>
+      </LembarBawah>
 
       <BarPilihanMassal jumlah={barisTerpilih.length} onBersihkan={() => setTerpilih(new Set())}>
         <TombolEkspor

@@ -288,7 +288,7 @@ export function Dashboard() {
       </div>
 
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('dasbor.kinerjaHari').replace('{n}', String(data.jumlahHari))}</p>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KartuHero
           judul={t('dasbor.penjualanBersih')}
           nilai={rupiah(data.omzet30Hari)}
@@ -331,7 +331,7 @@ export function Dashboard() {
 
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('dasbor.perluTindakanHariIni')}</p>
-        <div className={cn('grid gap-3 sm:grid-cols-2', bolehLihatBiaya && data.settlementTersedia ? 'xl:grid-cols-4' : 'lg:grid-cols-3')}>
+        <div className={cn('grid grid-cols-2 gap-3', bolehLihatBiaya && data.settlementTersedia ? 'xl:grid-cols-4' : 'lg:grid-cols-3')}>
           <Link to="/produk?stok=restock" className={cn('flex min-h-12 items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-accent', data.perluRestock.length > 0 && 'border-amber-500/30')}>
             <AlertTriangle className={cn('h-5 w-5', data.perluRestock.length > 0 ? 'text-amber-500' : 'text-success')} />
             <span className="flex-1 text-sm font-medium">{data.perluRestock.length > 0 ? `${data.perluRestock.length} ${t('dasbor.produkPerluRestock')}` : t('dasbor.semuaStokAman')}</span>
@@ -372,7 +372,7 @@ export function Dashboard() {
 
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('dasbor.posisiSaatIni')}</p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <KartuStat judul={t('dasbor.kasSaatIni')} nilai={rupiah(data.totalSaldoKas)} warna={AKSEN.hijau} ikon={<Landmark className="h-4 w-4" />} tautan="/kas-bank" />
           <KartuStat judul={t('dasbor.piutangSaatIni')} nilai={rupiah(data.totalPiutang)} warna={data.piutangMacet > 0 ? AKSEN.merah : AKSEN.kuning} ikon={<Wallet className="h-4 w-4" />} catatan={data.piutangMacet > 0 ? `${rupiah(data.piutangMacet)} ${t('dasbor.lewat90Hari')}` : undefined} bahaya={data.piutangMacet > 0} tautan="/laporan/piutang" />
           <KartuStat judul={t('dasbor.hutangSaatIni')} nilai={rupiah(data.totalHutang)} warna={data.hutangMacet > 0 ? AKSEN.merah : AKSEN.biru} ikon={<Coins className="h-4 w-4" />} catatan={data.hutangMacet > 0 ? `${rupiah(data.hutangMacet)} ${t('dasbor.lewat90Hari')}` : undefined} bahaya={data.hutangMacet > 0} tautan="/faktur-pembelian" />
@@ -425,7 +425,7 @@ function KartuHero({
             {ikon}
           </Link>
         </div>
-        <p className="tabular mt-2 text-2xl font-bold">{nilai}</p>
+        <p className="tabular mt-2 text-lg font-bold sm:text-2xl">{nilai}</p>
         {delta !== undefined && delta !== null ? (
           <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium">
             {delta >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
@@ -473,7 +473,7 @@ function KartuStat({
             {ikon}
           </Link>
         </div>
-        <p className="tabular mt-2 text-2xl font-semibold">{nilai}</p>
+        <p className="tabular mt-2 text-lg font-semibold sm:text-2xl">{nilai}</p>
         {catatan ? (
           <span className={cn('mt-2 inline-block text-xs', bahaya ? 'text-destructive' : 'text-muted-foreground')}>{catatan}</span>
         ) : null}

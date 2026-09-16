@@ -71,7 +71,7 @@ const ATTR_AUTO = new Map([
   ['placeholder', new Set(['Input', 'Textarea', 'InputAngka', 'Combobox', 'input', 'textarea'])],
   ['pesan', new Set(['KondisiKosong'])],
   ['label', new Set(['InfoField', 'Ringkas', 'Info', 'BarisInfo'])], // komponen presentasi lokal yang menerjemahkan sendiri labelnya
-  ['judul', new Set(['KartuAngka'])],
+  ['judul', new Set(['KartuAngka', 'LembarBawah'])],
   ['item', new Set(['MenuAksi'])], // MenuAksi menerjemahkan sendiri tiap label pilihannya lewat tt()
 ])
 const FUNGSI_AUTO = new Set(['toast', 'Error']) // Toaster & PesanError menerjemahkan saat render

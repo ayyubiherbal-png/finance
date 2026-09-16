@@ -223,6 +223,8 @@ export const TEKS: Record<string, string> = {
   Total: 'Total',
   Status: 'Status',
   'Status bayar': 'Payment status',
+  Filter: 'Filter',
+  Terapkan: 'Apply',
   Bayar: 'Payment',
   'Jatuh tempo': 'Due date',
   Sisa: 'Balance',

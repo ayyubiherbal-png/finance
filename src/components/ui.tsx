@@ -421,6 +421,41 @@ export function BarisInfo({ label, value, className }: { label: string; value: R
   )
 }
 
+/**
+ * Kartu ringkasan (KPI) kecil -- judul kecil huruf besar + satu angka besar,
+ * ikon bulat opsional (pola sama seperti ikon di dropdown Lonceng Layout.tsx).
+ * Dipakai berpasangan dengan grid `grid-cols-2 sm:grid-cols-3` dst supaya di
+ * HP 2 kartu sejajar (bukan numpuk 1 kartu per baris).
+ */
+export function KartuRingkas({
+  judul,
+  nilai,
+  bahaya,
+  ikon,
+}: {
+  judul: string
+  nilai: React.ReactNode
+  bahaya?: boolean
+  ikon?: React.ReactNode
+}) {
+  const teks = useTeks()
+  return (
+    <Card>
+      <CardContent className="p-3">
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{teks(judul)}</p>
+          {ikon ? (
+            <span className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-full', bahaya ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary')}>
+              {ikon}
+            </span>
+          ) : null}
+        </div>
+        <p className={cn('tabular mt-1 text-lg font-semibold', bahaya && 'text-destructive')}>{nilai}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
 /* -------------------------------------------------------------- Paginasi */
 
 export function Paginasi({
@@ -603,6 +638,56 @@ export function MenuAksi({ item, testId }: { item: MenuAksiItem[]; testId?: stri
           ))}
         </div>
       ) : null}
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------- LembarBawah */
+
+/**
+ * Panel meluncur dari bawah -- khusus HP (dipasang dengan `sm:hidden` di
+ * pemakainya sendiri kalau perlu). Dipakai untuk mengumpulkan beberapa
+ * filter yang di layar sempit akan numpuk jadi banyak baris penuh kalau
+ * ditaruh inline (lihat FakturPenjualan.tsx). Pola backdrop klik-luar +
+ * Escape-tutup sama persis drawer menu mobile (Layout.tsx) & dialog
+ * Konfirmasi (Konfirmasi.tsx) -- disatukan di sini supaya tidak ditulis
+ * ulang tiap halaman yang butuh sheet serupa.
+ */
+export function LembarBawah({
+  terbuka,
+  onTutup,
+  judul,
+  children,
+}: {
+  terbuka: boolean
+  onTutup: () => void
+  judul?: string
+  children: React.ReactNode
+}) {
+  const teks = useTeks()
+  React.useEffect(() => {
+    if (!terbuka) return
+    function tutupDenganEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') onTutup()
+    }
+    window.addEventListener('keydown', tutupDenganEscape)
+    return () => window.removeEventListener('keydown', tutupDenganEscape)
+  }, [terbuka, onTutup])
+
+  if (!terbuka) return null
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end">
+      <button type="button" className="absolute inset-0 cursor-default bg-foreground/40" aria-label="Tutup" onClick={onTutup} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={judul}
+        className="relative z-10 max-h-[85vh] w-full overflow-y-auto rounded-t-2xl bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-floating"
+      >
+        <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-border" />
+        {judul ? <h2 className="mb-3 text-base font-semibold">{teks(judul)}</h2> : null}
+        {children}
+      </div>
     </div>
   )
 }

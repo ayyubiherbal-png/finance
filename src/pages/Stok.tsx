@@ -16,6 +16,7 @@ import {
   DaftarMobile,
   Input,
   KartuBaris,
+  KartuRingkas,
   KondisiKosong,
   Paginasi,
   PesanError,
@@ -121,7 +122,7 @@ export function Stok() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{tt('Stok per Gudang')}</h1>
-          <p className="text-sm text-muted-foreground">{tt('Saldo persediaan berjalan, dari kartu stok')}</p>
+          <p className="hidden text-sm text-muted-foreground sm:block">{tt('Saldo persediaan berjalan, dari kartu stok')}</p>
         </div>
         <TombolEkspor
           ambilData={async () => {
@@ -140,8 +141,10 @@ export function Stok() {
         />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <KartuRingkas judul={tt('Total Nilai Persediaan')} nilai={rupiah(ringkasan?.totalNilai ?? 0)} />
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+        <div className="col-span-2 sm:col-span-1">
+          <KartuRingkas judul={tt('Total Nilai Persediaan')} nilai={rupiah(ringkasan?.totalNilai ?? 0)} />
+        </div>
         <KartuRingkas judul={tt('Jumlah SKU')} nilai={angka(ringkasan?.jumlahSku ?? 0)} />
         <KartuRingkas
           judul={tt('Perlu Restock')}
@@ -229,16 +232,5 @@ export function Stok() {
       </Card>
       <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
     </div>
-  )
-}
-
-function KartuRingkas({ judul, nilai, bahaya }: { judul: string; nilai: string; bahaya?: boolean }) {
-  return (
-    <Card>
-      <CardContent className="p-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{judul}</p>
-        <p className={`tabular mt-1 text-lg font-semibold ${bahaya ? 'text-destructive' : ''}`}>{nilai}</p>
-      </CardContent>
-    </Card>
   )
 }
