@@ -10,12 +10,16 @@ import { FilterPeriode, rentangDariPreset, type RentangTanggal } from '@/compone
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Card,
   CardContent,
+  DaftarMobile,
+  KartuBaris,
   KondisiKosong,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -148,28 +152,45 @@ export function RekonsiliasiMarketplace() {
                   <KondisiKosong pesan={tt('Belum ada settlement pada periode ini.')} />
                 </div>
               ) : (
-                <Table>
-                  <Thead>
-                    <Tr>
-                      <Th>Kanal</Th>
-                      <Th className="text-right">Jml Settlement</Th>
-                      <Th className="text-right">Bruto</Th>
-                      <Th className="text-right">Potongan</Th>
-                      <Th className="text-right">Netto</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
+                <>
+                  <TabelDesktop>
+                    <Table>
+                      <Thead>
+                        <Tr>
+                          <Th>Kanal</Th>
+                          <Th className="text-right">Jml Settlement</Th>
+                          <Th className="text-right">Bruto</Th>
+                          <Th className="text-right">Potongan</Th>
+                          <Th className="text-right">Netto</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {perKanal.map((r) => (
+                          <Tr key={r.kanal}>
+                            <Td className="font-medium">{LABEL_KANAL[r.kanal]}</Td>
+                            <Td className="tabular text-right">{r.jumlah}</Td>
+                            <Td className="tabular text-right">{rupiah(r.bruto)}</Td>
+                            <Td className="tabular text-right text-muted-foreground">{rupiah(r.potongan)}</Td>
+                            <Td className="tabular text-right font-medium">{rupiah(r.netto)}</Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </TabelDesktop>
+                  <DaftarMobile>
                     {perKanal.map((r) => (
-                      <Tr key={r.kanal}>
-                        <Td className="font-medium">{LABEL_KANAL[r.kanal]}</Td>
-                        <Td className="tabular text-right">{r.jumlah}</Td>
-                        <Td className="tabular text-right">{rupiah(r.bruto)}</Td>
-                        <Td className="tabular text-right text-muted-foreground">{rupiah(r.potongan)}</Td>
-                        <Td className="tabular text-right font-medium">{rupiah(r.netto)}</Td>
-                      </Tr>
+                      <KartuBaris key={r.kanal}>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-medium">{LABEL_KANAL[r.kanal]}</p>
+                          <p className="tabular shrink-0 font-semibold">{rupiah(r.netto)}</p>
+                        </div>
+                        <BarisInfo label="Jml Settlement" value={r.jumlah} />
+                        <BarisInfo label="Bruto" value={rupiah(r.bruto)} />
+                        <BarisInfo label="Potongan" value={rupiah(r.potongan)} />
+                      </KartuBaris>
                     ))}
-                  </Tbody>
-                </Table>
+                  </DaftarMobile>
+                </>
               )}
             </CardContent>
           </Card>
@@ -211,28 +232,44 @@ export function RekonsiliasiMarketplace() {
             ) : !menunggu || menunggu.length === 0 ? (
               <KondisiKosong pesan={tt('Semua pesanan marketplace sudah di-settlement.')} />
             ) : (
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>Kanal</Th>
-                    <Th>Nomor Pesanan</Th>
-                    <Th>Faktur</Th>
-                    <Th className="text-right">Bruto Menunggu</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+              <>
+                <TabelDesktop>
+                  <Table>
+                    <Thead>
+                      <Tr>
+                        <Th>Kanal</Th>
+                        <Th>Nomor Pesanan</Th>
+                        <Th>Faktur</Th>
+                        <Th className="text-right">Bruto Menunggu</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {menunggu.map((r) => (
+                        <Tr key={r.pesanan_id}>
+                          <Td>
+                            <Badge variant="netral">{LABEL_KANAL[r.kanal]}</Badge>
+                          </Td>
+                          <Td className="font-mono text-xs">{r.nomor_pesanan_platform}</Td>
+                          <Td className="font-medium">{r.nomor_faktur}</Td>
+                          <Td className="tabular text-right font-medium">{rupiah(r.bruto_menunggu)}</Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </TabelDesktop>
+                <DaftarMobile>
                   {menunggu.map((r) => (
-                    <Tr key={r.pesanan_id}>
-                      <Td>
-                        <Badge variant="netral">{LABEL_KANAL[r.kanal]}</Badge>
-                      </Td>
-                      <Td className="font-mono text-xs">{r.nomor_pesanan_platform}</Td>
-                      <Td className="font-medium">{r.nomor_faktur}</Td>
-                      <Td className="tabular text-right font-medium">{rupiah(r.bruto_menunggu)}</Td>
-                    </Tr>
+                    <KartuBaris key={r.pesanan_id}>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium">{r.nomor_faktur}</p>
+                        <p className="tabular shrink-0 font-semibold">{rupiah(r.bruto_menunggu)}</p>
+                      </div>
+                      <BarisInfo label="Kanal" value={<Badge variant="netral">{LABEL_KANAL[r.kanal]}</Badge>} />
+                      <BarisInfo label="Nomor Pesanan" value={<span className="font-mono text-xs">{r.nomor_pesanan_platform}</span>} />
+                    </KartuBaris>
                   ))}
-                </Tbody>
-              </Table>
+                </DaftarMobile>
+              </>
             )}
           </CardContent>
         </Card>

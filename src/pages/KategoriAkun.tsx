@@ -9,14 +9,18 @@ import { ambilSemuaBertahap } from '@/lib/ambilSemua'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -127,32 +131,49 @@ export function KategoriAkun() {
               <h2 className="text-base font-semibold">{LABEL_TIPE[tipe]}</h2>
               <Card>
                 <CardContent className="p-0 pb-2">
-                  <Table>
-                    <Thead>
-                      <Tr>
-                        <Th>Kode</Th>
-                        <Th>Nama</Th>
-                        <Th>Induk</Th>
-                        <Th>Saldo Normal</Th>
-                        <Th></Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {(perTipe.get(tipe) ?? []).map((a) => (
-                        <Tr key={a.id}>
-                          <Td className="font-mono text-xs">{a.kode}</Td>
-                          <Td>
-                            <Link to={`/kategori-akun/${a.id}`} className="font-medium text-primary hover:underline">
-                              {a.nama}
-                            </Link>
-                          </Td>
-                          <Td className="text-muted-foreground">{a.induk_id ? petaIndukNama.get(a.induk_id) ?? '-' : '-'}</Td>
-                          <Td>{a.saldo_normal === 'debit' ? tt('Debit') : tt('Kredit')}</Td>
-                          <Td className="text-right">{!a.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
+                  <TabelDesktop>
+                    <Table>
+                      <Thead>
+                        <Tr>
+                          <Th>Kode</Th>
+                          <Th>Nama</Th>
+                          <Th>Induk</Th>
+                          <Th>Saldo Normal</Th>
+                          <Th></Th>
                         </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
+                      </Thead>
+                      <Tbody>
+                        {(perTipe.get(tipe) ?? []).map((a) => (
+                          <Tr key={a.id}>
+                            <Td className="font-mono text-xs">{a.kode}</Td>
+                            <Td>
+                              <Link to={`/kategori-akun/${a.id}`} className="font-medium text-primary hover:underline">
+                                {a.nama}
+                              </Link>
+                            </Td>
+                            <Td className="text-muted-foreground">{a.induk_id ? petaIndukNama.get(a.induk_id) ?? '-' : '-'}</Td>
+                            <Td>{a.saldo_normal === 'debit' ? tt('Debit') : tt('Kredit')}</Td>
+                            <Td className="text-right">{!a.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </TabelDesktop>
+                  <DaftarMobile>
+                    {(perTipe.get(tipe) ?? []).map((a) => (
+                      <KartuBaris key={a.id}>
+                        <div className="flex items-center justify-between gap-2">
+                          <Link to={`/kategori-akun/${a.id}`} className="font-medium text-primary hover:underline">
+                            {a.nama}
+                          </Link>
+                          {!a.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}
+                        </div>
+                        <BarisInfo label="Kode" value={<span className="font-mono text-xs">{a.kode}</span>} />
+                        <BarisInfo label="Induk" value={a.induk_id ? petaIndukNama.get(a.induk_id) ?? '-' : '-'} />
+                        <BarisInfo label="Saldo Normal" value={a.saldo_normal === 'debit' ? tt('Debit') : tt('Kredit')} />
+                      </KartuBaris>
+                    ))}
+                  </DaftarMobile>
                 </CardContent>
               </Card>
             </div>

@@ -8,15 +8,19 @@ import { kutipFilterPostgrest } from '@/lib/utils'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -202,34 +206,53 @@ export function LaporanPiutang() {
 
           <Card>
             <CardContent className="p-0 pb-2">
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>Pelanggan</Th>
-                    <Th className="text-right">Total</Th>
-                    <Th className="text-right">Belum jatuh tempo</Th>
-                    <Th className="text-right">1-30</Th>
-                    <Th className="text-right">31-60</Th>
-                    <Th className="text-right">61-90</Th>
-                    <Th className="text-right">90+</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {aging?.baris.map((r) => (
-                    <Tr key={r.pelanggan_id}>
-                      <Td className="font-medium">{r.nama_pelanggan}</Td>
-                      <Td className="tabular text-right font-medium">{rupiah(r.total_piutang)}</Td>
-                      <Td className="tabular text-right text-muted-foreground">{rupiah(r.belum_jatuh_tempo ?? 0)}</Td>
-                      <Td className="tabular text-right">{r.umur_1_30 ? rupiah(r.umur_1_30) : '-'}</Td>
-                      <Td className="tabular text-right">{r.umur_31_60 ? rupiah(r.umur_31_60) : '-'}</Td>
-                      <Td className="tabular text-right">{r.umur_61_90 ? rupiah(r.umur_61_90) : '-'}</Td>
-                      <Td className="tabular text-right text-destructive">
-                        {r.umur_90_plus ? rupiah(r.umur_90_plus) : '-'}
-                      </Td>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Pelanggan</Th>
+                      <Th className="text-right">Total</Th>
+                      <Th className="text-right">Belum jatuh tempo</Th>
+                      <Th className="text-right">1-30</Th>
+                      <Th className="text-right">31-60</Th>
+                      <Th className="text-right">61-90</Th>
+                      <Th className="text-right">90+</Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    {aging?.baris.map((r) => (
+                      <Tr key={r.pelanggan_id}>
+                        <Td className="font-medium">{r.nama_pelanggan}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(r.total_piutang)}</Td>
+                        <Td className="tabular text-right text-muted-foreground">{rupiah(r.belum_jatuh_tempo ?? 0)}</Td>
+                        <Td className="tabular text-right">{r.umur_1_30 ? rupiah(r.umur_1_30) : '-'}</Td>
+                        <Td className="tabular text-right">{r.umur_31_60 ? rupiah(r.umur_31_60) : '-'}</Td>
+                        <Td className="tabular text-right">{r.umur_61_90 ? rupiah(r.umur_61_90) : '-'}</Td>
+                        <Td className="tabular text-right text-destructive">
+                          {r.umur_90_plus ? rupiah(r.umur_90_plus) : '-'}
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
+                {aging?.baris.map((r) => (
+                  <KartuBaris key={r.pelanggan_id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-medium">{r.nama_pelanggan}</p>
+                      <p className="tabular shrink-0 font-semibold">{rupiah(r.total_piutang)}</p>
+                    </div>
+                    <BarisInfo label="Belum jatuh tempo" value={rupiah(r.belum_jatuh_tempo ?? 0)} />
+                    {r.umur_1_30 ? <BarisInfo label="1-30 hari" value={rupiah(r.umur_1_30)} /> : null}
+                    {r.umur_31_60 ? <BarisInfo label="31-60 hari" value={rupiah(r.umur_31_60)} /> : null}
+                    {r.umur_61_90 ? <BarisInfo label="61-90 hari" value={rupiah(r.umur_61_90)} /> : null}
+                    {r.umur_90_plus ? (
+                      <BarisInfo label="90+ hari" value={<span className="text-destructive">{rupiah(r.umur_90_plus)}</span>} />
+                    ) : null}
+                  </KartuBaris>
+                ))}
+              </DaftarMobile>
               {aging?.baris.length === 0 ? <KondisiKosong pesan="Tidak ada piutang yang cocok dengan filter." /> : null}
               <Paginasi halaman={halamanAging} ukuranHalaman={UKURAN_HALAMAN} total={aging?.total ?? 0} onUbah={setHalamanAging} />
             </CardContent>
@@ -258,30 +281,48 @@ export function LaporanPiutang() {
               </div>
               <Card>
                 <CardContent className="p-0 pb-2">
-                  <Table>
-                    <Thead>
-                      <Tr>
-                        <Th>Nomor</Th>
-                        <Th>Pelanggan</Th>
-                        <Th>Jatuh tempo</Th>
-                        <Th className="text-right">Terlambat</Th>
-                        <Th className="text-right">Sisa</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {lewatTempo.baris.map((f) => (
-                        <Tr key={f.faktur_id}>
-                          <Td className="font-mono text-xs">{f.nomor}</Td>
-                          <Td className="font-medium">{f.nama_pelanggan}</Td>
-                          <Td className="text-muted-foreground">{tanggal(f.jatuh_tempo)}</Td>
-                          <Td className="text-right">
-                            <Badge variant={f.hari_lewat > 60 ? 'bahaya' : 'peringatan'}>{f.hari_lewat} hari</Badge>
-                          </Td>
-                          <Td className="tabular text-right font-medium">{rupiah(f.sisa)}</Td>
+                  <TabelDesktop>
+                    <Table>
+                      <Thead>
+                        <Tr>
+                          <Th>Nomor</Th>
+                          <Th>Pelanggan</Th>
+                          <Th>Jatuh tempo</Th>
+                          <Th className="text-right">Terlambat</Th>
+                          <Th className="text-right">Sisa</Th>
                         </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
+                      </Thead>
+                      <Tbody>
+                        {lewatTempo.baris.map((f) => (
+                          <Tr key={f.faktur_id}>
+                            <Td className="font-mono text-xs">{f.nomor}</Td>
+                            <Td className="font-medium">{f.nama_pelanggan}</Td>
+                            <Td className="text-muted-foreground">{tanggal(f.jatuh_tempo)}</Td>
+                            <Td className="text-right">
+                              <Badge variant={f.hari_lewat > 60 ? 'bahaya' : 'peringatan'}>{f.hari_lewat} hari</Badge>
+                            </Td>
+                            <Td className="tabular text-right font-medium">{rupiah(f.sisa)}</Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </TabelDesktop>
+                  <DaftarMobile>
+                    {lewatTempo.baris.map((f) => (
+                      <KartuBaris key={f.faktur_id}>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="truncate font-medium">{f.nama_pelanggan}</p>
+                          <p className="tabular shrink-0 font-semibold">{rupiah(f.sisa)}</p>
+                        </div>
+                        <BarisInfo label="Nomor" value={<span className="font-mono text-xs">{f.nomor}</span>} />
+                        <BarisInfo label="Jatuh tempo" value={tanggal(f.jatuh_tempo)} />
+                        <BarisInfo
+                          label="Terlambat"
+                          value={<Badge variant={f.hari_lewat > 60 ? 'bahaya' : 'peringatan'}>{f.hari_lewat} hari</Badge>}
+                        />
+                      </KartuBaris>
+                    ))}
+                  </DaftarMobile>
                   <Paginasi halaman={halamanLewatTempo} ukuranHalaman={UKURAN_HALAMAN} total={lewatTempo.total} onUbah={setHalamanLewatTempo} />
                 </CardContent>
               </Card>

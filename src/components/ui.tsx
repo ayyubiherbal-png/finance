@@ -337,7 +337,12 @@ export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTab
 
   return (
     <div ref={scrollRef} onMouseDown={mulaiSeret} className="w-full cursor-grab overflow-x-auto active:cursor-grabbing">
-      <table className={cn('w-full caption-bottom text-sm', className)} {...props} />
+      {/* min-w-full (bukan w-full) -- tabel boleh tumbuh MELEBIHI lebar
+          kontainer kalau kontennya butuh ruang lebih (mis. banyak kolom di
+          layar HP), supaya wrapper overflow-x-auto di atas benar-benar
+          memicu scroll horizontal alih-alih memaksa tiap kolom menyempit
+          dan teksnya patah berantakan. */}
+      <table className={cn('min-w-full caption-bottom text-sm', className)} {...props} />
     </div>
   )
 }
@@ -377,6 +382,43 @@ export function Th({ className, children, ...props }: React.ThHTMLAttributes<HTM
 
 export function Td({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return <td className={cn('px-3 py-2 align-middle', className)} {...props} />
+}
+
+/* ------------------------------------------------------- Daftar responsif */
+
+/**
+ * Setiap halaman daftar merender DUA tampilan dari data yang SAMA: <Table>
+ * di layar >=640px (`sm`), dan kartu ringkas di bawah itu -- tabel banyak
+ * kolom yang "dipaksa" masuk ke lebar HP membuat tiap kolom menyempit dan
+ * teksnya patah berantakan (lihat catatan di Table() di atas); kartu per
+ * baris jauh lebih enak dibaca & tanpa perlu geser ke samping.
+ *
+ * Pakai berpasangan:
+ *   <TabelDesktop><Table>...</Table></TabelDesktop>
+ *   <DaftarMobile>{baris.map((b) => <KartuBaris key={b.id}>...</KartuBaris>)}</DaftarMobile>
+ */
+export function TabelDesktop({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('hidden sm:block', className)} {...props} />
+}
+
+export function DaftarMobile({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('divide-y divide-border sm:hidden', className)} {...props} />
+}
+
+/** Satu baris data sebagai kartu ringkas -- isi biasanya judul (mis. Link nama/nomor) + beberapa <BarisInfo>. */
+export function KartuBaris({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('space-y-1.5 p-3', className)} {...props} />
+}
+
+/** Satu baris label:nilai di dalam KartuBaris, mis. "Total" -> "Rp 50.000". Label ikut diterjemahkan (sama seperti Th). */
+export function BarisInfo({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
+  const teks = useTeks()
+  return (
+    <div className={cn('flex items-center justify-between gap-3 text-sm', className)}>
+      <span className="shrink-0 text-muted-foreground">{teks(label)}</span>
+      <span className="tabular truncate text-right font-medium">{value}</span>
+    </div>
+  )
 }
 
 /* -------------------------------------------------------------- Paginasi */

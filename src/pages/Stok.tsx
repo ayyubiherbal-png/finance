@@ -10,14 +10,18 @@ import { ambilSemuaBertahap } from '@/lib/ambilSemua'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -176,30 +180,50 @@ export function Stok() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada stok tercatat." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Kode</Th>
-                  <Th>Produk</Th>
-                  {(gudang?.length ?? 0) > 1 ? <Th>Gudang</Th> : null}
-                  <Th className="text-right">Qty</Th>
-                  <Th className="text-right">HPP</Th>
-                  <Th className="text-right">Nilai</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Kode</Th>
+                      <Th>Produk</Th>
+                      {(gudang?.length ?? 0) > 1 ? <Th>Gudang</Th> : null}
+                      <Th className="text-right">Qty</Th>
+                      <Th className="text-right">HPP</Th>
+                      <Th className="text-right">Nilai</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.map((b) => (
+                      <Tr key={`${b.produk_id}-${b.gudang_id}`}>
+                        <Td className="font-mono text-xs">{b.kode}</Td>
+                        <Td className="font-medium">{b.nama}</Td>
+                        {(gudang?.length ?? 0) > 1 ? <Td className="text-muted-foreground">{b.nama_gudang}</Td> : null}
+                        <Td className="tabular text-right">{angka(b.qty)}</Td>
+                        <Td className="tabular text-right">{rupiah(b.hpp_rata2)}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(b.nilai)}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.map((b) => (
-                  <Tr key={`${b.produk_id}-${b.gudang_id}`}>
-                    <Td className="font-mono text-xs">{b.kode}</Td>
-                    <Td className="font-medium">{b.nama}</Td>
-                    {(gudang?.length ?? 0) > 1 ? <Td className="text-muted-foreground">{b.nama_gudang}</Td> : null}
-                    <Td className="tabular text-right">{angka(b.qty)}</Td>
-                    <Td className="tabular text-right">{rupiah(b.hpp_rata2)}</Td>
-                    <Td className="tabular text-right font-medium">{rupiah(b.nilai)}</Td>
-                  </Tr>
+                  <KartuBaris key={`${b.produk_id}-${b.gudang_id}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{b.nama}</p>
+                        <p className="font-mono text-xs text-muted-foreground">{b.kode}</p>
+                      </div>
+                      <p className="tabular shrink-0 font-semibold">{rupiah(b.nilai)}</p>
+                    </div>
+                    {(gudang?.length ?? 0) > 1 ? <BarisInfo label="Gudang" value={b.nama_gudang} /> : null}
+                    <BarisInfo label="Qty" value={angka(b.qty)} />
+                    <BarisInfo label="HPP" value={rupiah(b.hpp_rata2)} />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>

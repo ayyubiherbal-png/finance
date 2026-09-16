@@ -8,7 +8,25 @@ import { ambilSemuaBertahap } from '@/lib/ambilSemua'
 import { FilterPeriode, rentangDariPreset, type RentangTanggal } from '@/components/FilterPeriode'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
-import { Card, CardContent, KondisiKosong, Label, PesanError, Select, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import {
+  BarisInfo,
+  Card,
+  CardContent,
+  DaftarMobile,
+  KartuBaris,
+  KondisiKosong,
+  Label,
+  PesanError,
+  Select,
+  Spinner,
+  TabelDesktop,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from '@/components/ui'
 import type { AkunCoa, BarisNeraca, VBukuBesar } from '@/types/db'
 
 function useDaftarAkun() {
@@ -141,40 +159,66 @@ export function BukuBesar() {
 
           <Card>
             <CardContent className="p-0 pb-2">
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>Tanggal</Th>
-                    <Th>Nomor</Th>
-                    <Th>Referensi</Th>
-                    <Th>Keterangan</Th>
-                    <Th className="text-right">Debit</Th>
-                    <Th className="text-right">Kredit</Th>
-                    <Th className="text-right">Saldo</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  <Tr>
-                    <Td colSpan={6} className="text-right text-xs text-muted-foreground">
-                      {tt('Saldo awal')}
-                    </Td>
-                    <Td className="tabular text-right text-xs text-muted-foreground">{rupiah(saldoAwal ?? 0)}</Td>
-                  </Tr>
-                  {baris.map((b) => (
-                    <Tr key={b.baris_id}>
-                      <Td className="text-muted-foreground">{tanggal(b.tanggal)}</Td>
-                      <Td className="font-mono text-xs">{b.nomor}</Td>
-                      <Td className="font-mono text-xs">{b.ref_nomor}</Td>
-                      <Td>{b.keterangan}</Td>
-                      <Td className="tabular text-right">{b.debit ? rupiah(b.debit) : '-'}</Td>
-                      <Td className="tabular text-right">{b.kredit ? rupiah(b.kredit) : '-'}</Td>
-                      <Td className={cn('tabular text-right font-medium', b.saldoBerjalan < 0 && 'text-destructive')}>
-                        {rupiah(b.saldoBerjalan)}
-                      </Td>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Tanggal</Th>
+                      <Th>Nomor</Th>
+                      <Th>Referensi</Th>
+                      <Th>Keterangan</Th>
+                      <Th className="text-right">Debit</Th>
+                      <Th className="text-right">Kredit</Th>
+                      <Th className="text-right">Saldo</Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    <Tr>
+                      <Td colSpan={6} className="text-right text-xs text-muted-foreground">
+                        {tt('Saldo awal')}
+                      </Td>
+                      <Td className="tabular text-right text-xs text-muted-foreground">{rupiah(saldoAwal ?? 0)}</Td>
+                    </Tr>
+                    {baris.map((b) => (
+                      <Tr key={b.baris_id}>
+                        <Td className="text-muted-foreground">{tanggal(b.tanggal)}</Td>
+                        <Td className="font-mono text-xs">{b.nomor}</Td>
+                        <Td className="font-mono text-xs">{b.ref_nomor}</Td>
+                        <Td>{b.keterangan}</Td>
+                        <Td className="tabular text-right">{b.debit ? rupiah(b.debit) : '-'}</Td>
+                        <Td className="tabular text-right">{b.kredit ? rupiah(b.kredit) : '-'}</Td>
+                        <Td className={cn('tabular text-right font-medium', b.saldoBerjalan < 0 && 'text-destructive')}>
+                          {rupiah(b.saldoBerjalan)}
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
+                <KartuBaris className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{tt('Saldo awal')}</span>
+                  <span className="tabular">{rupiah(saldoAwal ?? 0)}</span>
+                </KartuBaris>
+                {baris.map((b) => (
+                  <KartuBaris key={b.baris_id}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{b.keterangan}</p>
+                        <p className="font-mono text-xs text-muted-foreground">
+                          {b.nomor} &middot; {b.ref_nomor}
+                        </p>
+                      </div>
+                      <p className={cn('tabular shrink-0 font-semibold', b.saldoBerjalan < 0 && 'text-destructive')}>
+                        {rupiah(b.saldoBerjalan)}
+                      </p>
+                    </div>
+                    <BarisInfo label="Tanggal" value={tanggal(b.tanggal)} />
+                    {b.debit ? <BarisInfo label="Debit" value={rupiah(b.debit)} /> : null}
+                    {b.kredit ? <BarisInfo label="Kredit" value={rupiah(b.kredit)} /> : null}
+                  </KartuBaris>
+                ))}
+              </DaftarMobile>
               {baris.length === 0 ? <KondisiKosong pesan={tt('Tidak ada mutasi pada periode ini.')} /> : null}
               <div className="flex items-center justify-between border-t border-border px-4 pt-2 text-sm font-semibold">
                 <span>{tt('Total')}</span>

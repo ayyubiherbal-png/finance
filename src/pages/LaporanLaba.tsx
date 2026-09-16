@@ -7,11 +7,15 @@ import { cn } from '@/lib/utils'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Card,
   CardContent,
+  DaftarMobile,
+  KartuBaris,
   KondisiKosong,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -199,89 +203,155 @@ export function LaporanLaba() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada penjualan tercatat." />
           ) : tab === 'produk' ? (
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Produk</Th>
-                  <Th className="text-right">Qty terjual</Th>
-                  <Th className="text-right">Omzet</Th>
-                  <Th className="text-right">HPP</Th>
-                  <Th className="text-right">Laba kotor</Th>
-                  <Th className="text-right">Margin</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Produk</Th>
+                      <Th className="text-right">Qty terjual</Th>
+                      <Th className="text-right">Omzet</Th>
+                      <Th className="text-right">HPP</Th>
+                      <Th className="text-right">Laba kotor</Th>
+                      <Th className="text-right">Margin</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {(data as VLabaProduk[]).map((r) => (
+                      <Tr key={r.produk_id}>
+                        <Td className="font-medium">
+                          {r.nama_produk}
+                          <span className="ml-1 font-mono text-xs text-muted-foreground">{r.kode_produk}</span>
+                        </Td>
+                        <Td className="tabular text-right">{angka(r.qty_terjual)}</Td>
+                        <Td className="tabular text-right">{rupiah(r.omzet)}</Td>
+                        <Td className="tabular text-right text-muted-foreground">{rupiah(r.hpp)}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(r.laba_kotor)}</Td>
+                        <Td className={cn('tabular text-right', r.margin_persen < 0 && 'text-destructive')}>
+                          {r.margin_persen.toFixed(1)}%
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
                 {(data as VLabaProduk[]).map((r) => (
-                  <Tr key={r.produk_id}>
-                    <Td className="font-medium">
-                      {r.nama_produk}
-                      <span className="ml-1 font-mono text-xs text-muted-foreground">{r.kode_produk}</span>
-                    </Td>
-                    <Td className="tabular text-right">{angka(r.qty_terjual)}</Td>
-                    <Td className="tabular text-right">{rupiah(r.omzet)}</Td>
-                    <Td className="tabular text-right text-muted-foreground">{rupiah(r.hpp)}</Td>
-                    <Td className="tabular text-right font-medium">{rupiah(r.laba_kotor)}</Td>
-                    <Td className={cn('tabular text-right', r.margin_persen < 0 && 'text-destructive')}>
-                      {r.margin_persen.toFixed(1)}%
-                    </Td>
-                  </Tr>
+                  <KartuBaris key={r.produk_id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{r.nama_produk}</p>
+                        <p className="font-mono text-xs text-muted-foreground">{r.kode_produk}</p>
+                      </div>
+                      <p className="tabular shrink-0 font-semibold">{rupiah(r.laba_kotor)}</p>
+                    </div>
+                    <BarisInfo label="Qty terjual" value={angka(r.qty_terjual)} />
+                    <BarisInfo label="Omzet" value={rupiah(r.omzet)} />
+                    <BarisInfo label="HPP" value={rupiah(r.hpp)} />
+                    <BarisInfo
+                      label="Margin"
+                      value={<span className={r.margin_persen < 0 ? 'text-destructive' : undefined}>{r.margin_persen.toFixed(1)}%</span>}
+                    />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           ) : tab === 'pelanggan' ? (
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Pelanggan</Th>
-                  <Th className="text-right">Jml faktur</Th>
-                  <Th className="text-right">Omzet</Th>
-                  <Th className="text-right">HPP</Th>
-                  <Th className="text-right">Laba kotor</Th>
-                  <Th className="text-right">Margin</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Pelanggan</Th>
+                      <Th className="text-right">Jml faktur</Th>
+                      <Th className="text-right">Omzet</Th>
+                      <Th className="text-right">HPP</Th>
+                      <Th className="text-right">Laba kotor</Th>
+                      <Th className="text-right">Margin</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {(data as VLabaPelanggan[]).map((r) => (
+                      <Tr key={r.pelanggan_id}>
+                        <Td className="font-medium">{r.nama_pelanggan}</Td>
+                        <Td className="tabular text-right">{r.jumlah_faktur}</Td>
+                        <Td className="tabular text-right">{rupiah(r.omzet)}</Td>
+                        <Td className="tabular text-right text-muted-foreground">{rupiah(r.hpp)}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(r.laba_kotor)}</Td>
+                        <Td className={cn('tabular text-right', r.margin_persen < 0 && 'text-destructive')}>
+                          {r.margin_persen.toFixed(1)}%
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
                 {(data as VLabaPelanggan[]).map((r) => (
-                  <Tr key={r.pelanggan_id}>
-                    <Td className="font-medium">{r.nama_pelanggan}</Td>
-                    <Td className="tabular text-right">{r.jumlah_faktur}</Td>
-                    <Td className="tabular text-right">{rupiah(r.omzet)}</Td>
-                    <Td className="tabular text-right text-muted-foreground">{rupiah(r.hpp)}</Td>
-                    <Td className="tabular text-right font-medium">{rupiah(r.laba_kotor)}</Td>
-                    <Td className={cn('tabular text-right', r.margin_persen < 0 && 'text-destructive')}>
-                      {r.margin_persen.toFixed(1)}%
-                    </Td>
-                  </Tr>
+                  <KartuBaris key={r.pelanggan_id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-medium">{r.nama_pelanggan}</p>
+                      <p className="tabular shrink-0 font-semibold">{rupiah(r.laba_kotor)}</p>
+                    </div>
+                    <BarisInfo label="Jml faktur" value={r.jumlah_faktur} />
+                    <BarisInfo label="Omzet" value={rupiah(r.omzet)} />
+                    <BarisInfo label="HPP" value={rupiah(r.hpp)} />
+                    <BarisInfo
+                      label="Margin"
+                      value={<span className={r.margin_persen < 0 ? 'text-destructive' : undefined}>{r.margin_persen.toFixed(1)}%</span>}
+                    />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           ) : tab === 'kanal' ? (
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Kanal</Th>
-                  <Th className="text-right">Jml faktur</Th>
-                  <Th className="text-right">Omzet</Th>
-                  <Th className="text-right">HPP</Th>
-                  <Th className="text-right">Laba kotor</Th>
-                  <Th className="text-right">Margin</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Kanal</Th>
+                      <Th className="text-right">Jml faktur</Th>
+                      <Th className="text-right">Omzet</Th>
+                      <Th className="text-right">HPP</Th>
+                      <Th className="text-right">Laba kotor</Th>
+                      <Th className="text-right">Margin</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {(data as VLabaKanal[]).map((r) => (
+                      <Tr key={r.kanal}>
+                        <Td className="font-medium">{LABEL_KANAL[r.kanal]}</Td>
+                        <Td className="tabular text-right">{r.jumlah_faktur}</Td>
+                        <Td className="tabular text-right">{rupiah(r.omzet)}</Td>
+                        <Td className="tabular text-right text-muted-foreground">{rupiah(r.hpp)}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(r.laba_kotor)}</Td>
+                        <Td className={cn('tabular text-right', r.margin_persen < 0 && 'text-destructive')}>
+                          {r.margin_persen.toFixed(1)}%
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
                 {(data as VLabaKanal[]).map((r) => (
-                  <Tr key={r.kanal}>
-                    <Td className="font-medium">{LABEL_KANAL[r.kanal]}</Td>
-                    <Td className="tabular text-right">{r.jumlah_faktur}</Td>
-                    <Td className="tabular text-right">{rupiah(r.omzet)}</Td>
-                    <Td className="tabular text-right text-muted-foreground">{rupiah(r.hpp)}</Td>
-                    <Td className="tabular text-right font-medium">{rupiah(r.laba_kotor)}</Td>
-                    <Td className={cn('tabular text-right', r.margin_persen < 0 && 'text-destructive')}>
-                      {r.margin_persen.toFixed(1)}%
-                    </Td>
-                  </Tr>
+                  <KartuBaris key={r.kanal}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-medium">{LABEL_KANAL[r.kanal]}</p>
+                      <p className="tabular shrink-0 font-semibold">{rupiah(r.laba_kotor)}</p>
+                    </div>
+                    <BarisInfo label="Jml faktur" value={r.jumlah_faktur} />
+                    <BarisInfo label="Omzet" value={rupiah(r.omzet)} />
+                    <BarisInfo label="HPP" value={rupiah(r.hpp)} />
+                    <BarisInfo
+                      label="Margin"
+                      value={<span className={r.margin_persen < 0 ? 'text-destructive' : undefined}>{r.margin_persen.toFixed(1)}%</span>}
+                    />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           ) : null}
         </CardContent>
       </Card>
