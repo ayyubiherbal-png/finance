@@ -9,16 +9,20 @@ import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -139,34 +143,51 @@ export function ReturPenjualan() {
             <KondisiKosong pesan="Belum ada Retur Penjualan." />
           ) : (
             <>
-              <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-                <Thead>
-                  <Tr>
-                    <Th>Nomor</Th>
-                    <Th>Tanggal</Th>
-                    <Th>Pelanggan</Th>
-                    <Th className="text-right">Total</Th>
-                    <Th>Status</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {data.map((r) => (
-                    <Tr key={r.id}>
-                      <Td>
-                        <Link to={`/retur-penjualan/${r.id}`} className="font-mono text-xs text-primary hover:underline">
-                          {r.nomor}
-                        </Link>
-                      </Td>
-                      <Td className="text-muted-foreground">{tanggal(r.tanggal)}</Td>
-                      <Td className="font-medium">{r.pelanggan?.nama ?? '-'}</Td>
-                      <Td className="tabular text-right font-medium">{rupiah(r.total)}</Td>
-                      <Td>
-                        <Badge variant={VARIAN_STATUS[r.status]}>{LABEL_STATUS[r.status]}</Badge>
-                      </Td>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Nomor</Th>
+                      <Th>Tanggal</Th>
+                      <Th>Pelanggan</Th>
+                      <Th className="text-right">Total</Th>
+                      <Th>Status</Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    {data.map((r) => (
+                      <Tr key={r.id}>
+                        <Td>
+                          <Link to={`/retur-penjualan/${r.id}`} className="font-mono text-xs text-primary hover:underline">
+                            {r.nomor}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{tanggal(r.tanggal)}</Td>
+                        <Td className="font-medium">{r.pelanggan?.nama ?? '-'}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(r.total)}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_STATUS[r.status]}>{LABEL_STATUS[r.status]}</Badge>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                {data.map((r) => (
+                  <KartuBaris key={r.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/retur-penjualan/${r.id}`} className="truncate font-mono text-xs text-primary hover:underline">
+                        {r.nomor}
+                      </Link>
+                      <Badge variant={VARIAN_STATUS[r.status]}>{LABEL_STATUS[r.status]}</Badge>
+                    </div>
+                    <p className="font-medium">{r.pelanggan?.nama ?? '-'}</p>
+                    <BarisInfo label="Tanggal" value={tanggal(r.tanggal)} />
+                    <BarisInfo label="Total" value={<span className="font-semibold">{rupiah(r.total)}</span>} />
+                  </KartuBaris>
+                ))}
+              </DaftarMobile>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
                   {data.length >= 100 ? tt('Total 100 retur teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('retur')}`}

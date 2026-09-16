@@ -9,16 +9,20 @@ import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -176,62 +180,94 @@ export function SuratJalan() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada Surat Jalan." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th className="w-8">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4"
-                      checked={semuaTercentang}
-                      onChange={toggleSemua}
-                      aria-label="Pilih semua"
-                    />
-                  </Th>
-                  <Th>Nomor</Th>
-                  <Th>Tanggal</Th>
-                  <Th>Pelanggan</Th>
-                  <Th>Gudang</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th className="w-8">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4"
+                          checked={semuaTercentang}
+                          onChange={toggleSemua}
+                          aria-label="Pilih semua"
+                        />
+                      </Th>
+                      <Th>Nomor</Th>
+                      <Th>Tanggal</Th>
+                      <Th>Pelanggan</Th>
+                      <Th>Gudang</Th>
+                      <Th>Status</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.map((sj) => (
+                      <Tr key={sj.id}>
+                        <Td>
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4"
+                            checked={dipilih.has(sj.id)}
+                            onChange={() => toggleSatu(sj.id)}
+                            aria-label={`Pilih ${sj.nomor}`}
+                          />
+                        </Td>
+                        <Td>
+                          <Link to={`/surat-jalan/${sj.id}`} className="font-mono text-xs text-primary hover:underline">
+                            {sj.nomor}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{tanggal(sj.tanggal)}</Td>
+                        <Td>
+                          {/* Lihat catatan sama di SalesOrder.tsx: pesanan marketplace pakai satu
+                              akun agregat sebagai pelanggan -- nama pembeli asli ada di
+                              nama_penerima, dijaga `terlihatSepertiNama` kalau isinya angka polos. */}
+                          <p className="font-medium">
+                            {(sj.nama_penerima && terlihatSepertiNama(sj.nama_penerima) ? sj.nama_penerima : null) || sj.pelanggan?.nama || '-'}
+                          </p>
+                          {sj.nama_penerima && terlihatSepertiNama(sj.nama_penerima) && sj.pelanggan?.nama && sj.nama_penerima !== sj.pelanggan.nama ? (
+                            <p className="text-xs text-muted-foreground">{sj.pelanggan.nama}</p>
+                          ) : null}
+                        </Td>
+                        <Td className="text-muted-foreground">{sj.gudang?.nama ?? '-'}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_STATUS[sj.status]}>{LABEL_STATUS[sj.status]}</Badge>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.map((sj) => (
-                  <Tr key={sj.id}>
-                    <Td>
+                  <KartuBaris key={sj.id}>
+                    <div className="flex items-start gap-2">
                       <input
                         type="checkbox"
-                        className="h-4 w-4"
+                        className="mt-1 h-4 w-4 shrink-0"
                         checked={dipilih.has(sj.id)}
                         onChange={() => toggleSatu(sj.id)}
                         aria-label={`Pilih ${sj.nomor}`}
                       />
-                    </Td>
-                    <Td>
-                      <Link to={`/surat-jalan/${sj.id}`} className="font-mono text-xs text-primary hover:underline">
-                        {sj.nomor}
-                      </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{tanggal(sj.tanggal)}</Td>
-                    <Td>
-                      {/* Lihat catatan sama di SalesOrder.tsx: pesanan marketplace pakai satu
-                          akun agregat sebagai pelanggan -- nama pembeli asli ada di
-                          nama_penerima, dijaga `terlihatSepertiNama` kalau isinya angka polos. */}
-                      <p className="font-medium">
-                        {(sj.nama_penerima && terlihatSepertiNama(sj.nama_penerima) ? sj.nama_penerima : null) || sj.pelanggan?.nama || '-'}
-                      </p>
-                      {sj.nama_penerima && terlihatSepertiNama(sj.nama_penerima) && sj.pelanggan?.nama && sj.nama_penerima !== sj.pelanggan.nama ? (
-                        <p className="text-xs text-muted-foreground">{sj.pelanggan.nama}</p>
-                      ) : null}
-                    </Td>
-                    <Td className="text-muted-foreground">{sj.gudang?.nama ?? '-'}</Td>
-                    <Td>
-                      <Badge variant={VARIAN_STATUS[sj.status]}>{LABEL_STATUS[sj.status]}</Badge>
-                    </Td>
-                  </Tr>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <Link to={`/surat-jalan/${sj.id}`} className="truncate font-mono text-xs text-primary hover:underline">
+                            {sj.nomor}
+                          </Link>
+                          <Badge variant={VARIAN_STATUS[sj.status]}>{LABEL_STATUS[sj.status]}</Badge>
+                        </div>
+                        <p className="truncate font-medium">{namaPenerimaSj(sj)}</p>
+                        <div className="mt-1.5 space-y-1">
+                          <BarisInfo label="Tanggal" value={tanggal(sj.tanggal)} />
+                          <BarisInfo label="Gudang" value={sj.gudang?.nama ?? '-'} />
+                        </div>
+                      </div>
+                    </div>
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>

@@ -8,15 +8,19 @@ import { tanggal, tanggalISO } from '@/lib/format'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -124,34 +128,53 @@ export function PenerimaanBarang() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada Penerimaan Barang." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Nomor</Th>
-                  <Th>Tanggal</Th>
-                  <Th>Supplier</Th>
-                  <Th>Gudang</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Nomor</Th>
+                      <Th>Tanggal</Th>
+                      <Th>Supplier</Th>
+                      <Th>Gudang</Th>
+                      <Th>Status</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.map((pb) => (
+                      <Tr key={pb.id}>
+                        <Td>
+                          <Link to={`/penerimaan-barang/${pb.id}`} className="font-mono text-xs text-primary hover:underline">
+                            {pb.nomor}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{tanggal(pb.tanggal)}</Td>
+                        <Td className="font-medium">{pb.supplier?.nama ?? '-'}</Td>
+                        <Td className="text-muted-foreground">{pb.gudang?.nama ?? '-'}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_STATUS[pb.status]}>{LABEL_STATUS[pb.status]}</Badge>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.map((pb) => (
-                  <Tr key={pb.id}>
-                    <Td>
-                      <Link to={`/penerimaan-barang/${pb.id}`} className="font-mono text-xs text-primary hover:underline">
+                  <KartuBaris key={pb.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/penerimaan-barang/${pb.id}`} className="truncate font-mono text-xs text-primary hover:underline">
                         {pb.nomor}
                       </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{tanggal(pb.tanggal)}</Td>
-                    <Td className="font-medium">{pb.supplier?.nama ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{pb.gudang?.nama ?? '-'}</Td>
-                    <Td>
                       <Badge variant={VARIAN_STATUS[pb.status]}>{LABEL_STATUS[pb.status]}</Badge>
-                    </Td>
-                  </Tr>
+                    </div>
+                    <p className="font-medium">{pb.supplier?.nama ?? '-'}</p>
+                    <BarisInfo label="Tanggal" value={tanggal(pb.tanggal)} />
+                    <BarisInfo label="Gudang" value={pb.gudang?.nama ?? '-'} />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>
