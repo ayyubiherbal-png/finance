@@ -9,15 +9,19 @@ import { tautanWa } from '@/lib/whatsapp'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   PesanError,
   Paginasi,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -183,6 +187,8 @@ export function CrmPelanggan() {
               {tersaring.length === 0 ? (
                 <KondisiKosong pesan="Tidak ada pelanggan yang cocok." />
               ) : (
+                <>
+                <TabelDesktop>
                 <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                   <Thead>
                     <Tr>
@@ -237,6 +243,44 @@ export function CrmPelanggan() {
                     })}
                   </Tbody>
                 </Table>
+                </TabelDesktop>
+                <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  {tersaring.map((p) => {
+                    const wa = tautanWa(p.whatsapp ?? p.telepon)
+                    return (
+                      <KartuBaris key={p.pelanggan_id}>
+                        <div className="flex items-center justify-between gap-2">
+                          <Link to={`/crm/pelanggan/${p.pelanggan_id}`} className="truncate font-medium text-primary hover:underline">
+                            {p.nama}
+                          </Link>
+                          <Badge variant={INFO_SEGMEN[p.segmen].varian}>{INFO_SEGMEN[p.segmen].label}</Badge>
+                        </div>
+                        <BarisInfo label="Kode" value={<span className="font-mono text-xs">{p.kode}</span>} />
+                        <BarisInfo label="Transaksi" value={p.jumlah_transaksi} />
+                        <BarisInfo label="Total belanja" value={rupiah(p.total_belanja)} />
+                        <BarisInfo
+                          label="Terakhir order"
+                          value={
+                            p.terakhir_order
+                              ? `${fmtTanggal(p.terakhir_order)}${p.hari_sejak_order !== null ? ` (${p.hari_sejak_order} ${tt('hari lalu')})` : ''}`
+                              : '-'
+                          }
+                        />
+                        {wa ? (
+                          <div className="pt-1">
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={wa} target="_blank" rel="noreferrer">
+                                <MessageCircle className="h-4 w-4" />
+                                Chat
+                              </a>
+                            </Button>
+                          </div>
+                        ) : null}
+                      </KartuBaris>
+                    )
+                  })}
+                </DaftarMobile>
+                </>
               )}
             </CardContent>
           </Card>

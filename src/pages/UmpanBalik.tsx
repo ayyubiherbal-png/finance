@@ -6,7 +6,26 @@ import { Star } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { tanggalWaktu } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { Badge, Card, CardContent, KondisiKosong, Paginasi, PesanError, Select, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@/components/ui'
+import {
+  BarisInfo,
+  Badge,
+  Card,
+  CardContent,
+  DaftarMobile,
+  KartuBaris,
+  KondisiKosong,
+  Paginasi,
+  PesanError,
+  Select,
+  Spinner,
+  TabelDesktop,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from '@/components/ui'
 import { daftarBerhalaman } from '@/lib/pagination'
 
 interface BarisUmpanBalik {
@@ -106,46 +125,69 @@ export function UmpanBalik() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada umpan balik yang masuk." />
           ) : (
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Tanggal</Th>
-                  <Th>Pelanggan</Th>
-                  <Th>Skor</Th>
-                  <Th>Testimoni</Th>
-                  <Th>Publikasi</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Tanggal</Th>
+                      <Th>Pelanggan</Th>
+                      <Th>Skor</Th>
+                      <Th>Testimoni</Th>
+                      <Th>Publikasi</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.map((u) => (
+                      <Tr key={u.id}>
+                        <Td className="text-muted-foreground">{tanggalWaktu(u.dibuat_pada)}</Td>
+                        <Td className="font-medium">
+                          {u.link?.entitas_tipe === 'pelanggan' ? (
+                            <Link to={`/crm/pelanggan/${u.link.entitas_id}`} className="text-primary hover:underline">
+                              {u.link?.nama ?? '-'}
+                            </Link>
+                          ) : (
+                            (u.link?.nama ?? '-')
+                          )}
+                        </Td>
+                        <Td>
+                          <Bintang skor={u.skor} />
+                        </Td>
+                        <Td className="max-w-sm text-muted-foreground" title={u.testimoni ?? undefined}>
+                          {u.testimoni || '-'}
+                        </Td>
+                        <Td>
+                          {u.boleh_dipublikasikan ? (
+                            <Badge variant="sukses">{tt('Boleh')}</Badge>
+                          ) : (
+                            <Badge variant="netral">{tt('Tidak')}</Badge>
+                          )}
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile>
                 {data.map((u) => (
-                  <Tr key={u.id}>
-                    <Td className="text-muted-foreground">{tanggalWaktu(u.dibuat_pada)}</Td>
-                    <Td className="font-medium">
+                  <KartuBaris key={u.id}>
+                    <div className="flex items-center justify-between gap-2">
                       {u.link?.entitas_tipe === 'pelanggan' ? (
-                        <Link to={`/crm/pelanggan/${u.link.entitas_id}`} className="text-primary hover:underline">
+                        <Link to={`/crm/pelanggan/${u.link.entitas_id}`} className="truncate font-medium text-primary hover:underline">
                           {u.link?.nama ?? '-'}
                         </Link>
                       ) : (
-                        (u.link?.nama ?? '-')
+                        <p className="truncate font-medium">{u.link?.nama ?? '-'}</p>
                       )}
-                    </Td>
-                    <Td>
-                      <Bintang skor={u.skor} />
-                    </Td>
-                    <Td className="max-w-sm text-muted-foreground" title={u.testimoni ?? undefined}>
-                      {u.testimoni || '-'}
-                    </Td>
-                    <Td>
-                      {u.boleh_dipublikasikan ? (
-                        <Badge variant="sukses">{tt('Boleh')}</Badge>
-                      ) : (
-                        <Badge variant="netral">{tt('Tidak')}</Badge>
-                      )}
-                    </Td>
-                  </Tr>
+                      {u.boleh_dipublikasikan ? <Badge variant="sukses">{tt('Boleh')}</Badge> : <Badge variant="netral">{tt('Tidak')}</Badge>}
+                    </div>
+                    <BarisInfo label="Tanggal" value={tanggalWaktu(u.dibuat_pada)} />
+                    <BarisInfo label="Skor" value={<Bintang skor={u.skor} />} />
+                    {u.testimoni ? <p className="text-sm text-muted-foreground">{u.testimoni}</p> : null}
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>

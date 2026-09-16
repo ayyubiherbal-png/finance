@@ -10,16 +10,20 @@ import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -182,40 +186,59 @@ export function Tiket() {
             <KondisiKosong pesan="Belum ada tiket." />
           ) : (
             <>
-              <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-                <Thead>
-                  <Tr>
-                    <Th>Nomor</Th>
-                    <Th>Tanggal</Th>
-                    <Th>Pelanggan</Th>
-                    <Th>Judul</Th>
-                    <Th>Prioritas</Th>
-                    <Th>Ditugaskan ke</Th>
-                    <Th>Status</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {data.map((tk) => (
-                    <Tr key={tk.id} className="cursor-pointer">
-                      <Td>
-                        <Link to={`/tiket/${tk.id}`} className="font-mono text-xs text-primary hover:underline">
-                          {tk.nomor}
-                        </Link>
-                      </Td>
-                      <Td className="text-muted-foreground">{tanggal(tk.tanggal)}</Td>
-                      <Td className="font-medium">{tk.pelanggan?.nama ?? '-'}</Td>
-                      <Td className="max-w-xs truncate">{tk.judul}</Td>
-                      <Td>
-                        <Badge variant={VARIAN_PRIORITAS[tk.prioritas]}>{LABEL_PRIORITAS[tk.prioritas]}</Badge>
-                      </Td>
-                      <Td className="text-muted-foreground">{tk.ditugaskan?.nama ?? '-'}</Td>
-                      <Td>
-                        <Badge variant={VARIAN_STATUS_TIKET[tk.status]}>{LABEL_STATUS_TIKET[tk.status]}</Badge>
-                      </Td>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Nomor</Th>
+                      <Th>Tanggal</Th>
+                      <Th>Pelanggan</Th>
+                      <Th>Judul</Th>
+                      <Th>Prioritas</Th>
+                      <Th>Ditugaskan ke</Th>
+                      <Th>Status</Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    {data.map((tk) => (
+                      <Tr key={tk.id} className="cursor-pointer">
+                        <Td>
+                          <Link to={`/tiket/${tk.id}`} className="font-mono text-xs text-primary hover:underline">
+                            {tk.nomor}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{tanggal(tk.tanggal)}</Td>
+                        <Td className="font-medium">{tk.pelanggan?.nama ?? '-'}</Td>
+                        <Td className="max-w-xs truncate">{tk.judul}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_PRIORITAS[tk.prioritas]}>{LABEL_PRIORITAS[tk.prioritas]}</Badge>
+                        </Td>
+                        <Td className="text-muted-foreground">{tk.ditugaskan?.nama ?? '-'}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_STATUS_TIKET[tk.status]}>{LABEL_STATUS_TIKET[tk.status]}</Badge>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                {data.map((tk) => (
+                  <KartuBaris key={tk.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/tiket/${tk.id}`} className="truncate font-mono text-xs text-primary hover:underline">
+                        {tk.nomor}
+                      </Link>
+                      <Badge variant={VARIAN_STATUS_TIKET[tk.status]}>{LABEL_STATUS_TIKET[tk.status]}</Badge>
+                    </div>
+                    <p className="font-medium">{tk.judul}</p>
+                    <BarisInfo label="Pelanggan" value={tk.pelanggan?.nama ?? '-'} />
+                    <BarisInfo label="Tanggal" value={tanggal(tk.tanggal)} />
+                    <BarisInfo label="Prioritas" value={<Badge variant={VARIAN_PRIORITAS[tk.prioritas]}>{LABEL_PRIORITAS[tk.prioritas]}</Badge>} />
+                    <BarisInfo label="Ditugaskan ke" value={tk.ditugaskan?.nama ?? '-'} />
+                  </KartuBaris>
+                ))}
+              </DaftarMobile>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
                   {data.length >= 100 ? tt('Total 100 tiket teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('tiket')}`}
