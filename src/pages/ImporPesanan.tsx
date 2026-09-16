@@ -8,18 +8,22 @@ import { rupiah, tanggal as fmtTanggal, pesanKesalahan, terlihatSepertiNama } fr
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  DaftarMobile,
+  KartuBaris,
   KondisiKosong,
   Label,
   PesanError,
   Paginasi,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -554,63 +558,113 @@ export function ImporPesanan() {
             <CardTitle className="text-base">3. {tt('Pencocokan Produk')}</CardTitle>
           </CardHeader>
           <CardContent className="p-0 pb-2">
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>{tt('Dari File')}</Th>
-                  <Th className="text-right">Qty</Th>
-                  <Th>{tt('Produk di Katalog')}</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {produkSumber.map((s) => {
-                  const cocok = petaProduk.get(s.kunci)
-                  return (
-                    <Tr key={s.kunci}>
-                      <Td>
-                        <p className="font-medium">{s.namaProduk || '-'}</p>
+            <TabelDesktop>
+              <Table>
+                <Thead>
+                  <Tr>
+                    <Th>{tt('Dari File')}</Th>
+                    <Th className="text-right">Qty</Th>
+                    <Th>{tt('Produk di Katalog')}</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {produkSumber.map((s) => {
+                    const cocok = petaProduk.get(s.kunci)
+                    return (
+                      <Tr key={s.kunci}>
+                        <Td>
+                          <p className="font-medium">{s.namaProduk || '-'}</p>
+                          {s.sku ? <p className="font-mono text-xs text-muted-foreground">{s.sku}</p> : null}
+                        </Td>
+                        <Td className="tabular text-right">{s.totalQty}</Td>
+                        <Td>
+                          <Combobox
+                            value={cocok?.produk_id ?? null}
+                            opsiTerpilih={cocok ? { value: cocok.produk_id, label: cocok.label } : null}
+                            onChange={async (id, opsi) => {
+                              const { data: satuan } = await supabase
+                                .from('produk_satuan')
+                                .select('satuan_id, konversi, satuan:satuan_id(kode)')
+                                .eq('produk_id', id)
+                                .order('urutan')
+                                .limit(1)
+                              const su = satuan?.[0] as unknown as { satuan_id: string; konversi: number } | undefined
+                              setPetaProduk((m) => {
+                                const baru = new Map(m)
+                                baru.set(s.kunci, su ? { produk_id: id, satuan_id: su.satuan_id, konversi: su.konversi, label: opsi.label } : null)
+                                return baru
+                              })
+                            }}
+                            cariOpsi={async (q) => {
+                              const { data } = await supabase.from('produk').select('id, kode, nama').eq('aktif', true).ilike('nama', `%${q}%`).limit(20)
+                              return ((data ?? []) as { id: string; kode: string; nama: string }[]).map((p) => ({
+                                value: p.id,
+                                label: p.nama,
+                                sublabel: p.kode,
+                              })) as OpsiCombobox[]
+                            }}
+                            placeholder="Pilih produk..."
+                          />
+                          {!cocok ? (
+                            <p className="mt-1 flex items-center gap-1 text-xs text-amber-600">
+                              <AlertTriangle className="h-3 w-3" /> {tt('Belum cocok -- pilih manual')}
+                            </p>
+                          ) : null}
+                        </Td>
+                      </Tr>
+                    )
+                  })}
+                </Tbody>
+              </Table>
+            </TabelDesktop>
+            <DaftarMobile>
+              {produkSumber.map((s) => {
+                const cocok = petaProduk.get(s.kunci)
+                return (
+                  <KartuBaris key={s.kunci}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{s.namaProduk || '-'}</p>
                         {s.sku ? <p className="font-mono text-xs text-muted-foreground">{s.sku}</p> : null}
-                      </Td>
-                      <Td className="tabular text-right">{s.totalQty}</Td>
-                      <Td>
-                        <Combobox
-                          value={cocok?.produk_id ?? null}
-                          opsiTerpilih={cocok ? { value: cocok.produk_id, label: cocok.label } : null}
-                          onChange={async (id, opsi) => {
-                            const { data: satuan } = await supabase
-                              .from('produk_satuan')
-                              .select('satuan_id, konversi, satuan:satuan_id(kode)')
-                              .eq('produk_id', id)
-                              .order('urutan')
-                              .limit(1)
-                            const su = satuan?.[0] as unknown as { satuan_id: string; konversi: number } | undefined
-                            setPetaProduk((m) => {
-                              const baru = new Map(m)
-                              baru.set(s.kunci, su ? { produk_id: id, satuan_id: su.satuan_id, konversi: su.konversi, label: opsi.label } : null)
-                              return baru
-                            })
-                          }}
-                          cariOpsi={async (q) => {
-                            const { data } = await supabase.from('produk').select('id, kode, nama').eq('aktif', true).ilike('nama', `%${q}%`).limit(20)
-                            return ((data ?? []) as { id: string; kode: string; nama: string }[]).map((p) => ({
-                              value: p.id,
-                              label: p.nama,
-                              sublabel: p.kode,
-                            })) as OpsiCombobox[]
-                          }}
-                          placeholder="Pilih produk..."
-                        />
-                        {!cocok ? (
-                          <p className="mt-1 flex items-center gap-1 text-xs text-amber-600">
-                            <AlertTriangle className="h-3 w-3" /> {tt('Belum cocok -- pilih manual')}
-                          </p>
-                        ) : null}
-                      </Td>
-                    </Tr>
-                  )
-                })}
-              </Tbody>
-            </Table>
+                      </div>
+                      <p className="tabular shrink-0 text-sm text-muted-foreground">{tt('Qty')} {s.totalQty}</p>
+                    </div>
+                    <Combobox
+                      value={cocok?.produk_id ?? null}
+                      opsiTerpilih={cocok ? { value: cocok.produk_id, label: cocok.label } : null}
+                      onChange={async (id, opsi) => {
+                        const { data: satuan } = await supabase
+                          .from('produk_satuan')
+                          .select('satuan_id, konversi, satuan:satuan_id(kode)')
+                          .eq('produk_id', id)
+                          .order('urutan')
+                          .limit(1)
+                        const su = satuan?.[0] as unknown as { satuan_id: string; konversi: number } | undefined
+                        setPetaProduk((m) => {
+                          const baru = new Map(m)
+                          baru.set(s.kunci, su ? { produk_id: id, satuan_id: su.satuan_id, konversi: su.konversi, label: opsi.label } : null)
+                          return baru
+                        })
+                      }}
+                      cariOpsi={async (q) => {
+                        const { data } = await supabase.from('produk').select('id, kode, nama').eq('aktif', true).ilike('nama', `%${q}%`).limit(20)
+                        return ((data ?? []) as { id: string; kode: string; nama: string }[]).map((p) => ({
+                          value: p.id,
+                          label: p.nama,
+                          sublabel: p.kode,
+                        })) as OpsiCombobox[]
+                      }}
+                      placeholder="Pilih produk..."
+                    />
+                    {!cocok ? (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-amber-600">
+                        <AlertTriangle className="h-3 w-3" /> {tt('Belum cocok -- pilih manual')}
+                      </p>
+                    ) : null}
+                  </KartuBaris>
+                )
+              })}
+            </DaftarMobile>
             <div className="flex justify-end p-3">
               <Button onClick={lanjutKePratinjau} disabled={produkSumber.some((s) => !petaProduk.get(s.kunci))}>
                 {tt('Lanjut ke Pratinjau')}
@@ -665,68 +719,123 @@ export function ImporPesanan() {
             {pesanan.length === 0 ? (
               <KondisiKosong pesan="Tidak ada pesanan yang bisa diproses." />
             ) : (
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th className="w-8"></Th>
-                    <Th>{tt('Nomor Pesanan')}</Th>
-                    <Th>{tt('Tanggal')}</Th>
-                    <Th>{tt('Pembeli')}</Th>
-                    <Th className="text-right">Total</Th>
-                    <Th>{tt('Status')}</Th>
-                    <Th>{tt('Keterangan')}</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+              <>
+                <TabelDesktop>
+                  <Table>
+                    <Thead>
+                      <Tr>
+                        <Th className="w-8"></Th>
+                        <Th>{tt('Nomor Pesanan')}</Th>
+                        <Th>{tt('Tanggal')}</Th>
+                        <Th>{tt('Pembeli')}</Th>
+                        <Th className="text-right">Total</Th>
+                        <Th>{tt('Status')}</Th>
+                        <Th>{tt('Keterangan')}</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {pesananHalaman.map((p) => {
+                        const duplikat = sudahDiimpor.has(p.nomorPesanan)
+                        const statusBerubah = nomorStatusBerubah.has(p.nomorPesanan)
+                        const siap = pesananSiap(p)
+                        const statusAman = statusAmanDiimpor(p.statusPesanan)
+                        return (
+                          <Tr key={p.nomorPesanan}>
+                            <Td>
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4 cursor-pointer"
+                                checked={dicentang.has(p.nomorPesanan)}
+                                disabled={!siap}
+                                onChange={() => toggleCentang(p.nomorPesanan)}
+                              />
+                            </Td>
+                            <Td className="font-mono text-xs">{p.nomorPesanan}</Td>
+                            <Td className="text-muted-foreground">{p.tanggal ? fmtTanggal(p.tanggal) : '-'}</Td>
+                            <Td>{p.namaPembeli || '-'}</Td>
+                            <Td className="tabular text-right">{rupiah(p.total)}</Td>
+                            {/* Badge menampilkan teks ASLI dari kolom Status Pesanan di file, apa
+                                adanya -- bukan istilah/verdict buatan aplikasi. Warnanya saja yang
+                                ditentukan aplikasi (lihat `variantStatusPlatform`), supaya user
+                                selalu tahu status paketnya persis seperti di marketplace. */}
+                            <Td>
+                              {p.statusPesanan ? (
+                                <Badge variant={variantStatusPlatform(p.statusPesanan)}>{p.statusPesanan}</Badge>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </Td>
+                            <Td className="text-xs text-muted-foreground">
+                              {duplikat
+                                ? statusBerubah
+                                  ? tt('Sudah pernah diimpor, statusnya berubah -- lihat bagian "Perbarui Status" di bawah')
+                                  : tt('Sudah pernah diimpor, dilewati')
+                                : !siap
+                                  ? tt('Ada produk belum cocok, dilewati')
+                                  : !statusAman
+                                    ? tt('Status ini tidak diimpor otomatis -- centang manual kalau yakin')
+                                    : statusSudahFinal(p.statusPesanan)
+                                      ? tt('Diimpor & langsung Lunas')
+                                      : tt('Diimpor, jadi piutang')}
+                            </Td>
+                          </Tr>
+                        )
+                      })}
+                    </Tbody>
+                  </Table>
+                </TabelDesktop>
+                <DaftarMobile>
                   {pesananHalaman.map((p) => {
                     const duplikat = sudahDiimpor.has(p.nomorPesanan)
                     const statusBerubah = nomorStatusBerubah.has(p.nomorPesanan)
                     const siap = pesananSiap(p)
                     const statusAman = statusAmanDiimpor(p.statusPesanan)
                     return (
-                      <Tr key={p.nomorPesanan}>
-                        <Td>
+                      <KartuBaris key={p.nomorPesanan}>
+                        <div className="flex items-start gap-2">
                           <input
                             type="checkbox"
-                            className="h-4 w-4 cursor-pointer"
+                            className="mt-1 h-4 w-4 shrink-0 cursor-pointer"
                             checked={dicentang.has(p.nomorPesanan)}
                             disabled={!siap}
                             onChange={() => toggleCentang(p.nomorPesanan)}
                           />
-                        </Td>
-                        <Td className="font-mono text-xs">{p.nomorPesanan}</Td>
-                        <Td className="text-muted-foreground">{p.tanggal ? fmtTanggal(p.tanggal) : '-'}</Td>
-                        <Td>{p.namaPembeli || '-'}</Td>
-                        <Td className="tabular text-right">{rupiah(p.total)}</Td>
-                        {/* Badge menampilkan teks ASLI dari kolom Status Pesanan di file, apa
-                            adanya -- bukan istilah/verdict buatan aplikasi. Warnanya saja yang
-                            ditentukan aplikasi (lihat `variantStatusPlatform`), supaya user
-                            selalu tahu status paketnya persis seperti di marketplace. */}
-                        <Td>
-                          {p.statusPesanan ? (
-                            <Badge variant={variantStatusPlatform(p.statusPesanan)}>{p.statusPesanan}</Badge>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </Td>
-                        <Td className="text-xs text-muted-foreground">
-                          {duplikat
-                            ? statusBerubah
-                              ? tt('Sudah pernah diimpor, statusnya berubah -- lihat bagian "Perbarui Status" di bawah')
-                              : tt('Sudah pernah diimpor, dilewati')
-                            : !siap
-                              ? tt('Ada produk belum cocok, dilewati')
-                              : !statusAman
-                                ? tt('Status ini tidak diimpor otomatis -- centang manual kalau yakin')
-                                : statusSudahFinal(p.statusPesanan)
-                                  ? tt('Diimpor & langsung Lunas')
-                                  : tt('Diimpor, jadi piutang')}
-                        </Td>
-                      </Tr>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="truncate font-mono text-xs">{p.nomorPesanan}</p>
+                              <p className="tabular shrink-0 font-semibold">{rupiah(p.total)}</p>
+                            </div>
+                            <p className="truncate font-medium">{p.namaPembeli || '-'}</p>
+                            <div className="mt-1">
+                              {p.statusPesanan ? (
+                                <Badge variant={variantStatusPlatform(p.statusPesanan)}>{p.statusPesanan}</Badge>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">-</span>
+                              )}
+                            </div>
+                            <div className="mt-1.5 space-y-1">
+                              <BarisInfo label="Tanggal" value={p.tanggal ? fmtTanggal(p.tanggal) : '-'} />
+                            </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {duplikat
+                                ? statusBerubah
+                                  ? tt('Sudah pernah diimpor, statusnya berubah -- lihat bagian "Perbarui Status" di bawah')
+                                  : tt('Sudah pernah diimpor, dilewati')
+                                : !siap
+                                  ? tt('Ada produk belum cocok, dilewati')
+                                  : !statusAman
+                                    ? tt('Status ini tidak diimpor otomatis -- centang manual kalau yakin')
+                                    : statusSudahFinal(p.statusPesanan)
+                                      ? tt('Diimpor & langsung Lunas')
+                                      : tt('Diimpor, jadi piutang')}
+                            </p>
+                          </div>
+                        </div>
+                      </KartuBaris>
                     )
                   })}
-                </Tbody>
-              </Table>
+                </DaftarMobile>
+              </>
             )}
             <Paginasi halaman={halamanPratinjau} ukuranHalaman={UKURAN_PRATINJAU} total={pesanan.length} onUbah={setHalamanPratinjau} />
 
@@ -784,41 +893,72 @@ export function ImporPesanan() {
             </p>
           </CardHeader>
           <CardContent className="p-0 pb-2">
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th className="w-8"></Th>
-                  <Th>{tt('Nomor Pesanan')}</Th>
-                  <Th>{tt('Status Tersimpan')}</Th>
-                  <Th>{tt('Status Baru di File')}</Th>
-                  <Th>{tt('Keterangan')}</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {statusBerubahHalaman.map((p) => {
-                  const statusLama = sudahDiimpor.get(p.nomorPesanan) ?? ''
-                  const jadiFinal = statusSudahFinal(p.statusPesanan)
-                  return (
-                    <Tr key={p.nomorPesanan}>
-                      <Td>
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer"
-                          checked={dicentangUpdate.has(p.nomorPesanan)}
-                          onChange={() => toggleCentangUpdate(p.nomorPesanan)}
-                        />
-                      </Td>
-                      <Td className="font-mono text-xs">{p.nomorPesanan}</Td>
-                      <Td>{statusLama ? <Badge variant={variantStatusPlatform(statusLama)}>{statusLama}</Badge> : <span className="text-muted-foreground">-</span>}</Td>
-                      <Td>
-                        <Badge variant={variantStatusPlatform(p.statusPesanan)}>{p.statusPesanan}</Badge>
-                      </Td>
-                      <Td className="text-xs text-muted-foreground">{jadiFinal ? tt('Status diperbarui & ditandai Lunas') : tt('Status diperbarui, tetap piutang')}</Td>
-                    </Tr>
-                  )
-                })}
-              </Tbody>
-            </Table>
+            <TabelDesktop>
+              <Table>
+                <Thead>
+                  <Tr>
+                    <Th className="w-8"></Th>
+                    <Th>{tt('Nomor Pesanan')}</Th>
+                    <Th>{tt('Status Tersimpan')}</Th>
+                    <Th>{tt('Status Baru di File')}</Th>
+                    <Th>{tt('Keterangan')}</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {statusBerubahHalaman.map((p) => {
+                    const statusLama = sudahDiimpor.get(p.nomorPesanan) ?? ''
+                    const jadiFinal = statusSudahFinal(p.statusPesanan)
+                    return (
+                      <Tr key={p.nomorPesanan}>
+                        <Td>
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 cursor-pointer"
+                            checked={dicentangUpdate.has(p.nomorPesanan)}
+                            onChange={() => toggleCentangUpdate(p.nomorPesanan)}
+                          />
+                        </Td>
+                        <Td className="font-mono text-xs">{p.nomorPesanan}</Td>
+                        <Td>{statusLama ? <Badge variant={variantStatusPlatform(statusLama)}>{statusLama}</Badge> : <span className="text-muted-foreground">-</span>}</Td>
+                        <Td>
+                          <Badge variant={variantStatusPlatform(p.statusPesanan)}>{p.statusPesanan}</Badge>
+                        </Td>
+                        <Td className="text-xs text-muted-foreground">{jadiFinal ? tt('Status diperbarui & ditandai Lunas') : tt('Status diperbarui, tetap piutang')}</Td>
+                      </Tr>
+                    )
+                  })}
+                </Tbody>
+              </Table>
+            </TabelDesktop>
+            <DaftarMobile>
+              {statusBerubahHalaman.map((p) => {
+                const statusLama = sudahDiimpor.get(p.nomorPesanan) ?? ''
+                const jadiFinal = statusSudahFinal(p.statusPesanan)
+                return (
+                  <KartuBaris key={p.nomorPesanan}>
+                    <div className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        className="mt-1 h-4 w-4 shrink-0 cursor-pointer"
+                        checked={dicentangUpdate.has(p.nomorPesanan)}
+                        onChange={() => toggleCentangUpdate(p.nomorPesanan)}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-mono text-xs">{p.nomorPesanan}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          {statusLama ? <Badge variant={variantStatusPlatform(statusLama)}>{statusLama}</Badge> : <span className="text-sm text-muted-foreground">-</span>}
+                          <span className="text-xs text-muted-foreground">&rarr;</span>
+                          <Badge variant={variantStatusPlatform(p.statusPesanan)}>{p.statusPesanan}</Badge>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {jadiFinal ? tt('Status diperbarui & ditandai Lunas') : tt('Status diperbarui, tetap piutang')}
+                        </p>
+                      </div>
+                    </div>
+                  </KartuBaris>
+                )
+              })}
+            </DaftarMobile>
             <Paginasi halaman={halamanUpdate} ukuranHalaman={UKURAN_PRATINJAU} total={pesananStatusBerubah.length} onUbah={setHalamanUpdate} />
 
             {hasilUpdate ? (

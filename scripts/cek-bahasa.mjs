@@ -81,6 +81,7 @@ const ABAIKAN = new Set([
   'Ayyubi Food',
   'Ayyubi Finance',
   '&middot;',
+  '&rarr;',
   'H+',
   'Enter',
   'Rp',
