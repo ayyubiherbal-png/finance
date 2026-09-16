@@ -9,16 +9,20 @@ import { useAuth } from '@/contexts/AuthContext'
 import { tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { toast } from '@/components/Toast'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  DaftarMobile,
   Input,
+  KartuBaris,
   Label,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -246,45 +250,74 @@ function FormBaru({ soId }: { soId: string | null }) {
           <CardTitle className="text-base">Barang yang dikirim</CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-2">
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>Produk</Th>
-                <Th>Satuan</Th>
-                <Th className="text-right">Sisa</Th>
-                <Th className="text-right">Kirim sekarang</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {baris.map((r) => {
+          <TabelDesktop>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Produk</Th>
+                  <Th>Satuan</Th>
+                  <Th className="text-right">Sisa</Th>
+                  <Th className="text-right">Kirim sekarang</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {baris.map((r) => {
+                  const maks = (r.qty_dasar - r.qty_terkirim) / r.konversi
+                  return (
+                    <Tr key={r.id}>
+                      <Td className="font-medium">{r.produk?.nama}</Td>
+                      <Td className="text-xs text-muted-foreground">{r.satuan?.kode}</Td>
+                      <Td className="tabular text-right text-muted-foreground">{maks}</Td>
+                      <Td className="text-right">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={maks}
+                          value={r.qtyKirim}
+                          onChange={(e) => ubahQty(r.id, Number(e.target.value))}
+                          className="ml-auto w-24 text-right"
+                        />
+                      </Td>
+                    </Tr>
+                  )
+                })}
+                {baris.length === 0 ? (
+                  <Tr>
+                    <Td colSpan={4} className="py-6 text-center text-sm text-muted-foreground">
+                      {tt("Semua item pada SO ini sudah terkirim penuh.")}
+                    </Td>
+                  </Tr>
+                ) : null}
+              </Tbody>
+            </Table>
+          </TabelDesktop>
+          <DaftarMobile>
+            {baris.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">{tt('Semua item pada SO ini sudah terkirim penuh.')}</p>
+            ) : (
+              baris.map((r) => {
                 const maks = (r.qty_dasar - r.qty_terkirim) / r.konversi
                 return (
-                  <Tr key={r.id}>
-                    <Td className="font-medium">{r.produk?.nama}</Td>
-                    <Td className="text-xs text-muted-foreground">{r.satuan?.kode}</Td>
-                    <Td className="tabular text-right text-muted-foreground">{maks}</Td>
-                    <Td className="text-right">
+                  <KartuBaris key={r.id}>
+                    <p className="font-medium">{r.produk?.nama}</p>
+                    <BarisInfo label="Satuan" value={r.satuan?.kode} />
+                    <BarisInfo label="Sisa" value={maks} />
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <span className="text-sm text-muted-foreground">{tt('Kirim sekarang')}</span>
                       <Input
                         type="number"
                         min={0}
                         max={maks}
                         value={r.qtyKirim}
                         onChange={(e) => ubahQty(r.id, Number(e.target.value))}
-                        className="ml-auto w-24 text-right"
+                        className="w-24 text-right"
                       />
-                    </Td>
-                  </Tr>
+                    </div>
+                  </KartuBaris>
                 )
-              })}
-              {baris.length === 0 ? (
-                <Tr>
-                  <Td colSpan={4} className="py-6 text-center text-sm text-muted-foreground">
-                    {tt("Semua item pada SO ini sudah terkirim penuh.")}
-                  </Td>
-                </Tr>
-              ) : null}
-            </Tbody>
-          </Table>
+              })
+            )}
+          </DaftarMobile>
         </CardContent>
       </Card>
 
@@ -538,27 +571,42 @@ function FormDetail({ sjId }: { sjId: string }) {
           <CardTitle className="text-base">Item dikirim</CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-2">
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>Produk</Th>
-                <Th>Satuan</Th>
-                <Th className="text-right">Qty</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {(items ?? []).map((it) => (
-                <Tr key={it.id}>
-                  <Td className="font-medium">
-                    {it.produk?.nama}
-                    <span className="ml-1 font-mono text-xs text-muted-foreground">{it.produk?.kode}</span>
-                  </Td>
-                  <Td className="text-xs text-muted-foreground">{it.satuan?.kode}</Td>
-                  <Td className="tabular text-right">{it.qty}</Td>
+          <TabelDesktop>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Produk</Th>
+                  <Th>Satuan</Th>
+                  <Th className="text-right">Qty</Th>
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              </Thead>
+              <Tbody>
+                {(items ?? []).map((it) => (
+                  <Tr key={it.id}>
+                    <Td className="font-medium">
+                      {it.produk?.nama}
+                      <span className="ml-1 font-mono text-xs text-muted-foreground">{it.produk?.kode}</span>
+                    </Td>
+                    <Td className="text-xs text-muted-foreground">{it.satuan?.kode}</Td>
+                    <Td className="tabular text-right">{it.qty}</Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </TabelDesktop>
+          <DaftarMobile>
+            {(items ?? []).map((it) => (
+              <KartuBaris key={it.id}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{it.produk?.nama}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{it.produk?.kode}</p>
+                  </div>
+                  <p className="tabular shrink-0 font-semibold">{it.qty} {it.satuan?.kode}</p>
+                </div>
+              </KartuBaris>
+            ))}
+          </DaftarMobile>
         </CardContent>
       </Card>
 

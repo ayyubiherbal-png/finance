@@ -11,16 +11,20 @@ import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  DaftarMobile,
+  KartuBaris,
   KondisiKosong,
   Label,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -439,31 +443,48 @@ function FormDetail({ fakturId }: { fakturId: string }) {
           <CardTitle className="text-base">Item</CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-2">
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>Produk</Th>
-                <Th>Satuan</Th>
-                <Th className="text-right">Qty</Th>
-                <Th className="text-right">Harga</Th>
-                <Th className="text-right">Subtotal</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {(items ?? []).map((it) => (
-                <Tr key={it.id}>
-                  <Td className="font-medium">
-                    {it.produk?.nama}
-                    <span className="ml-1 font-mono text-xs text-muted-foreground">{it.produk?.kode}</span>
-                  </Td>
-                  <Td className="text-xs text-muted-foreground">{it.satuan?.kode}</Td>
-                  <Td className="tabular text-right">{it.qty}</Td>
-                  <Td className="tabular text-right">{rupiah(it.harga_satuan)}</Td>
-                  <Td className="tabular text-right font-medium">{rupiah(it.subtotal)}</Td>
+          <TabelDesktop>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Produk</Th>
+                  <Th>Satuan</Th>
+                  <Th className="text-right">Qty</Th>
+                  <Th className="text-right">Harga</Th>
+                  <Th className="text-right">Subtotal</Th>
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              </Thead>
+              <Tbody>
+                {(items ?? []).map((it) => (
+                  <Tr key={it.id}>
+                    <Td className="font-medium">
+                      {it.produk?.nama}
+                      <span className="ml-1 font-mono text-xs text-muted-foreground">{it.produk?.kode}</span>
+                    </Td>
+                    <Td className="text-xs text-muted-foreground">{it.satuan?.kode}</Td>
+                    <Td className="tabular text-right">{it.qty}</Td>
+                    <Td className="tabular text-right">{rupiah(it.harga_satuan)}</Td>
+                    <Td className="tabular text-right font-medium">{rupiah(it.subtotal)}</Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </TabelDesktop>
+          <DaftarMobile>
+            {(items ?? []).map((it) => (
+              <KartuBaris key={it.id}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{it.produk?.nama}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{it.produk?.kode}</p>
+                  </div>
+                  <p className="tabular shrink-0 font-semibold">{rupiah(it.subtotal)}</p>
+                </div>
+                <BarisInfo label="Qty" value={`${it.qty} ${it.satuan?.kode ?? ''}`} />
+                <BarisInfo label="Harga" value={rupiah(it.harga_satuan)} />
+              </KartuBaris>
+            ))}
+          </DaftarMobile>
 
           <div className="flex justify-end border-t border-border p-3">
             <div className="w-full max-w-xs space-y-1 text-sm">
