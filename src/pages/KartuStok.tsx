@@ -8,16 +8,20 @@ import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   Label,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -184,36 +188,56 @@ export function KartuStok() {
             ) : !data || data.length === 0 ? (
               <KondisiKosong pesan="Tidak ada mutasi pada rentang tanggal ini." />
             ) : (
-              <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-                <Thead>
-                  <Tr>
-                    <Th>Tanggal</Th>
-                    <Th>Jenis</Th>
-                    <Th>No. dokumen</Th>
-                    {(gudang?.length ?? 0) > 1 ? <Th>Gudang</Th> : null}
-                    <Th className="text-right">Masuk</Th>
-                    <Th className="text-right">Keluar</Th>
-                    <Th className="text-right">Saldo</Th>
-                    <Th className="text-right">Nilai</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+              <>
+                <TabelDesktop>
+                  <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                    <Thead>
+                      <Tr>
+                        <Th>Tanggal</Th>
+                        <Th>Jenis</Th>
+                        <Th>No. dokumen</Th>
+                        {(gudang?.length ?? 0) > 1 ? <Th>Gudang</Th> : null}
+                        <Th className="text-right">Masuk</Th>
+                        <Th className="text-right">Keluar</Th>
+                        <Th className="text-right">Saldo</Th>
+                        <Th className="text-right">Nilai</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {data.map((b) => (
+                        <Tr key={b.id}>
+                          <Td className="text-muted-foreground">{tanggal(b.tanggal)}</Td>
+                          <Td>
+                            <Badge variant="netral">{LABEL_JENIS[b.jenis]}</Badge>
+                          </Td>
+                          <Td className="font-mono text-xs">{b.ref_nomor ?? '-'}</Td>
+                          {(gudang?.length ?? 0) > 1 ? <Td className="text-muted-foreground">{b.nama_gudang}</Td> : null}
+                          <Td className="tabular text-right text-emerald-600">{b.masuk > 0 ? angka(b.masuk) : '-'}</Td>
+                          <Td className="tabular text-right text-destructive">{b.keluar > 0 ? angka(b.keluar) : '-'}</Td>
+                          <Td className="tabular text-right font-medium">{angka(b.saldo)}</Td>
+                          <Td className="tabular text-right">{rupiah(b.nilai)}</Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </TabelDesktop>
+                <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                   {data.map((b) => (
-                    <Tr key={b.id}>
-                      <Td className="text-muted-foreground">{tanggal(b.tanggal)}</Td>
-                      <Td>
+                    <KartuBaris key={b.id}>
+                      <div className="flex items-center justify-between gap-2">
                         <Badge variant="netral">{LABEL_JENIS[b.jenis]}</Badge>
-                      </Td>
-                      <Td className="font-mono text-xs">{b.ref_nomor ?? '-'}</Td>
-                      {(gudang?.length ?? 0) > 1 ? <Td className="text-muted-foreground">{b.nama_gudang}</Td> : null}
-                      <Td className="tabular text-right text-emerald-600">{b.masuk > 0 ? angka(b.masuk) : '-'}</Td>
-                      <Td className="tabular text-right text-destructive">{b.keluar > 0 ? angka(b.keluar) : '-'}</Td>
-                      <Td className="tabular text-right font-medium">{angka(b.saldo)}</Td>
-                      <Td className="tabular text-right">{rupiah(b.nilai)}</Td>
-                    </Tr>
+                        <p className="tabular font-semibold">{tt('Saldo')} {angka(b.saldo)}</p>
+                      </div>
+                      <BarisInfo label="Tanggal" value={tanggal(b.tanggal)} />
+                      <BarisInfo label="No. dokumen" value={<span className="font-mono text-xs">{b.ref_nomor ?? '-'}</span>} />
+                      {(gudang?.length ?? 0) > 1 ? <BarisInfo label="Gudang" value={b.nama_gudang} /> : null}
+                      {b.masuk > 0 ? <BarisInfo label="Masuk" value={<span className="text-emerald-600">{angka(b.masuk)}</span>} /> : null}
+                      {b.keluar > 0 ? <BarisInfo label="Keluar" value={<span className="text-destructive">{angka(b.keluar)}</span>} /> : null}
+                      <BarisInfo label="Nilai" value={rupiah(b.nilai)} />
+                    </KartuBaris>
                   ))}
-                </Tbody>
-              </Table>
+                </DaftarMobile>
+              </>
             )}
           </CardContent>
         </Card>

@@ -8,16 +8,20 @@ import { tanggal, tanggalISO } from '@/lib/format'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -134,38 +138,58 @@ export function PenyesuaianStok() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada Penyesuaian Stok." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Nomor</Th>
-                  <Th>Tanggal</Th>
-                  <Th>Gudang</Th>
-                  <Th>Jenis</Th>
-                  <Th>Alasan</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Nomor</Th>
+                      <Th>Tanggal</Th>
+                      <Th>Gudang</Th>
+                      <Th>Jenis</Th>
+                      <Th>Alasan</Th>
+                      <Th>Status</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.map((p) => (
+                      <Tr key={p.id}>
+                        <Td>
+                          <Link to={`/penyesuaian-stok/${p.id}`} className="font-mono text-xs text-primary hover:underline">
+                            {p.nomor}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{tanggal(p.tanggal)}</Td>
+                        <Td className="text-muted-foreground">{p.gudang?.nama ?? '-'}</Td>
+                        <Td>
+                          <Badge variant="netral">{LABEL_JENIS[p.jenis]}</Badge>
+                        </Td>
+                        <Td className="text-muted-foreground">{p.alasan ?? '-'}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_STATUS[p.status]}>{LABEL_STATUS[p.status]}</Badge>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.map((p) => (
-                  <Tr key={p.id}>
-                    <Td>
-                      <Link to={`/penyesuaian-stok/${p.id}`} className="font-mono text-xs text-primary hover:underline">
+                  <KartuBaris key={p.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/penyesuaian-stok/${p.id}`} className="truncate font-mono text-xs text-primary hover:underline">
                         {p.nomor}
                       </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{tanggal(p.tanggal)}</Td>
-                    <Td className="text-muted-foreground">{p.gudang?.nama ?? '-'}</Td>
-                    <Td>
-                      <Badge variant="netral">{LABEL_JENIS[p.jenis]}</Badge>
-                    </Td>
-                    <Td className="text-muted-foreground">{p.alasan ?? '-'}</Td>
-                    <Td>
                       <Badge variant={VARIAN_STATUS[p.status]}>{LABEL_STATUS[p.status]}</Badge>
-                    </Td>
-                  </Tr>
+                    </div>
+                    <BarisInfo label="Tanggal" value={tanggal(p.tanggal)} />
+                    <BarisInfo label="Gudang" value={p.gudang?.nama ?? '-'} />
+                    <BarisInfo label="Jenis" value={<Badge variant="netral">{LABEL_JENIS[p.jenis]}</Badge>} />
+                    {p.alasan ? <BarisInfo label="Alasan" value={p.alasan} /> : null}
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>
