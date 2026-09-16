@@ -9,15 +9,19 @@ import { tanggalISO } from '@/lib/format'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -109,37 +113,58 @@ export function Gudang() {
           ) : !data || data.baris.length === 0 ? (
             <KondisiKosong pesan="Belum ada gudang." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Kode</Th>
-                  <Th>Nama</Th>
-                  <Th>Alamat</Th>
-                  <Th></Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Kode</Th>
+                      <Th>Nama</Th>
+                      <Th>Alamat</Th>
+                      <Th></Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.baris.map((g) => (
+                      <Tr key={g.id}>
+                        <Td className="font-mono text-xs">{g.kode}</Td>
+                        <Td>
+                          <Link to={`/gudang/${g.id}`} className="font-medium text-primary hover:underline">
+                            {g.nama}
+                          </Link>
+                        </Td>
+                        <Td className="max-w-sm truncate text-muted-foreground" title={g.alamat ?? undefined}>
+                          {g.alamat ?? '-'}
+                        </Td>
+                        <Td className="text-right">
+                          <div className="flex justify-end gap-1.5">
+                            {g.utama ? <Badge>Utama</Badge> : null}
+                            {!g.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}
+                          </div>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.baris.map((g) => (
-                  <Tr key={g.id}>
-                    <Td className="font-mono text-xs">{g.kode}</Td>
-                    <Td>
-                      <Link to={`/gudang/${g.id}`} className="font-medium text-primary hover:underline">
+                  <KartuBaris key={g.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/gudang/${g.id}`} className="truncate font-medium text-primary hover:underline">
                         {g.nama}
                       </Link>
-                    </Td>
-                    <Td className="max-w-sm truncate text-muted-foreground" title={g.alamat ?? undefined}>
-                      {g.alamat ?? '-'}
-                    </Td>
-                    <Td className="text-right">
-                      <div className="flex justify-end gap-1.5">
+                      <div className="flex shrink-0 gap-1.5">
                         {g.utama ? <Badge>Utama</Badge> : null}
                         {!g.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}
                       </div>
-                    </Td>
-                  </Tr>
+                    </div>
+                    <BarisInfo label="Kode" value={<span className="font-mono text-xs">{g.kode}</span>} />
+                    <BarisInfo label="Alamat" value={g.alamat ?? '-'} />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
           <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
         </CardContent>

@@ -9,15 +9,19 @@ import { kutipFilterPostgrest } from '@/lib/utils'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -169,49 +173,82 @@ export function Produk() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada produk. Tambahkan lewat master produk." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Kode</Th>
-                  <Th>Nama</Th>
-                  <Th>Kategori</Th>
-                  <Th className="text-right">Stok</Th>
-                  <Th>Satuan</Th>
-                  <Th className="text-right">HPP</Th>
-                  <Th className="text-right">Nilai persediaan</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Kode</Th>
+                      <Th>Nama</Th>
+                      <Th>Kategori</Th>
+                      <Th className="text-right">Stok</Th>
+                      <Th>Satuan</Th>
+                      <Th className="text-right">HPP</Th>
+                      <Th className="text-right">Nilai persediaan</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {baris.map(({ produk: p, varian }) => (
+                      <Tr key={p.produk_id}>
+                        <Td className={`font-mono text-xs ${varian ? 'pl-6 text-muted-foreground/70' : ''}`}>{p.kode}</Td>
+                        <Td className="font-medium">
+                          <div className={`flex items-center gap-2 ${varian ? 'pl-6' : ''}`}>
+                            <Link to={`/produk/${p.produk_id}`} className={varian ? 'text-muted-foreground hover:underline' : 'text-primary hover:underline'}>
+                              {p.nama}
+                            </Link>
+                            {varian ? <Badge variant="netral">{tt('Varian')}</Badge> : null}
+                            {!varian && (jumlahVarian.get(p.produk_id) ?? 0) > 0 ? (
+                              <span className="text-xs text-muted-foreground">
+                                ({tt('{n} varian').replace('{n}', String(jumlahVarian.get(p.produk_id)))})
+                              </span>
+                            ) : null}
+                            {p.perlu_restock ? (
+                              <Badge variant={Number(p.qty) <= 0 ? 'bahaya' : 'peringatan'}>
+                                {Number(p.qty) <= 0 ? 'Habis' : 'Menipis'}
+                              </Badge>
+                            ) : null}
+                          </div>
+                        </Td>
+                        <Td className="text-muted-foreground">{p.kategori ?? '-'}</Td>
+                        <Td className="tabular text-right">{angka(p.qty)}</Td>
+                        <Td className="text-xs text-muted-foreground">{p.satuan_dasar}</Td>
+                        <Td className="tabular text-right">{rupiah(p.hpp_rata2)}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(p.nilai_persediaan)}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {baris.map(({ produk: p, varian }) => (
-                  <Tr key={p.produk_id}>
-                    <Td className={`font-mono text-xs ${varian ? 'pl-6 text-muted-foreground/70' : ''}`}>{p.kode}</Td>
-                    <Td className="font-medium">
-                      <div className={`flex items-center gap-2 ${varian ? 'pl-6' : ''}`}>
-                        <Link to={`/produk/${p.produk_id}`} className={varian ? 'text-muted-foreground hover:underline' : 'text-primary hover:underline'}>
-                          {p.nama}
-                        </Link>
-                        {varian ? <Badge variant="netral">{tt('Varian')}</Badge> : null}
-                        {!varian && (jumlahVarian.get(p.produk_id) ?? 0) > 0 ? (
-                          <span className="text-xs text-muted-foreground">
-                            ({tt('{n} varian').replace('{n}', String(jumlahVarian.get(p.produk_id)))})
-                          </span>
-                        ) : null}
-                        {p.perlu_restock ? (
-                          <Badge variant={Number(p.qty) <= 0 ? 'bahaya' : 'peringatan'}>
-                            {Number(p.qty) <= 0 ? 'Habis' : 'Menipis'}
-                          </Badge>
-                        ) : null}
+                  <KartuBaris key={p.produk_id} className={varian ? 'pl-8' : undefined}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Link
+                            to={`/produk/${p.produk_id}`}
+                            className={`truncate font-medium ${varian ? 'text-muted-foreground hover:underline' : 'text-primary hover:underline'}`}
+                          >
+                            {p.nama}
+                          </Link>
+                          {varian ? <Badge variant="netral">{tt('Varian')}</Badge> : null}
+                          {p.perlu_restock ? (
+                            <Badge variant={Number(p.qty) <= 0 ? 'bahaya' : 'peringatan'}>
+                              {Number(p.qty) <= 0 ? 'Habis' : 'Menipis'}
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <p className="font-mono text-xs text-muted-foreground">{p.kode}</p>
                       </div>
-                    </Td>
-                    <Td className="text-muted-foreground">{p.kategori ?? '-'}</Td>
-                    <Td className="tabular text-right">{angka(p.qty)}</Td>
-                    <Td className="text-xs text-muted-foreground">{p.satuan_dasar}</Td>
-                    <Td className="tabular text-right">{rupiah(p.hpp_rata2)}</Td>
-                    <Td className="tabular text-right font-medium">{rupiah(p.nilai_persediaan)}</Td>
-                  </Tr>
+                      <p className="tabular shrink-0 font-semibold">{rupiah(p.nilai_persediaan)}</p>
+                    </div>
+                    <BarisInfo label="Kategori" value={p.kategori ?? '-'} />
+                    <BarisInfo label="Stok" value={`${angka(p.qty)} ${p.satuan_dasar}`} />
+                    <BarisInfo label="HPP" value={rupiah(p.hpp_rata2)} />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>

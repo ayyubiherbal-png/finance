@@ -10,15 +10,19 @@ import { ambilSemuaBertahap } from '@/lib/ambilSemua'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -127,36 +131,60 @@ export function AkunKasBank() {
           ) : !data || data.baris.length === 0 ? (
             <KondisiKosong pesan="Belum ada akun kas/bank. Tambahkan minimal satu supaya Penerimaan Kas & Pembayaran Supplier bisa dicatat." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Kode</Th>
-                  <Th>Nama</Th>
-                  <Th>Jenis</Th>
-                  <Th>No. rekening</Th>
-                  <Th className="text-right">Saldo</Th>
-                  <Th></Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Kode</Th>
+                      <Th>Nama</Th>
+                      <Th>Jenis</Th>
+                      <Th>No. rekening</Th>
+                      <Th className="text-right">Saldo</Th>
+                      <Th></Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.baris.map((a) => (
+                      <Tr key={a.akun_id}>
+                        <Td className="font-mono text-xs">{a.kode}</Td>
+                        <Td>
+                          <Link to={`/kas-bank/${a.akun_id}`} className="font-medium text-primary hover:underline">
+                            {a.nama}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{tt(LABEL_JENIS[a.jenis])}</Td>
+                        <Td className="text-muted-foreground">{a.nomor_rekening ?? '-'}</Td>
+                        <Td className={`tabular text-right font-semibold ${a.saldo < 0 ? 'text-destructive' : ''}`}>
+                          {rupiah(a.saldo)}
+                        </Td>
+                        <Td className="text-right">{!a.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.baris.map((a) => (
-                  <Tr key={a.akun_id}>
-                    <Td className="font-mono text-xs">{a.kode}</Td>
-                    <Td>
-                      <Link to={`/kas-bank/${a.akun_id}`} className="font-medium text-primary hover:underline">
+                  <KartuBaris key={a.akun_id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/kas-bank/${a.akun_id}`} className="truncate font-medium text-primary hover:underline">
                         {a.nama}
                       </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{tt(LABEL_JENIS[a.jenis])}</Td>
-                    <Td className="text-muted-foreground">{a.nomor_rekening ?? '-'}</Td>
-                    <Td className={`tabular text-right font-semibold ${a.saldo < 0 ? 'text-destructive' : ''}`}>
-                      {rupiah(a.saldo)}
-                    </Td>
-                    <Td className="text-right">{!a.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
-                  </Tr>
+                      <p className={`tabular shrink-0 font-semibold ${a.saldo < 0 ? 'text-destructive' : ''}`}>{rupiah(a.saldo)}</p>
+                    </div>
+                    <BarisInfo label="Kode" value={<span className="font-mono text-xs">{a.kode}</span>} />
+                    <BarisInfo label="Jenis" value={tt(LABEL_JENIS[a.jenis])} />
+                    <BarisInfo label="No. rekening" value={a.nomor_rekening ?? '-'} />
+                    {!a.aktif ? (
+                      <div className="pt-0.5">
+                        <Badge variant="netral">Nonaktif</Badge>
+                      </div>
+                    ) : null}
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
           <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
         </CardContent>

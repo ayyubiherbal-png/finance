@@ -13,11 +13,14 @@ import {
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -107,28 +110,45 @@ export function KategoriProduk() {
           ) : !data || data.baris.length === 0 ? (
             <KondisiKosong pesan="Belum ada kategori." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Kode</Th>
-                  <Th>Nama</Th>
-                  <Th></Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Kode</Th>
+                      <Th>Nama</Th>
+                      <Th></Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.baris.map((k) => (
+                      <Tr key={k.id}>
+                        <Td className="font-mono text-xs">{k.kode}</Td>
+                        <Td>
+                          <Link to={`/kategori-produk/${k.id}`} className="font-medium text-primary hover:underline">
+                            {k.nama}
+                          </Link>
+                        </Td>
+                        <Td className="text-right">{!k.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.baris.map((k) => (
-                  <Tr key={k.id}>
-                    <Td className="font-mono text-xs">{k.kode}</Td>
-                    <Td>
+                  <KartuBaris key={k.id} className="flex items-center justify-between gap-2">
+                    <div>
                       <Link to={`/kategori-produk/${k.id}`} className="font-medium text-primary hover:underline">
                         {k.nama}
                       </Link>
-                    </Td>
-                    <Td className="text-right">{!k.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
-                  </Tr>
+                      <p className="font-mono text-xs text-muted-foreground">{k.kode}</p>
+                    </div>
+                    {!k.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
           <Paginasi halaman={halaman} ukuranHalaman={UKURAN_HALAMAN} total={data?.total ?? 0} onUbah={setHalaman} />
         </CardContent>

@@ -9,15 +9,19 @@ import { kutipFilterPostgrest } from '@/lib/utils'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -70,6 +74,29 @@ function labelSumber(p: VPelangganRingkas) {
   if (!p.sumber) return '-'
   if (p.sumber === 'custom') return p.sumber_custom || 'Custom'
   return LABEL_SUMBER[p.sumber]
+}
+
+function nilaiKolomOpsional(p: VPelangganRingkas, kunci: KunciKolom): string {
+  switch (kunci) {
+    case 'kontak_nama':
+      return p.kontak_nama || '-'
+    case 'sales_nama':
+      return p.sales_nama || '-'
+    case 'telepon':
+      return p.telepon || '-'
+    case 'whatsapp':
+      return p.whatsapp || '-'
+    case 'email':
+      return p.email || '-'
+    case 'sumber':
+      return labelSumber(p)
+    case 'tanggal_lahir':
+      return p.tanggal_lahir ? fmtTanggal(p.tanggal_lahir) : '-'
+    case 'sosial_media':
+      return p.sosial_media || '-'
+    case 'alamat_lengkap':
+      return p.alamat_lengkap || '-'
+  }
 }
 
 // Kolom di luar ID/Nama/Tipe (selalu tampil) -- banyak yang sering kosong
@@ -234,54 +261,74 @@ export function Pelanggan() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada pelanggan." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>ID</Th>
-                  <Th>Nama</Th>
-                  <Th>Tipe</Th>
-                  {kolomAktif.has('kontak_nama') ? <Th>Kontak</Th> : null}
-                  {kolomAktif.has('sales_nama') ? <Th>Sales</Th> : null}
-                  {kolomAktif.has('telepon') ? <Th>Telepon</Th> : null}
-                  {kolomAktif.has('whatsapp') ? <Th>WhatsApp</Th> : null}
-                  {kolomAktif.has('email') ? <Th>Email</Th> : null}
-                  {kolomAktif.has('sumber') ? <Th>Sumber</Th> : null}
-                  {kolomAktif.has('tanggal_lahir') ? <Th>Tanggal lahir</Th> : null}
-                  {kolomAktif.has('sosial_media') ? <Th>Media sosial</Th> : null}
-                  {kolomAktif.has('alamat_lengkap') ? <Th>Alamat</Th> : null}
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>ID</Th>
+                      <Th>Nama</Th>
+                      <Th>Tipe</Th>
+                      {kolomAktif.has('kontak_nama') ? <Th>Kontak</Th> : null}
+                      {kolomAktif.has('sales_nama') ? <Th>Sales</Th> : null}
+                      {kolomAktif.has('telepon') ? <Th>Telepon</Th> : null}
+                      {kolomAktif.has('whatsapp') ? <Th>WhatsApp</Th> : null}
+                      {kolomAktif.has('email') ? <Th>Email</Th> : null}
+                      {kolomAktif.has('sumber') ? <Th>Sumber</Th> : null}
+                      {kolomAktif.has('tanggal_lahir') ? <Th>Tanggal lahir</Th> : null}
+                      {kolomAktif.has('sosial_media') ? <Th>Media sosial</Th> : null}
+                      {kolomAktif.has('alamat_lengkap') ? <Th>Alamat</Th> : null}
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.map((p) => (
+                      <Tr key={p.pelanggan_id}>
+                        <Td className="font-mono text-xs">{p.kode}</Td>
+                        <Td className="font-medium">
+                          <Link to={`/pelanggan/${p.pelanggan_id}`} className="text-primary hover:underline">
+                            {p.nama}
+                          </Link>
+                        </Td>
+                        <Td>
+                          <Badge variant="netral">{LABEL_TIPE[p.tipe]}</Badge>
+                        </Td>
+                        {kolomAktif.has('kontak_nama') ? <Td className="text-muted-foreground">{p.kontak_nama || '-'}</Td> : null}
+                        {kolomAktif.has('sales_nama') ? <Td className="text-muted-foreground">{p.sales_nama || '-'}</Td> : null}
+                        {kolomAktif.has('telepon') ? <Td className="text-muted-foreground">{p.telepon || '-'}</Td> : null}
+                        {kolomAktif.has('whatsapp') ? <Td className="text-muted-foreground">{p.whatsapp || '-'}</Td> : null}
+                        {kolomAktif.has('email') ? <Td className="text-muted-foreground">{p.email || '-'}</Td> : null}
+                        {kolomAktif.has('sumber') ? <Td className="text-muted-foreground">{tt(labelSumber(p))}</Td> : null}
+                        {kolomAktif.has('tanggal_lahir') ? (
+                          <Td className="text-muted-foreground">{p.tanggal_lahir ? fmtTanggal(p.tanggal_lahir) : '-'}</Td>
+                        ) : null}
+                        {kolomAktif.has('sosial_media') ? <Td className="text-muted-foreground">{p.sosial_media || '-'}</Td> : null}
+                        {kolomAktif.has('alamat_lengkap') ? (
+                          <Td className="max-w-xs truncate text-muted-foreground" title={p.alamat_lengkap ?? undefined}>
+                            {p.alamat_lengkap || '-'}
+                          </Td>
+                        ) : null}
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.map((p) => (
-                  <Tr key={p.pelanggan_id}>
-                    <Td className="font-mono text-xs">{p.kode}</Td>
-                    <Td className="font-medium">
-                      <Link to={`/pelanggan/${p.pelanggan_id}`} className="text-primary hover:underline">
+                  <KartuBaris key={p.pelanggan_id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/pelanggan/${p.pelanggan_id}`} className="truncate font-medium text-primary hover:underline">
                         {p.nama}
                       </Link>
-                    </Td>
-                    <Td>
                       <Badge variant="netral">{LABEL_TIPE[p.tipe]}</Badge>
-                    </Td>
-                    {kolomAktif.has('kontak_nama') ? <Td className="text-muted-foreground">{p.kontak_nama || '-'}</Td> : null}
-                    {kolomAktif.has('sales_nama') ? <Td className="text-muted-foreground">{p.sales_nama || '-'}</Td> : null}
-                    {kolomAktif.has('telepon') ? <Td className="text-muted-foreground">{p.telepon || '-'}</Td> : null}
-                    {kolomAktif.has('whatsapp') ? <Td className="text-muted-foreground">{p.whatsapp || '-'}</Td> : null}
-                    {kolomAktif.has('email') ? <Td className="text-muted-foreground">{p.email || '-'}</Td> : null}
-                    {kolomAktif.has('sumber') ? <Td className="text-muted-foreground">{tt(labelSumber(p))}</Td> : null}
-                    {kolomAktif.has('tanggal_lahir') ? (
-                      <Td className="text-muted-foreground">{p.tanggal_lahir ? fmtTanggal(p.tanggal_lahir) : '-'}</Td>
-                    ) : null}
-                    {kolomAktif.has('sosial_media') ? <Td className="text-muted-foreground">{p.sosial_media || '-'}</Td> : null}
-                    {kolomAktif.has('alamat_lengkap') ? (
-                      <Td className="max-w-xs truncate text-muted-foreground" title={p.alamat_lengkap ?? undefined}>
-                        {p.alamat_lengkap || '-'}
-                      </Td>
-                    ) : null}
-                  </Tr>
+                    </div>
+                    <BarisInfo label="ID" value={<span className="font-mono text-xs">{p.kode}</span>} />
+                    {KOLOM_OPSIONAL.filter((k) => kolomAktif.has(k.kunci)).map((k) => (
+                      <BarisInfo key={k.kunci} label={k.label} value={nilaiKolomOpsional(p, k.kunci)} />
+                    ))}
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>

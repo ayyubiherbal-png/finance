@@ -9,15 +9,19 @@ import { tanggalISO } from '@/lib/format'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -114,34 +118,54 @@ export function Supplier() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada supplier." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Kode</Th>
-                  <Th>Nama</Th>
-                  <Th>Kontak</Th>
-                  <Th>Kabupaten/Kota</Th>
-                  <Th>Termin</Th>
-                  <Th></Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Kode</Th>
+                      <Th>Nama</Th>
+                      <Th>Kontak</Th>
+                      <Th>Kabupaten/Kota</Th>
+                      <Th>Termin</Th>
+                      <Th></Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.map((s) => (
+                      <Tr key={s.id}>
+                        <Td className="font-mono text-xs">{s.kode}</Td>
+                        <Td>
+                          <Link to={`/supplier/${s.id}`} className="font-medium text-primary hover:underline">
+                            {s.nama}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{s.kontak_nama ?? '-'}</Td>
+                        <Td className="text-muted-foreground">{s.kabupaten_kota?.nama ?? s.kota ?? '-'}</Td>
+                        <Td className="text-muted-foreground">{s.termin_hari > 0 ? `${s.termin_hari} hari` : 'COD'}</Td>
+                        <Td className="text-right">{!s.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.map((s) => (
-                  <Tr key={s.id}>
-                    <Td className="font-mono text-xs">{s.kode}</Td>
-                    <Td>
-                      <Link to={`/supplier/${s.id}`} className="font-medium text-primary hover:underline">
+                  <KartuBaris key={s.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/supplier/${s.id}`} className="truncate font-medium text-primary hover:underline">
                         {s.nama}
                       </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{s.kontak_nama ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{s.kabupaten_kota?.nama ?? s.kota ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{s.termin_hari > 0 ? `${s.termin_hari} hari` : 'COD'}</Td>
-                    <Td className="text-right">{!s.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
-                  </Tr>
+                      {!s.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}
+                    </div>
+                    <BarisInfo label="Kode" value={<span className="font-mono text-xs">{s.kode}</span>} />
+                    <BarisInfo label="Kontak" value={s.kontak_nama ?? '-'} />
+                    <BarisInfo label="Kabupaten/Kota" value={s.kabupaten_kota?.nama ?? s.kota ?? '-'} />
+                    <BarisInfo label="Termin" value={s.termin_hari > 0 ? `${s.termin_hari} hari` : 'COD'} />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>

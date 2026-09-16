@@ -13,11 +13,14 @@ import {
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -180,28 +183,45 @@ export function KategoriBiaya() {
                     {item.length === 0 ? (
                       <KondisiKosong pesan="Belum ada nama pengeluaran di kategori ini." />
                     ) : (
-                      <Table>
-                        <Thead>
-                          <Tr>
-                            <Th>Kode</Th>
-                            <Th>Nama Pengeluaran</Th>
-                            <Th></Th>
-                          </Tr>
-                        </Thead>
-                        <Tbody>
+                      <>
+                        <TabelDesktop>
+                          <Table>
+                            <Thead>
+                              <Tr>
+                                <Th>Kode</Th>
+                                <Th>Nama Pengeluaran</Th>
+                                <Th></Th>
+                              </Tr>
+                            </Thead>
+                            <Tbody>
+                              {item.map((i) => (
+                                <Tr key={i.id}>
+                                  <Td className="font-mono text-xs">{i.kode}</Td>
+                                  <Td>
+                                    <Link to={`/nama-pengeluaran/${i.id}`} className="font-medium text-primary hover:underline">
+                                      {i.nama}
+                                    </Link>
+                                  </Td>
+                                  <Td className="text-right">{!i.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
+                                </Tr>
+                              ))}
+                            </Tbody>
+                          </Table>
+                        </TabelDesktop>
+                        <DaftarMobile>
                           {item.map((i) => (
-                            <Tr key={i.id}>
-                              <Td className="font-mono text-xs">{i.kode}</Td>
-                              <Td>
+                            <KartuBaris key={i.id} className="flex items-center justify-between gap-2">
+                              <div>
                                 <Link to={`/nama-pengeluaran/${i.id}`} className="font-medium text-primary hover:underline">
                                   {i.nama}
                                 </Link>
-                              </Td>
-                              <Td className="text-right">{!i.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}</Td>
-                            </Tr>
+                                <p className="font-mono text-xs text-muted-foreground">{i.kode}</p>
+                              </div>
+                              {!i.aktif ? <Badge variant="netral">Nonaktif</Badge> : null}
+                            </KartuBaris>
                           ))}
-                        </Tbody>
-                      </Table>
+                        </DaftarMobile>
+                      </>
                     )}
                   </CardContent>
                 </Card>
