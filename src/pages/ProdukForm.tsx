@@ -9,18 +9,22 @@ import { toast } from '@/components/Toast'
 import { useTierHarga } from '@/lib/queries'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import {
+  BarisInfo,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  DaftarMobile,
   Input,
   InputAngka,
+  KartuBaris,
   KondisiKosong,
   Label,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -819,35 +823,57 @@ function FormEdit({ produkId }: { produkId: string }) {
           <CardTitle className="text-base">Satuan</CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-2">
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>Satuan</Th>
-                <Th className="text-right">{`${tt('Konversi ke')} ${satuanDasar?.kode ?? tt('dasar')}`}</Th>
-                <Th></Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {(satuanProduk ?? []).map((s) => (
-                <Tr key={s.id}>
-                  <Td className="font-medium">
+          <TabelDesktop>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Satuan</Th>
+                  <Th className="text-right">{`${tt('Konversi ke')} ${satuanDasar?.kode ?? tt('dasar')}`}</Th>
+                  <Th></Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {(satuanProduk ?? []).map((s) => (
+                  <Tr key={s.id}>
+                    <Td className="font-medium">
+                      {s.satuan?.nama} ({s.satuan?.kode})
+                      {s.satuan_id === produk.satuan_dasar_id ? (
+                        <span className="ml-2 text-xs text-muted-foreground">{tt('(satuan dasar)')}</span>
+                      ) : null}
+                    </Td>
+                    <Td className="tabular text-right">{s.konversi}</Td>
+                    <Td className="text-right">
+                      {s.satuan_id !== produk.satuan_dasar_id ? (
+                        <Button variant="ghost" size="icon" onClick={() => hapusSatuan(s)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      ) : null}
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </TabelDesktop>
+          <DaftarMobile>
+            {(satuanProduk ?? []).map((s) => (
+              <KartuBaris key={s.id}>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">
                     {s.satuan?.nama} ({s.satuan?.kode})
                     {s.satuan_id === produk.satuan_dasar_id ? (
-                      <span className="ml-2 text-xs text-muted-foreground">{tt('(satuan dasar)')}</span>
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">{tt('(satuan dasar)')}</span>
                     ) : null}
-                  </Td>
-                  <Td className="tabular text-right">{s.konversi}</Td>
-                  <Td className="text-right">
-                    {s.satuan_id !== produk.satuan_dasar_id ? (
-                      <Button variant="ghost" size="icon" onClick={() => hapusSatuan(s)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    ) : null}
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
+                  </p>
+                  {s.satuan_id !== produk.satuan_dasar_id ? (
+                    <Button variant="ghost" size="icon" onClick={() => hapusSatuan(s)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  ) : null}
+                </div>
+                <BarisInfo label={`${tt('Konversi ke')} ${satuanDasar?.kode ?? tt('dasar')}`} value={s.konversi} />
+              </KartuBaris>
+            ))}
+          </DaftarMobile>
 
           <div className="grid gap-2 border-t border-border p-3 sm:grid-cols-[1fr_1fr_auto]">
             <Select
@@ -882,41 +908,65 @@ function FormEdit({ produkId }: { produkId: string }) {
           <CardTitle className="text-base">Harga Jual</CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-2">
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>Tier</Th>
-                <Th>Satuan</Th>
-                <Th className="text-right">Min. qty</Th>
-                <Th className="text-right">Harga</Th>
-                <Th>Berlaku mulai</Th>
-                <Th></Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {(hargaProduk ?? []).map((h) => (
-                <Tr key={h.id}>
-                  <Td className="font-medium">{h.tier_harga?.nama}</Td>
-                  <Td className="text-xs text-muted-foreground">{h.satuan?.kode}</Td>
-                  <Td className="tabular text-right">{h.min_qty}</Td>
-                  <Td className="tabular text-right">{rupiah(h.harga)}</Td>
-                  <Td className="text-muted-foreground">{fmtTanggal(h.berlaku_mulai)}</Td>
-                  <Td className="text-right">
+          <TabelDesktop>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Tier</Th>
+                  <Th>Satuan</Th>
+                  <Th className="text-right">Min. qty</Th>
+                  <Th className="text-right">Harga</Th>
+                  <Th>Berlaku mulai</Th>
+                  <Th></Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {(hargaProduk ?? []).map((h) => (
+                  <Tr key={h.id}>
+                    <Td className="font-medium">{h.tier_harga?.nama}</Td>
+                    <Td className="text-xs text-muted-foreground">{h.satuan?.kode}</Td>
+                    <Td className="tabular text-right">{h.min_qty}</Td>
+                    <Td className="tabular text-right">{rupiah(h.harga)}</Td>
+                    <Td className="text-muted-foreground">{fmtTanggal(h.berlaku_mulai)}</Td>
+                    <Td className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => hapusHarga(h.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </Td>
+                  </Tr>
+                ))}
+                {(hargaProduk ?? []).length === 0 ? (
+                  <Tr>
+                    <Td colSpan={6} className="py-6 text-center text-sm text-muted-foreground">
+                      {tt("Belum ada aturan harga. Tanpa ini, produk tidak akan muncul harganya otomatis di Sales Order.")}
+                    </Td>
+                  </Tr>
+                ) : null}
+              </Tbody>
+            </Table>
+          </TabelDesktop>
+          <DaftarMobile>
+            {(hargaProduk ?? []).length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                {tt('Belum ada aturan harga. Tanpa ini, produk tidak akan muncul harganya otomatis di Sales Order.')}
+              </p>
+            ) : (
+              (hargaProduk ?? []).map((h) => (
+                <KartuBaris key={h.id}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium">{h.tier_harga?.nama}</p>
                     <Button variant="ghost" size="icon" onClick={() => hapusHarga(h.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
-                  </Td>
-                </Tr>
-              ))}
-              {(hargaProduk ?? []).length === 0 ? (
-                <Tr>
-                  <Td colSpan={6} className="py-6 text-center text-sm text-muted-foreground">
-                    {tt("Belum ada aturan harga. Tanpa ini, produk tidak akan muncul harganya otomatis di Sales Order.")}
-                  </Td>
-                </Tr>
-              ) : null}
-            </Tbody>
-          </Table>
+                  </div>
+                  <BarisInfo label="Satuan" value={h.satuan?.kode} />
+                  <BarisInfo label="Min. qty" value={h.min_qty} />
+                  <BarisInfo label="Harga" value={<span className="font-semibold">{rupiah(h.harga)}</span>} />
+                  <BarisInfo label="Berlaku mulai" value={fmtTanggal(h.berlaku_mulai)} />
+                </KartuBaris>
+              ))
+            )}
+          </DaftarMobile>
 
           <div className="grid gap-2 border-t border-border p-3 sm:grid-cols-[1fr_1fr_0.7fr_1fr_1fr_auto]">
             <Select
