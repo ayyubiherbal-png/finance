@@ -9,16 +9,20 @@ import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -146,40 +150,60 @@ export function PengeluaranKas() {
             <KondisiKosong pesan="Belum ada Pengeluaran Kas." />
           ) : (
             <>
-              <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-                <Thead>
-                  <Tr>
-                    <Th>Nomor</Th>
-                    <Th>Tanggal</Th>
-                    <Th>Kategori</Th>
-                    <Th>Nama Pengeluaran</Th>
-                    <Th>Akun</Th>
-                    <Th>Metode</Th>
-                    <Th className="text-right">Jumlah</Th>
-                    <Th>Status</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {data.map((p) => (
-                    <Tr key={p.id}>
-                      <Td>
-                        <Link to={`/pengeluaran-kas/${p.id}`} className="font-mono text-xs text-primary hover:underline">
-                          {p.nomor}
-                        </Link>
-                      </Td>
-                      <Td className="text-muted-foreground">{tanggal(p.tanggal)}</Td>
-                      <Td className="text-muted-foreground">{p.namaPengeluaran?.kategori?.nama ?? '-'}</Td>
-                      <Td className="font-medium">{p.namaPengeluaran?.nama ?? '-'}</Td>
-                      <Td className="text-muted-foreground">{p.akun?.nama ?? '-'}</Td>
-                      <Td className="text-muted-foreground">{LABEL_METODE[p.metode]}</Td>
-                      <Td className="tabular text-right font-medium">{rupiah(p.jumlah)}</Td>
-                      <Td>
-                        <Badge variant={VARIAN_STATUS[p.status]}>{LABEL_STATUS[p.status]}</Badge>
-                      </Td>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Nomor</Th>
+                      <Th>Tanggal</Th>
+                      <Th>Kategori</Th>
+                      <Th>Nama Pengeluaran</Th>
+                      <Th>Akun</Th>
+                      <Th>Metode</Th>
+                      <Th className="text-right">Jumlah</Th>
+                      <Th>Status</Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    {data.map((p) => (
+                      <Tr key={p.id}>
+                        <Td>
+                          <Link to={`/pengeluaran-kas/${p.id}`} className="font-mono text-xs text-primary hover:underline">
+                            {p.nomor}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{tanggal(p.tanggal)}</Td>
+                        <Td className="text-muted-foreground">{p.namaPengeluaran?.kategori?.nama ?? '-'}</Td>
+                        <Td className="font-medium">{p.namaPengeluaran?.nama ?? '-'}</Td>
+                        <Td className="text-muted-foreground">{p.akun?.nama ?? '-'}</Td>
+                        <Td className="text-muted-foreground">{LABEL_METODE[p.metode]}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(p.jumlah)}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_STATUS[p.status]}>{LABEL_STATUS[p.status]}</Badge>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                {data.map((p) => (
+                  <KartuBaris key={p.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/pengeluaran-kas/${p.id}`} className="truncate font-mono text-xs text-primary hover:underline">
+                        {p.nomor}
+                      </Link>
+                      <Badge variant={VARIAN_STATUS[p.status]}>{LABEL_STATUS[p.status]}</Badge>
+                    </div>
+                    <p className="font-medium">{p.namaPengeluaran?.nama ?? '-'}</p>
+                    <BarisInfo label="Tanggal" value={tanggal(p.tanggal)} />
+                    <BarisInfo label="Kategori" value={p.namaPengeluaran?.kategori?.nama ?? '-'} />
+                    <BarisInfo label="Akun" value={p.akun?.nama ?? '-'} />
+                    <BarisInfo label="Metode" value={LABEL_METODE[p.metode]} />
+                    <BarisInfo label="Jumlah" value={<span className="font-semibold">{rupiah(p.jumlah)}</span>} />
+                  </KartuBaris>
+                ))}
+              </DaftarMobile>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
                   {data.length >= 100 ? tt('Total 100 pengeluaran teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('pengeluaran')}`}

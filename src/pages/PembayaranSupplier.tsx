@@ -8,16 +8,20 @@ import { rupiah, tanggal, tanggalISO } from '@/lib/format'
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -127,36 +131,56 @@ export function PembayaranSupplier() {
           ) : !data || data.length === 0 ? (
             <KondisiKosong pesan="Belum ada Pembayaran Supplier." />
           ) : (
-            <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-              <Thead>
-                <Tr>
-                  <Th>Nomor</Th>
-                  <Th>Tanggal</Th>
-                  <Th>Supplier</Th>
-                  <Th>Metode</Th>
-                  <Th className="text-right">Jumlah</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
+            <>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Nomor</Th>
+                      <Th>Tanggal</Th>
+                      <Th>Supplier</Th>
+                      <Th>Metode</Th>
+                      <Th className="text-right">Jumlah</Th>
+                      <Th>Status</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {data.map((b) => (
+                      <Tr key={b.id}>
+                        <Td>
+                          <Link to={`/pembayaran-supplier/${b.id}`} className="font-mono text-xs text-primary hover:underline">
+                            {b.nomor}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{tanggal(b.tanggal)}</Td>
+                        <Td className="font-medium">{b.supplier?.nama ?? '-'}</Td>
+                        <Td className="text-muted-foreground">{LABEL_METODE[b.metode]}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(b.jumlah)}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_STATUS[b.status]}>{LABEL_STATUS[b.status]}</Badge>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
                 {data.map((b) => (
-                  <Tr key={b.id}>
-                    <Td>
-                      <Link to={`/pembayaran-supplier/${b.id}`} className="font-mono text-xs text-primary hover:underline">
+                  <KartuBaris key={b.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/pembayaran-supplier/${b.id}`} className="truncate font-mono text-xs text-primary hover:underline">
                         {b.nomor}
                       </Link>
-                    </Td>
-                    <Td className="text-muted-foreground">{tanggal(b.tanggal)}</Td>
-                    <Td className="font-medium">{b.supplier?.nama ?? '-'}</Td>
-                    <Td className="text-muted-foreground">{LABEL_METODE[b.metode]}</Td>
-                    <Td className="tabular text-right font-medium">{rupiah(b.jumlah)}</Td>
-                    <Td>
                       <Badge variant={VARIAN_STATUS[b.status]}>{LABEL_STATUS[b.status]}</Badge>
-                    </Td>
-                  </Tr>
+                    </div>
+                    <p className="font-medium">{b.supplier?.nama ?? '-'}</p>
+                    <BarisInfo label="Tanggal" value={tanggal(b.tanggal)} />
+                    <BarisInfo label="Metode" value={LABEL_METODE[b.metode]} />
+                    <BarisInfo label="Jumlah" value={<span className="font-semibold">{rupiah(b.jumlah)}</span>} />
+                  </KartuBaris>
                 ))}
-              </Tbody>
-            </Table>
+              </DaftarMobile>
+            </>
           )}
         </CardContent>
       </Card>

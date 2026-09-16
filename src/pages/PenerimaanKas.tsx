@@ -9,16 +9,20 @@ import { FilterPeriode, RENTANG_KOSONG, type RentangTanggal } from '@/components
 import { TombolEkspor } from '@/components/TombolEkspor'
 import type { KolomEkspor } from '@/lib/eksporData'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
+  DaftarMobile,
   Input,
+  KartuBaris,
   KondisiKosong,
   Paginasi,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -147,36 +151,54 @@ export function PenerimaanKas() {
             <KondisiKosong pesan="Belum ada Penerimaan Kas." />
           ) : (
             <>
-              <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
-                <Thead>
-                  <Tr>
-                    <Th>Nomor</Th>
-                    <Th>Tanggal</Th>
-                    <Th>Pelanggan</Th>
-                    <Th>Metode</Th>
-                    <Th className="text-right">Jumlah</Th>
-                    <Th>Status</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {data.map((k) => (
-                    <Tr key={k.id}>
-                      <Td>
-                        <Link to={`/penerimaan-kas/${k.id}`} className="font-mono text-xs text-primary hover:underline">
-                          {k.nomor}
-                        </Link>
-                      </Td>
-                      <Td className="text-muted-foreground">{tanggal(k.tanggal)}</Td>
-                      <Td className="font-medium">{k.pelanggan?.nama ?? '-'}</Td>
-                      <Td className="text-muted-foreground">{LABEL_METODE[k.metode]}</Td>
-                      <Td className="tabular text-right font-medium">{rupiah(k.jumlah)}</Td>
-                      <Td>
-                        <Badge variant={VARIAN_STATUS[k.status]}>{LABEL_STATUS[k.status]}</Badge>
-                      </Td>
+              <TabelDesktop>
+                <Table className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                  <Thead>
+                    <Tr>
+                      <Th>Nomor</Th>
+                      <Th>Tanggal</Th>
+                      <Th>Pelanggan</Th>
+                      <Th>Metode</Th>
+                      <Th className="text-right">Jumlah</Th>
+                      <Th>Status</Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    {data.map((k) => (
+                      <Tr key={k.id}>
+                        <Td>
+                          <Link to={`/penerimaan-kas/${k.id}`} className="font-mono text-xs text-primary hover:underline">
+                            {k.nomor}
+                          </Link>
+                        </Td>
+                        <Td className="text-muted-foreground">{tanggal(k.tanggal)}</Td>
+                        <Td className="font-medium">{k.pelanggan?.nama ?? '-'}</Td>
+                        <Td className="text-muted-foreground">{LABEL_METODE[k.metode]}</Td>
+                        <Td className="tabular text-right font-medium">{rupiah(k.jumlah)}</Td>
+                        <Td>
+                          <Badge variant={VARIAN_STATUS[k.status]}>{LABEL_STATUS[k.status]}</Badge>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TabelDesktop>
+              <DaftarMobile className={isFetching ? 'opacity-60 transition-opacity' : undefined}>
+                {data.map((k) => (
+                  <KartuBaris key={k.id}>
+                    <div className="flex items-center justify-between gap-2">
+                      <Link to={`/penerimaan-kas/${k.id}`} className="truncate font-mono text-xs text-primary hover:underline">
+                        {k.nomor}
+                      </Link>
+                      <Badge variant={VARIAN_STATUS[k.status]}>{LABEL_STATUS[k.status]}</Badge>
+                    </div>
+                    <p className="font-medium">{k.pelanggan?.nama ?? '-'}</p>
+                    <BarisInfo label="Tanggal" value={tanggal(k.tanggal)} />
+                    <BarisInfo label="Metode" value={LABEL_METODE[k.metode]} />
+                    <BarisInfo label="Jumlah" value={<span className="font-semibold">{rupiah(k.jumlah)}</span>} />
+                  </KartuBaris>
+                ))}
+              </DaftarMobile>
               <div className="flex items-center justify-end gap-1.5 border-t border-border px-4 py-2 text-sm">
                 <span className="text-muted-foreground">
                   {data.length >= 100 ? tt('Total 100 penerimaan teratas yang tampil') : `${tt('Total')} ${data.length} ${tt('penerimaan')}`}
