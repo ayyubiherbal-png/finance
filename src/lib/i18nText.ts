@@ -335,6 +335,10 @@ export const TEKS: Record<string, string> = {
   'Kirim sekarang': 'Ship now',
   'Biaya tambahan (ongkos angkut/bongkar)': 'Additional cost (freight/unloading)',
   'Belum jatuh tempo': 'Not yet due',
+  '1-30 hari': '1-30 days',
+  '31-60 hari': '31-60 days',
+  '61-90 hari': '61-90 days',
+  '90+ hari': '90+ days',
   Terlambat: 'Overdue',
   'vs Periode Sebelumnya': 'vs previous period',
 

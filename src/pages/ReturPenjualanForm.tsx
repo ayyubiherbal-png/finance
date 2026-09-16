@@ -11,18 +11,22 @@ import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { Combobox, type OpsiCombobox } from '@/components/Combobox'
 import { toast } from '@/components/Toast'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  DaftarMobile,
   Input,
   InputAngka,
+  KartuBaris,
   Label,
   PesanError,
   Select,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -476,46 +480,72 @@ function FormEdit({ returId }: { returId: string }) {
           ) : null}
         </CardHeader>
         <CardContent className="p-0 pb-2">
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>Produk</Th>
-                <Th>Satuan</Th>
-                <Th className="text-right">Qty</Th>
-                <Th className="text-right">Harga</Th>
-                <Th className="text-right">Subtotal</Th>
-                {bisaEdit ? <Th></Th> : null}
-              </Tr>
-            </Thead>
-            <Tbody>
-              {(items ?? []).map((it) => (
-                <Tr key={it.id}>
-                  <Td className="font-medium">
-                    {it.produk?.nama}
-                    <span className="ml-1 font-mono text-xs text-muted-foreground">{it.produk?.kode}</span>
-                  </Td>
-                  <Td className="text-xs text-muted-foreground">{it.satuan?.kode}</Td>
-                  <Td className="tabular text-right">{it.qty}</Td>
-                  <Td className="tabular text-right">{rupiah(it.harga_satuan)}</Td>
-                  <Td className="tabular text-right font-medium">{rupiah(it.subtotal)}</Td>
-                  {bisaEdit ? (
-                    <Td className="text-right">
+          <TabelDesktop>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Produk</Th>
+                  <Th>Satuan</Th>
+                  <Th className="text-right">Qty</Th>
+                  <Th className="text-right">Harga</Th>
+                  <Th className="text-right">Subtotal</Th>
+                  {bisaEdit ? <Th></Th> : null}
+                </Tr>
+              </Thead>
+              <Tbody>
+                {(items ?? []).map((it) => (
+                  <Tr key={it.id}>
+                    <Td className="font-medium">
+                      {it.produk?.nama}
+                      <span className="ml-1 font-mono text-xs text-muted-foreground">{it.produk?.kode}</span>
+                    </Td>
+                    <Td className="text-xs text-muted-foreground">{it.satuan?.kode}</Td>
+                    <Td className="tabular text-right">{it.qty}</Td>
+                    <Td className="tabular text-right">{rupiah(it.harga_satuan)}</Td>
+                    <Td className="tabular text-right font-medium">{rupiah(it.subtotal)}</Td>
+                    {bisaEdit ? (
+                      <Td className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => hapusItem(it.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </Td>
+                    ) : null}
+                  </Tr>
+                ))}
+                {(!items || items.length === 0) && (
+                  <Tr>
+                    <Td colSpan={bisaEdit ? 6 : 5} className="py-6 text-center text-sm text-muted-foreground">
+                      {tt("Belum ada item.")}
+                    </Td>
+                  </Tr>
+                )}
+              </Tbody>
+            </Table>
+          </TabelDesktop>
+          <DaftarMobile>
+            {(!items || items.length === 0) ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">{tt('Belum ada item.')}</p>
+            ) : (
+              items.map((it) => (
+                <KartuBaris key={it.id}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{it.produk?.nama}</p>
+                      <p className="font-mono text-xs text-muted-foreground">{it.produk?.kode}</p>
+                    </div>
+                    {bisaEdit ? (
                       <Button variant="ghost" size="icon" onClick={() => hapusItem(it.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
-                    </Td>
-                  ) : null}
-                </Tr>
-              ))}
-              {(!items || items.length === 0) && (
-                <Tr>
-                  <Td colSpan={bisaEdit ? 6 : 5} className="py-6 text-center text-sm text-muted-foreground">
-                    {tt("Belum ada item.")}
-                  </Td>
-                </Tr>
-              )}
-            </Tbody>
-          </Table>
+                    ) : null}
+                  </div>
+                  <BarisInfo label="Qty" value={`${it.qty} ${it.satuan?.kode ?? ''}`} />
+                  <BarisInfo label="Harga" value={rupiah(it.harga_satuan)} />
+                  <BarisInfo label="Subtotal" value={<span className="font-semibold">{rupiah(it.subtotal)}</span>} />
+                </KartuBaris>
+              ))
+            )}
+          </DaftarMobile>
 
           {bisaEdit ? (
             <div className="space-y-2 border-t border-border p-3">

@@ -9,17 +9,21 @@ import { useAuth } from '@/contexts/AuthContext'
 import { rupiah, tanggal as fmtTanggal, tanggalISO } from '@/lib/format'
 import { toast } from '@/components/Toast'
 import {
+  BarisInfo,
   Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  DaftarMobile,
   Input,
   InputAngka,
+  KartuBaris,
   Label,
   PesanError,
   Spinner,
+  TabelDesktop,
   Table,
   Tbody,
   Td,
@@ -249,54 +253,92 @@ function FormBaru({ poId }: { poId: string | null }) {
           <CardTitle className="text-base">Barang yang diterima</CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-2">
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>Produk</Th>
-                <Th>Satuan</Th>
-                <Th className="text-right">Sisa PO</Th>
-                <Th className="text-right">Diterima</Th>
-                <Th className="text-right">Harga</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {baris.map((r) => {
+          <TabelDesktop>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Produk</Th>
+                  <Th>Satuan</Th>
+                  <Th className="text-right">Sisa PO</Th>
+                  <Th className="text-right">Diterima</Th>
+                  <Th className="text-right">Harga</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {baris.map((r) => {
+                  const maks = (r.qty_dasar - r.qty_diterima) / r.konversi
+                  return (
+                    <Tr key={r.id}>
+                      <Td className="font-medium">{r.produk?.nama}</Td>
+                      <Td className="text-xs text-muted-foreground">{r.satuan?.kode}</Td>
+                      <Td className="tabular text-right text-muted-foreground">{maks}</Td>
+                      <Td className="text-right">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={maks}
+                          value={r.qtyTerima}
+                          onChange={(e) => ubahQty(r.id, Number(e.target.value))}
+                          className="ml-auto w-24 text-right"
+                        />
+                      </Td>
+                      <Td className="text-right">
+                        <InputAngka value={r.hargaTerima} onChange={(nilai) => ubahHarga(r.id, nilai)} className="ml-auto w-28" />
+                        {r.diskon_persen > 0 || r.diskon_nilai > 0 ? (
+                          <p className="mt-0.5 text-right text-xs text-muted-foreground">
+                            {tt('Sudah termasuk diskon PO')} {teksDiskon(r)}
+                          </p>
+                        ) : null}
+                      </Td>
+                    </Tr>
+                  )
+                })}
+                {baris.length === 0 ? (
+                  <Tr>
+                    <Td colSpan={5} className="py-6 text-center text-sm text-muted-foreground">
+                      {tt("Semua item pada PO ini sudah diterima penuh.")}
+                    </Td>
+                  </Tr>
+                ) : null}
+              </Tbody>
+            </Table>
+          </TabelDesktop>
+          <DaftarMobile>
+            {baris.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">{tt('Semua item pada PO ini sudah diterima penuh.')}</p>
+            ) : (
+              baris.map((r) => {
                 const maks = (r.qty_dasar - r.qty_diterima) / r.konversi
                 return (
-                  <Tr key={r.id}>
-                    <Td className="font-medium">{r.produk?.nama}</Td>
-                    <Td className="text-xs text-muted-foreground">{r.satuan?.kode}</Td>
-                    <Td className="tabular text-right text-muted-foreground">{maks}</Td>
-                    <Td className="text-right">
+                  <KartuBaris key={r.id}>
+                    <p className="font-medium">{r.produk?.nama}</p>
+                    <BarisInfo label="Satuan" value={r.satuan?.kode} />
+                    <BarisInfo label="Sisa PO" value={maks} />
+                    <div className="flex items-center justify-between gap-2 py-1 text-sm">
+                      <span className="text-muted-foreground">{tt('Diterima')}</span>
                       <Input
                         type="number"
                         min={0}
                         max={maks}
                         value={r.qtyTerima}
                         onChange={(e) => ubahQty(r.id, Number(e.target.value))}
-                        className="ml-auto w-24 text-right"
+                        className="w-24 text-right"
                       />
-                    </Td>
-                    <Td className="text-right">
-                      <InputAngka value={r.hargaTerima} onChange={(nilai) => ubahHarga(r.id, nilai)} className="ml-auto w-28" />
-                      {r.diskon_persen > 0 || r.diskon_nilai > 0 ? (
-                        <p className="mt-0.5 text-right text-xs text-muted-foreground">
-                          {tt('Sudah termasuk diskon PO')} {teksDiskon(r)}
-                        </p>
-                      ) : null}
-                    </Td>
-                  </Tr>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 py-1 text-sm">
+                      <span className="text-muted-foreground">{tt('Harga')}</span>
+                      <InputAngka value={r.hargaTerima} onChange={(nilai) => ubahHarga(r.id, nilai)} className="w-28" />
+                    </div>
+                    {r.diskon_persen > 0 || r.diskon_nilai > 0 ? (
+                      <p className="text-right text-xs text-muted-foreground">
+                        {tt('Sudah termasuk diskon PO')} {teksDiskon(r)}
+                      </p>
+                    ) : null}
+                  </KartuBaris>
                 )
-              })}
-              {baris.length === 0 ? (
-                <Tr>
-                  <Td colSpan={5} className="py-6 text-center text-sm text-muted-foreground">
-                    {tt("Semua item pada PO ini sudah diterima penuh.")}
-                  </Td>
-                </Tr>
-              ) : null}
-            </Tbody>
-          </Table>
+              })
+            )}
+          </DaftarMobile>
         </CardContent>
       </Card>
 
@@ -471,31 +513,47 @@ function FormDetail({ pbId }: { pbId: string }) {
           <CardTitle className="text-base">Item diterima</CardTitle>
         </CardHeader>
         <CardContent className="p-0 pb-2">
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>Produk</Th>
-                <Th>Satuan</Th>
-                <Th className="text-right">Qty</Th>
-                <Th className="text-right">Harga beli</Th>
-                {pb.status === 'selesai' ? <Th className="text-right">HPP/satuan dasar</Th> : null}
-              </Tr>
-            </Thead>
-            <Tbody>
-              {(items ?? []).map((it) => (
-                <Tr key={it.id}>
-                  <Td className="font-medium">
-                    {it.produk?.nama}
-                    <span className="ml-1 font-mono text-xs text-muted-foreground">{it.produk?.kode}</span>
-                  </Td>
-                  <Td className="text-xs text-muted-foreground">{it.satuan?.kode}</Td>
-                  <Td className="tabular text-right">{it.qty}</Td>
-                  <Td className="tabular text-right">{rupiah(it.harga_satuan)}</Td>
-                  {pb.status === 'selesai' ? <Td className="tabular text-right">{rupiah(it.hpp_satuan)}</Td> : null}
+          <TabelDesktop>
+            <Table>
+              <Thead>
+                <Tr>
+                  <Th>Produk</Th>
+                  <Th>Satuan</Th>
+                  <Th className="text-right">Qty</Th>
+                  <Th className="text-right">Harga beli</Th>
+                  {pb.status === 'selesai' ? <Th className="text-right">HPP/satuan dasar</Th> : null}
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              </Thead>
+              <Tbody>
+                {(items ?? []).map((it) => (
+                  <Tr key={it.id}>
+                    <Td className="font-medium">
+                      {it.produk?.nama}
+                      <span className="ml-1 font-mono text-xs text-muted-foreground">{it.produk?.kode}</span>
+                    </Td>
+                    <Td className="text-xs text-muted-foreground">{it.satuan?.kode}</Td>
+                    <Td className="tabular text-right">{it.qty}</Td>
+                    <Td className="tabular text-right">{rupiah(it.harga_satuan)}</Td>
+                    {pb.status === 'selesai' ? <Td className="tabular text-right">{rupiah(it.hpp_satuan)}</Td> : null}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </TabelDesktop>
+          <DaftarMobile>
+            {(items ?? []).map((it) => (
+              <KartuBaris key={it.id}>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{it.produk?.nama}</p>
+                  <p className="font-mono text-xs text-muted-foreground">{it.produk?.kode}</p>
+                </div>
+                <BarisInfo label="Satuan" value={it.satuan?.kode} />
+                <BarisInfo label="Qty" value={it.qty} />
+                <BarisInfo label="Harga beli" value={rupiah(it.harga_satuan)} />
+                {pb.status === 'selesai' ? <BarisInfo label="HPP/satuan dasar" value={rupiah(it.hpp_satuan)} /> : null}
+              </KartuBaris>
+            ))}
+          </DaftarMobile>
         </CardContent>
       </Card>
 

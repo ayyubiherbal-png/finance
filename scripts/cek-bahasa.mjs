@@ -70,7 +70,7 @@ const ANAK_AUTO = new Set(['Th', 'Label', 'Badge', 'Button', 'CardTitle', 'optio
 const ATTR_AUTO = new Map([
   ['placeholder', new Set(['Input', 'Textarea', 'InputAngka', 'Combobox', 'input', 'textarea'])],
   ['pesan', new Set(['KondisiKosong'])],
-  ['label', new Set(['InfoField', 'Ringkas', 'Info'])], // komponen presentasi lokal yang menerjemahkan sendiri labelnya
+  ['label', new Set(['InfoField', 'Ringkas', 'Info', 'BarisInfo'])], // komponen presentasi lokal yang menerjemahkan sendiri labelnya
   ['judul', new Set(['KartuAngka'])],
   ['item', new Set(['MenuAksi'])], // MenuAksi menerjemahkan sendiri tiap label pilihannya lewat tt()
 ])
